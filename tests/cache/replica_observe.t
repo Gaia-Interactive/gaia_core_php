@@ -11,7 +11,7 @@ class TestObserve extends Cache\Base {
     protected $core;
     protected $_calls = array(); 
     
-    public function __construct( Memcache_G $m ){
+    public function __construct( Cache\Base $m ){
         $this->core = $m;
     }
     
