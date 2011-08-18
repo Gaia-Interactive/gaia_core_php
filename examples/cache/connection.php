@@ -1,12 +1,12 @@
 <?php
 namespace Demo;
 include __DIR__ . '/../common.php';
-use Gaia\Cache as GCache;
+use Gaia\Cache;
 
 /**
 * very simple singleton instance of the cache object.
 */
-class Cache {
+class Connection {
    
     // store the singleton cache object here.
     protected static $cache;
@@ -15,22 +15,22 @@ class Cache {
     * use this method to use the cache.
     *
     */
-    public static function instance(){
+    public static function cache(){
         if( isset( self::$cache ) ) return $cache;
-        $cache = new GCache\Base;
+        $cache = new Cache\Base;
         
-        foreach( self::servers() as $entry){
+        foreach( self::cacheservers() as $entry){
             list( $host, $port, $weight ) = $entry;
             $cache->addServer($host, $port, $weight);
         }
-        return self::$cache = new GCache\Namespaced( $cache, self::prefix() );
+        return self::$cache = new Cache\Namespaced( $cache, self::cacheprefix() );
      }
      
      // make this function return an appropriate prefix based on whether
      // being used in a test environent. Don't want to overlap with any one
      // else's cache namespace.
      //
-     protected static function prefix(){
+     protected static function cacheprefix(){
         return 'demo';
      }
      
@@ -38,13 +38,9 @@ class Cache {
     // normally this will be a huge cluster of servers. 
     // grab it from some global config spot.
     // this is just a demo.
-     protected static function servers(){
+     protected static function cacheservers(){
         return array(
             array('localhost', '11211', '1'),
         );
      }
 }
-
-// --------------------------------------------
-// DEMO
-print_r( new GCache\Replica(Cache::instance(), 3) );

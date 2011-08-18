@@ -52,6 +52,11 @@ class Tap {
         return self::_proclaim($cond, $desc);
     }
     
+    public static function debug( $var, $comment = NULL ){
+       if( $comment ) echo "#  " . $comment . "\n# ----\n";
+       echo "#  " . str_replace("\n", "\n#  ", is_scalar( $var ) ? var_dump( $var, TRUE ) : print_r( $var, TRUE ) );
+    }
+    
     public static function is($have, $want, $desc = '') {
         $pass = $have == $want;
         return self::_proclaim($pass, $desc, /* todo */ false, $have, $want);
