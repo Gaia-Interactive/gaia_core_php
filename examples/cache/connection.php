@@ -16,7 +16,7 @@ class Connection {
     *
     */
     public static function cache(){
-        if( isset( self::$cache ) ) return $cache;
+        if( isset( self::$cache ) ) return self::$cache;
         $cache = new Cache\Base;
         
         foreach( self::cacheservers() as $entry){
