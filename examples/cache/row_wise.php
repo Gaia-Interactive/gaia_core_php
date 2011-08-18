@@ -13,8 +13,38 @@ include __DIR__ . '/connection.php';
 * cache data, developers will fetch all the rows they need from the database and write it all into 
 * a single cache key. This works great to cache the data needed for that individual request and any
 * others that are identical. But what about caching overlapping data sets?
+* 
+* For example, I have user information that I cache for a page where a bunch of users reply to a 
+* message board. If I put all of that user information into one cache key, It is likely I can only 
+* use that cached data on that one page. But what about thousands of other pages where different
+* combinations of those same users are commenting on other messages? I end up duplicating lots of 
+* information into my cache. Worse, what if user information changes after I have cached the data?
+* With all that cached data spread out over thousands of keys, there is no easy way to refresh the 
+* cache.
 *
+* (See ''./cache_revision.php'' for more info about good ways to refresh many cache keys at once).
 *
+* But if each user row is assigned its own key in the cache, we don't duplicate any information
+* in the cache, and can easily keep the cache up-to-date. With memcache's multi-key fetching abilities
+* we can get 10 keys out of the cache in the same amount of time it takes to get 1 key out of the
+* cache. The memcache client is smart enough to fetch all the keys you request in parallel across 
+* the network, even if the keys are hashed across many different servers.
+*
+* Now that we have populated user information into the cache by id, we can ask for different users
+* from the cache, and only ask the database for the missing keys. This sounds easy to do, but when
+* you start coding this from scratch using only the base memcache object, you find you have to write
+* a whole lot of code to accomplish this. First, you have to prefix all of your memcache keys with a 
+* name that won't collide with any other keys in the cache. Then you have to check your cache results
+* to see which keys came back empty and parse the name to extract the user id and figure out which
+* key is not there. Then you have to query the database for those users, and re-generate the key names
+* and populate it back into the cache. This process is very cumbersome and error prone. 
+* 
+* The Cache\Namespaced class provides nice hooks for you to be able to do these steps easily with very
+* few steps. We use the namespaced functionality to prefix all of the memcache keys automatically with
+* a string of our choosing, by passing that prefix to the constructor. Thereafter we only have to 
+* use the ids themselves that we pass to the database. Next, we provide a callback hook that allows
+* the cache object to pass all the ids that are missing in the cache to a method of your choice and
+* use it to re-populate the cache.
 * 
 * Clarifying note: I wrote this class as a static class function library because it is simpler
 * for you to understand. But you can use instantiated objects and callback handlers to populate
@@ -78,7 +108,10 @@ class UserController {
         }
         return $result;
     }
-
+    
+    /**
+    * singleton method for cache object.
+    */
     protected static function cache(){
         return new Cache\Namespaced( Connection::cache(), __CLASS__ . '/');
     }
