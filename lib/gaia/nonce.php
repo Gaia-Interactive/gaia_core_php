@@ -196,7 +196,7 @@ class Nonce {
     */
     static protected function _secret()
     {
-        return "cfdoxfv7zxYueqy+UoXhO0fZsutd0HwqPMRF0N1i+rmYnum48Zl8Q/7tK2fisQwc";
+        return include "/etc/gaia/nonce.secret.php';
     }
 
 }
