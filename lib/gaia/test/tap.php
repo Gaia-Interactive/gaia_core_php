@@ -54,7 +54,7 @@ class Tap {
     
     public static function debug( $var, $comment = NULL ){
        if( $comment ) echo "#  " . $comment . "\n# ----\n";
-       echo "#  " . str_replace("\n", "\n#  ", is_scalar( $var ) ? var_dump( $var, TRUE ) : print_r( $var, TRUE ) );
+       echo "#  " . str_replace("\n", "\n#  ",print_r( $var, TRUE ) ) . "\n#\n";
     }
     
     public static function is($have, $want, $desc = '') {
