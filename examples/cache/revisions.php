@@ -9,18 +9,19 @@ include __DIR__ . '/../common.php';
 include __DIR__ . '/connection.php';
 
 /**
-* When writing caching solutions, the preferred approach is to have a single 'domain' model (see 
-* http://en.wikipedia.org/wiki/Domain_model ) to control the business logic and caching for everything
-* related to that relevant domain. This means you have many unique peices of data all independently 
+* When writing applications, it is often best to use the 'domain' model approach.(see 
+* http://en.wikipedia.org/wiki/Domain_model )The domain controls business logic and caching 
+* related to that domain. This means you have many unique peices of data all independently 
 * populated into the cache. Unfortunately, this can be very inefficient for requests that aggregate 
 * data from many sources of data independently. Each domain model has to be instantiated and queried,
-* then all the information assembled into a single composite every time the request comes in. If you 
-* cache the composite of information you avoid having to instantiate and query all the individual models
-* and just consume the final dataset. But what happens when the data changes? If there is only one 
-* composite of information, it is easy enough to have each domain model delete the composite data from
-* the cache that is related to the composite and let the cache repopulate. But what if there are many
+* then all the information assembled into a composite every time the request comes in. 
+*
+* Caching composite information avoids having to instantiate and query all the individual models.
+* Just consume the data from the cache and rebuild it as needed. But what happens when the data changes? 
+* If there is only one composite of information, it is easy enough to have each domain model delete
+* the cache that is related to the domain and let the cache repopulate. But what if there are many
 * different composite datasets related to the changed data in the original domain object? The domain 
-* objects have to know about all the related composite cached data. This approach would model the 
+* objects have to know about all the related composite cached data. This approach follows the 
 * observer - observable pattern ( see http://en.wikipedia.org/wiki/Observer_pattern ). Nice concept, 
 * but messy to maintain.
 * 
