@@ -11,9 +11,34 @@ include __DIR__ . '/connection.php';
 /**
 * When writing caching solutions, the preferred approach is to have a single 'domain' model (see 
 * http://en.wikipedia.org/wiki/Domain_model ) to control the business logic and caching for everything
-* related to that relevant domain. But sometimes, the real world is messier than that. Sometimes it
-* is best to cache large chunks of aggregated information. For example, you might want to cache a
-* user's entire profile page. Profile pages are difficult to cache because they usually contain lots
+* related to that relevant domain. This means you have many unique peices of data all independently 
+* populated into the cache. Unfortunately, this can be very inefficient for requests that aggregate 
+* data from many sources of data independently. Each domain model has to be instantiated and queried,
+* then all the information assembled into a single composite every time the request comes in. If you 
+* cache the composite of information you avoid having to instantiate and query all the individual models
+* and just consume the final dataset. But what happens when the data changes? If there is only one 
+* composite of information, it is easy enough to have each domain model delete the composite data from
+* the cache that is related to the composite and let the cache repopulate. But what if there are many
+* different composite datasets related to the changed data in the original domain object? The domain 
+* objects have to know about all the related composite cached data. This approach would model the 
+* observer - observable pattern ( see http://en.wikipedia.org/wiki/Observer_pattern ). Nice concept, 
+* but messy to maintain.
+* 
+*  We need a way to loosely couple the composite with the domain. We solve this problem using a layer
+* of indirection. We attach a revision number to the cache key. When we increment the revision number,
+* it changes the cache key, in effect forcing a refresh of the cache. This is a variation on the
+* publish - subscribe pattern (see http://en.wikipedia.org/wiki/Publish/subscribe):
+
+* ----------\                /-----------
+* publishers > - revision - < subscribers 
+* ----------/                \-----------
+*
+* This pattern allows many different publishers to increment a revision number as things change, and 
+* the subscribers use that changed revision number to know they need to update the cache. Now the 
+* domain object and the composite cache are decoupled.
+*
+* An example may help to clarify my point. For example, you might want to cache a user's
+* entire profile page. Profile pages are difficult to cache because they usually contain lots
 * of information from many different tables. This means they are also expensive to render. If I cache 
 * the entire profile page, I skip instantiating all those different objects and making all those queries.
 * I can get it all from one cache key.
@@ -37,6 +62,10 @@ include __DIR__ . '/connection.php';
 */
 class UserRev {
     
+    /**
+    * get a revision number. if one doesn't exist yet in the cache, auto-populate a new value
+    * into the cache.  If the refresh flag is specified, increment to a new revision.
+    */
     public static function get( $id, $refresh = FALSE ){
         $cacher = self::cache();
         $key = '/rev/' . $id;
@@ -47,12 +76,20 @@ class UserRev {
         return $res;
     }
     
+    /*
+    * factory method of instantiation of the cache.
+    */
     protected static function cache(){
         return new Cache\Namespaced( new Cache\Replica(Connection::cache(), 3), __CLASS__ . '/');
     }
 
 }
 
+/**
+* This is just a dummy class that illustrates how a class might increment a rev. You can have many 
+* different objects that can increment the revision, and many objects that rely on that revision to 
+* create a cache key. This class is and example of a publisher mentioned earlier.
+*/
 class UserName {
     
     static protected $names = array();
@@ -68,7 +105,10 @@ class UserName {
     }
 }
 
-
+/**
+* This is an example of a subscriber of the cache revision. It never increments the revision on its
+* own, but will update its own idependent cache if the revision changes.
+*/
 class UserMessage {
     
     protected $user_id;
