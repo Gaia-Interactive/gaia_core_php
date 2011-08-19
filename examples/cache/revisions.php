@@ -67,20 +67,14 @@ class UserRev {
     * into the cache.  If the refresh flag is specified, increment to a new revision.
     */
     public static function get( $id, $refresh = FALSE ){
-        $cacher = self::cache();
-        $key = '/rev/' . $id;
-        $res = ( ! $refresh ) ? $cacher->get($key) : '';
-        if( strlen( strval( $res ) ) < 1 ){
-            $cacher->set($key, $res = time() .'.' . mt_rand(0, 1000000) + posix_getpid(), 0 );
-        }
-        return $res;
+        return self::rev()->get( $id, $refresh );
     }
     
     /*
     * factory method of instantiation of the cache.
     */
-    protected static function cache(){
-        return new Cache\Namespaced( new Cache\Replica(Connection::cache(), 3), __CLASS__ . '/');
+    protected static function rev(){
+        return new Cache\Revision( new Cache\Namespaced( Connection::cache(), __CLASS__ . '/') );
     }
 
 }
