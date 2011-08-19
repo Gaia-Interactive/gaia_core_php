@@ -7,10 +7,24 @@ class Namespaced extends Base
     private $namespace = '';
     private $core;
     const UNDEF = "\0__undef__\0";
-    function __construct( Memcache $core, $namespace ){ $this->core = $core; $this->namespace = $namespace;}
-    function decrement($key, $value = 1){ return $this->core->decrement($this->namespace . $key, $value);}
-    function flush(){ return FALSE; }
-    function delete($key) { return $this->core->delete($this->namespace . $key); }
+    
+    function __construct( Memcache $core, $namespace ){ 
+        $this->core = $core; 
+        $this->namespace = $namespace;
+    }
+    
+    function decrement($key, $value = 1){ 
+        return $this->core->decrement($this->namespace . $key, $value);
+    }
+    
+    function flush(){ 
+        return FALSE; 
+    }
+    
+    function delete($key) {
+        return $this->core->delete($this->namespace . $key); 
+    }
+    
     function get($request, $options = NULL){
         // we want to work with a list of keys
         $keys =  ( $single = is_scalar( $request ) ) ? array( $request ) : $request;
@@ -81,9 +95,24 @@ class Namespaced extends Base
         
         return $matches;
     }
-    function increment($key, $value = 1){ return $this->core->increment($this->namespace . $key, $value); }
-    function replace($key, $value, $flag = NULL, $expire = NULL){ return $this->core->replace($this->namespace . $key, $value, $flag, $expire); }
-    function set($key, $value, $flag = NULL, $expire = NULL){ return $this->core->set($this->namespace . $key, $value, $flag, $expire); }
-    function add($key, $value, $flag = NULL, $expire = NULL){ return $this->core->add($this->namespace . $key, $value, $flag, $expire); }
-    function __call($method, $args){ return call_user_func_array( array( $this->core, $method), $args ); }
+    
+    function increment($key, $value = 1){
+        return $this->core->increment($this->namespace . $key, $value); 
+    }
+    
+    function replace($key, $value, $flag = NULL, $expire = NULL){ 
+        return $this->core->replace($this->namespace . $key, $value, $flag, $expire); 
+    }
+    
+    function set($key, $value, $flag = NULL, $expire = NULL){ 
+        return $this->core->set($this->namespace . $key, $value, $flag, $expire); 
+    }
+    
+    function add($key, $value, $flag = NULL, $expire = NULL){
+        return $this->core->add($this->namespace . $key, $value, $flag, $expire);
+    }
+    
+    function __call($method, $args){
+        return call_user_func_array( array( $this->core, $method), $args ); 
+    }
 }
