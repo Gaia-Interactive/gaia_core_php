@@ -22,7 +22,7 @@ include __DIR__ . '/connection.php';
 * With all that cached data spread out over thousands of keys, there is no easy way to refresh the 
 * cache.
 *
-* (See ''./cache_revision.php'' for more info about good ways to refresh many cache keys at once).
+* (See ''./revisions.php'' for more info about good ways to refresh many cache keys at once).
 *
 * But if each user row is assigned its own key in the cache, we don't duplicate any information
 * in the cache, and can easily keep the cache up-to-date. With memcache's multi-key fetching abilities
