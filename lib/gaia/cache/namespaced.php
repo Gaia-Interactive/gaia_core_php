@@ -5,7 +5,7 @@ class Namespaced extends Wrap
 {
     private $namespace = '';
     
-    function __construct( Wrap $core, $namespace ){ 
+    function __construct( Iface $core, $namespace ){ 
         parent::__construct( $core );
         $this->namespace = $namespace;
     }
