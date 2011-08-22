@@ -190,10 +190,14 @@ class AnimalFood {
 
 }
 
+Tap::plan(4);
 
 $animals = AnimalFarm::all();
 
+Tap::is($animals, array(1=>'horse', 2 => 'pig', 3 => 'chicken', 4 => 'sheep', 5 => 'turkey'), 'got back my animals');
+
 $foodlist = AnimalFoodTracker::get( array_keys( $animals ) );
+Tap::is( $foodlist, array( 1=> array(1,3), 2 => array(2), 3 => array(3), 4 => array(1), 5 => array(3)), 'got my foodlist');
 
 $food_ids = array();
 
@@ -205,8 +209,22 @@ foreach( $foodlist as $animal_id => $foods ){
 
 $foods = AnimalFood::get( $food_ids );
 
+Tap::is( $foods, array(1=>'hay', 3=>'grain', 2=>'slop'), 'got the food names based on the ids');
+
+$messages = array();
+
 foreach( $animals as $id => $name ){
     $eat = array();
     foreach( $foodlist[ $id ] as $food_id ) $eat[] = $foods[ $food_id ];
-    Tap::debug( "$name eats " . implode(', ', $eat ));
+    $messages[] = "$name eats " . implode(', ', $eat );
 }
+
+Tap::is( $messages, array(
+    'horse eats hay, grain',
+    'pig eats slop',
+    'chicken eats grain',
+    'sheep eats hay',
+    'turkey eats grain',
+    ), 'can tell what each animal eats now');
+
+Tap::debug($messages);

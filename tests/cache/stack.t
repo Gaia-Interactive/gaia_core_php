@@ -24,4 +24,4 @@ unset($cl);
 
 $cl = new Cache\Stack( new Cache\Namespaced( $cache, $app ) );
 krsort( $values );
-Tap::is($cl->getRecent(400), $values, 'all the items added to the list show up, sorted by most recently added');
+Tap::is($cl->recent(400), $values, 'all the items added to the list show up, sorted by most recently added');
