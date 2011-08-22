@@ -169,6 +169,10 @@ class AnimalFood {
         return self::cache()->get( $ids, $options );
     }
     
+    /*
+    * faking the query from the db:
+    *    SELECT id, name from foods where id IN(? ... );
+    */
     function _fromDB( array $ids ){
         $foods = array(
             1 => 'hay',
