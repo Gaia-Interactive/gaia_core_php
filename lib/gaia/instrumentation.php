@@ -96,7 +96,7 @@ modifications for gaiaonline.com by John Loehrer <jloehrer@gaiaonline.com>
     public static function export_counters() {
         if( ! function_exists('apache_setenv') || config()->get('instrumentation_export_disable') ) return;
         apache_setenv('php_instrumented', 1, true);
-        $data = self::data()->getAllData();
+        $data = self::data()->all();
         $data['basedir'] = DIR_BASE;
         apache_setenv("php_instrumented_json", json_encode( $data ));
     }
@@ -148,22 +148,17 @@ modifications for gaiaonline.com by John Loehrer <jloehrer@gaiaonline.com>
         return $data;
     }
     
-    public static function & get( $name ){ return self::data()->get( $name );}
-    public static function & set( $name, $value ){return self::data()->set( $name, $value ); }
-    public static function & setByRef( $name, & $value ){ return self::data()->setByRef( $name, $value ); }
-    public static function & merge( array $a, $overwrite = TRUE ){ return self::data()->merge( $a, $overwrite ); }
-    public static function & move($target,$destination){ return self::data()->move( $target, $destination ); }
+    public static function get( $name ){ return self::data()->get( $name );}
+    public static function set( $name, $value ){return self::data()->set( $name, $value ); }
     public static function append($name, $value){ return self::data()->append( $name, $value ); }
-    public static function appendByRef($name, & $value){ return self::data()->appendByRef( $name, $value ); }
     public static function increment($name, $value = 1){ return self::data()->increment( $name, $value ); }
     public static function remove( $name ){ return self::data()->remove( $name );}
     public static function exists($name ){ return self::data()->exists( $name ); }   
     public static function isEmpty( $name ){ return self::data()->isEmpty( $name ); }
     public static function getNames(){ return self::data()->getNames(); }
     public static function size($name = ""){ return self::data()->size( $name ); }
-    public static function & getAllData(){ return self::data()->getAllData();}
-    public static function & overrideAllData( & $data ){ return self::data()->overrideAllData( $data ); }
-    public static function data() {
+    public static function all(){ return self::data()->all();}
+=    public static function data() {
         if ( self::$data !== NULL ) return self::$data;
         return self::$data = new Container( array(
                 'request_id' => NULL,
