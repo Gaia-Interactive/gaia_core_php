@@ -15,7 +15,7 @@ class Nonce {
     
     public static function create($token, $expires = null) {
         if ($expires === NULL) $expires = time() + self::INTERVAL;
-        return substr( sha1($token . "-" . $expires . "-" . Nonce::secret()), 0, self::$digest_length) . $expires;
+        return substr( sha1($token . "-" . $expires . "-" . self::secret()), 0, self::$digest_length) . $expires;
     }
 
     public static function check($input, $token ) {
