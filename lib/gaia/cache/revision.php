@@ -18,7 +18,7 @@ class Revision {
         $res = ( ! $refresh ) ? $this->core->get($keys) : array();
         foreach( $keys as $key ){
             if( ! isset( $res[ $key ] ) ||  strlen( strval( $res[ $key ] ) ) < 1 ){
-                $res[ $key ] = time() .'.' . mt_rand(0, 1000000) + posix_getpid();
+                $res[ $key ] = time() .'.' . mt_rand(0, 100000000);
                 $this->core->set($key, $res[ $key ] );
             }
         }
