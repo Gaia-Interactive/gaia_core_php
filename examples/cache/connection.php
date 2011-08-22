@@ -58,7 +58,7 @@ class Connection {
     */
     public static function cache(){
         if( isset( self::$cache ) ) return self::$cache;
-        $cache = new Cache\Base;
+        $cache = new Cache\Memcache;
         
         foreach( self::cacheservers() as $entry){
             list( $host, $port, $weight ) = $entry;

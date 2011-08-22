@@ -6,9 +6,9 @@ use Gaia\Cache;
 
 Tap::plan(6);
 
-$cache = new Cache\Base();
+$cache = new Cache\Memcache();
 
-Tap::ok( $cache instanceof Gaia\Cache\Base, 'instantiated base cache object');
+Tap::ok( $cache instanceof Cache\Memcache, 'instantiated memcache cache object');
 
 $result = $cache->addServer('127.0.0.1', '11211');
 
@@ -29,7 +29,7 @@ Tap::ok( ! $res, 'none of the data exists before I write it in the cache');
 
 $res = TRUE;
 foreach( $data as $k => $v ){
-    if( ! $cache->set( $k, $v, 0, 10) ) $res = FALSE;
+    if( ! $cache->set( $k, $v, 10) ) $res = FALSE;
 }
 Tap::ok( $res, 'wrote all of my data into the cache');
 

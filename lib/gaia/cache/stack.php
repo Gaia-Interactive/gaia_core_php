@@ -3,14 +3,13 @@
 * Class that implements a list of memcache objects
 */
 namespace Gaia\Cache;
-use Memcache;
 
 class Stack {
 
 	private $core;
     const MAX_RANGE = 5000;
 
-    public function __construct( Memcache $core ){
+    public function __construct( Iface $core ){
     	$this->core = $core;
     }
 	
@@ -20,7 +19,7 @@ class Stack {
             $pos = 1;
         }
         if( ! is_numeric( $expires ) || $expires < 1 ) $expires = NULL;
-        $this->core->set($pos, $value, 0, $expires);
+        $this->core->set($pos, $value, $expires);
         return $pos;
     }
     

@@ -39,7 +39,7 @@ class TestData {
 
 $ids = array('1', '2');
 
-$m = new Cache\Base();
+$m = new Cache\Queue( new Cache\Memcache() );
 $m->addServer('127.0.0.1', '11211');
 
 $t = new TestData();

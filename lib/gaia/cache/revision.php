@@ -1,12 +1,11 @@
 <?php
 namespace Gaia\Cache;
-use Memcache;
 
 class Revision {
 
     protected $core;
 
-    public function __construct( Memcache $core ){
+    public function __construct( Iface $core ){
         $this->core = $core;
     }
 
@@ -20,7 +19,7 @@ class Revision {
         foreach( $keys as $key ){
             if( ! isset( $res[ $key ] ) ||  strlen( strval( $res[ $key ] ) ) < 1 ){
                 $res[ $key ] = time() .'.' . mt_rand(0, 1000000) + posix_getpid();
-                $this->core->set($key, $res[ $key ], 0 );
+                $this->core->set($key, $res[ $key ] );
             }
         }
         return $res;

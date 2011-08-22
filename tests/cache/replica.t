@@ -6,24 +6,24 @@ use Gaia\Cache;
 
 Tap::plan(17);
 
-$m = new Cache\Base();
+$m = new Cache\Memcache();
 $m->addServer('127.0.0.1', '11211');
 $m = new Cache\Replica($m, 2);
-Tap::ok( $m instanceof Memcache, 'replicamemcache instantiated successfully');
+Tap::ok( $m instanceof Cache\Iface, 'replicamemcache instantiated successfully');
 
 $key = 'test' . microtime(TRUE);
 $res = $m->get($key);
 Tap::ok( $res === FALSE, 'send get request for a key, got no data back');
-$res = $m->set( $key, 1, 0, 30);
+$res = $m->set( $key, 1, 30);
 Tap::ok( $res, 'write data into the key, got an ok response back');
 $res = $m->get($key);
 Tap::is( $res, 1, 'read the data again, got my value back');
 
 $key = 'test' . microtime(TRUE);
-$res = $m->add( $key, 1, 0, 30);
+$res = $m->add( $key, 1, 30);
 Tap::is( $res, TRUE, 'adding a new key');
 
-$res = $m->add( $key, 1, 0, 30);
+$res = $m->add( $key, 1, 30);
 Tap::is( $res, FALSE, 'trying to add the key again fails');
 $res = $m->get($key);
 

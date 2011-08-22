@@ -70,7 +70,7 @@ class AnimalFarm {
         $ids = $cacher->get($key);
         if( ! is_array( $ids ) ){
             $ids = self::_allIdsFromDB();
-            $cacher->set($key, $ids, MEMCACHE_COMPRESSED, self::CACHE_TIMEOUT);
+            $cacher->set($key, $ids, self::CACHE_TIMEOUT);
         }
         return self::get( $ids );
     }

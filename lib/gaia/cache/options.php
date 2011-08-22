@@ -12,7 +12,6 @@ class Options extends Container {
         if( isset( $options['response_callback'] ) && is_callable( $options['response_callback']) ) $this->response_callback = $options['response_callback'];
         if( isset( $options['prefix'] ) ) $this->prefix = $options['prefix'];
         if( isset( $options['timeout'] ) ) $this->timeout = $options['timeout'];
-        if( isset( $options['compression'] ) ) $this->compression = $options['compression'];
         if( isset( $options['default'] ) ) $this->default = $options['default'];
         if( isset( $options['cache_missing'] ) ) $this->default = $options['cache_missing'];
     }

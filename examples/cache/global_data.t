@@ -71,7 +71,7 @@ class GlobalData {
         
         // gzip the data transparently so less overhead over the wire.
         // the date and time values will change each time the cache is refreshed.
-        $cacher->set($key, $data, MEMCACHE_COMPRESSED, self::CACHE_TIMEOUT);
+        $cacher->set($key, $data, self::CACHE_TIMEOUT);
         
         // all done.
         return $data;

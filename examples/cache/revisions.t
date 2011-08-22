@@ -145,7 +145,7 @@ class UserMessage {
             $this->message, UserName::get( $this->user_id ), date('Y/m/d H:i:s'),  microtime(TRUE));
             
         // write it back into the cache.
-        self::cache()->set( $key, $result, MEMCACHE_COMPRESSED, self::CACHE_TIMEOUT );
+        self::cache()->set( $key, $result, self::CACHE_TIMEOUT );
         
         // return the result
         return $result;

@@ -8,7 +8,7 @@ $limit = 10;
 
 Tap::plan(2);
 
-$cache = new Cache\Base;
+$cache = new Cache\Memcache;
 $result = $cache->addServer('127.0.0.1', '11211');
 Tap::ok( $result, 'connected to localhost server');
 $app = 'test/cache/stack/' . microtime(TRUE) .'/';

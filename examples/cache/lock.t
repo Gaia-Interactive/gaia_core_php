@@ -65,7 +65,7 @@ class Mutex {
     
     // claim the lock
     public function claim(){
-        if( ! self::cache()->add( $this->mutex, 1, 0, self::LOCK_TIMEOUT ) ) {
+        if( ! self::cache()->add( $this->mutex, 1, self::LOCK_TIMEOUT ) ) {
             if( self::cache()->get( $this->mutex ) ) return FALSE;
         }
         $this->locked = TRUE;

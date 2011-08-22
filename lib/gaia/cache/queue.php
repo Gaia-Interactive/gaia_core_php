@@ -1,52 +1,10 @@
 <?php
-/**
- * @copyright 2003-present GAIA Interactive, Inc.
- */
 namespace Gaia\Cache;
-use Memcache;
 
-class Base extends Memcache {
-    const UNDEF = "\0__undef__\0";
+class Queue extends Wrap {
+
     protected $queue = array();
-
-    // fixing a problem introduced by the upgrade of the Pecl Memcache Extension from 2.2.4 -> 3.0.3
-    // the newer pecl extension returns false on no results, whereas the older version returned an
-    // empty array. we want the older behavior.
-    public function get( $k, $options = NULL ){
-        if( is_scalar( $k ) ) return parent::get( $k );
-        if( ! is_array( $k ) ) return FALSE;
-        if( count( $k ) < 1 ) return array();
-        $res = parent::get( $k );
-        if( is_array( $res ) ) return $res;
-        return array();
-    }
     
-    public function add( $k, $v, $compress = 0, $ttl = NULL ){
-        if( is_scalar( $v ) && strlen( $v ) < 100) $compress = 0;
-        return parent::add($k, $v, $compress, $ttl );
-    }
-    
-    public function set( $k, $v, $compress = 0, $ttl = NULL ){
-        if( is_scalar( $v ) && strlen( $v ) < 100) $compress = 0;
-        return parent::set($k, $v, $compress, $ttl );
-    }
-    
-    public function replace( $k, $v, $compress = 0, $ttl = NULL ){
-        if( is_scalar( $v ) && strlen( $v ) < 100) $compress = 0;
-        return parent::replace($k, $v, $compress, $ttl );
-    }
-    
-    public function increment( $k, $v = 1 ){
-        return parent::increment($k, $v );
-    }
-    
-    public function decrement( $k, $v = 1 ){
-        return parent::decrement($k, $v );
-    }
-    
-    public function delete( $k ){
-        return parent::delete( $k, 0);
-    }
     
     public function queue( $keys, $options = NULL ){
         if( ! is_array( $keys ) ) $keys = array( $keys );
@@ -84,7 +42,7 @@ class Base extends Memcache {
             foreach( $direct_res as $key=>$v ){
                 $k = $keys[ $key ];
                 $res[ $k ] = $v;
-                $this->set( $k, $v, $queue[ $k ]->compression, $queue[ $k ]->timeout );
+                $this->set( $k, $v, $queue[ $k ]->timeout );
             }
             if( isset( $options->default ) ) {
                 foreach( $keys as $k ){

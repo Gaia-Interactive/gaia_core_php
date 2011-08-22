@@ -84,7 +84,7 @@ class UserController {
         $row = array_pop( self::get( array( $id ) ) );
         if( ! $row ) return FALSE;
         $row['name'] = $name;
-        self::cache()->set($id, $row, MEMCACHE_COMPRESSED, self::CACHE_TIMEOUT);
+        self::cache()->set($id, $row, self::CACHE_TIMEOUT);
         return TRUE;
     }
     

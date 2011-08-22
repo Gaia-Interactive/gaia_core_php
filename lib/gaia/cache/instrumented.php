@@ -2,7 +2,7 @@
 namespace Gaia\Cache;
 use Gaia\Instrumentation;
 
-class Instrumented extends Base  {
+class Instrumented extends Wrap  {
 
     public function get( $k, $options = NULL ){
         $multi = FALSE;
@@ -17,7 +17,7 @@ class Instrumented extends Base  {
         }
         self::stat('mc_get_count');
         $_ts = microtime(TRUE);
-        $res = parent::get( $k );
+        $res = $this->core->get( $k );
         self::stat('mc_get_time', microtime(TRUE) - $_ts );
 
         if( $multi ){
@@ -39,26 +39,26 @@ class Instrumented extends Base  {
         Instrumentation::increment($key, $value);
     }
     
-    public function add( $k, $v, $compress = 0, $ttl = NULL ){
+    public function add( $k, $v, $ttl = NULL ){
         $_ts = microtime(TRUE);
         self::stat('mc_add_count');
-        $res = parent::add($k, $v, $compress, $ttl );
+        $res = $this->core->add($k, $v, $ttl );
         self::stat('mc_add_time', microtime(TRUE) - $_ts );
         return $res;
     }
     
-    public function set( $k, $v, $compress = 0, $ttl = NULL ){
+    public function set( $k, $v, $ttl = NULL ){
         $_ts = microtime(TRUE);
         self::stat('mc_set_count');
-        $res = parent::set($k, $v, $compress, $ttl );
+        $res = $this->core->set($k, $v, $ttl );
         self::stat('mc_set_time', microtime(TRUE) - $_ts );
         return $res;
     }
     
-    public function replace( $k, $v, $compress = 0, $ttl = NULL ){
+    public function replace( $k, $v, $ttl = NULL ){
         $_ts = microtime(TRUE);
         self::stat('mc_replace_count');
-        $res = parent::replace($k, $v, $compress, $ttl );
+        $res = $this->core->replace($k, $v, $ttl );
         self::stat('mc_replace_time', microtime(TRUE) - $_ts );
         return $res;
     }
@@ -66,7 +66,7 @@ class Instrumented extends Base  {
     public function increment( $k, $v = 1 ){
         $_ts = microtime(TRUE);
         self::stat('mc_increment_count');
-        $res = parent::increment($k, $v );
+        $res = $this->core->increment($k, $v );
         self::stat('mc_increment_time', microtime(TRUE) - $_ts );
         return $res;
     }
@@ -74,7 +74,7 @@ class Instrumented extends Base  {
     public function decrement( $k, $v = 1 ){
         $_ts = microtime(TRUE);
         self::stat('mc_increment_count');
-        $res = parent::decrement($k, $v );
+        $res = $this->core->decrement($k, $v );
         self::stat('mc_increment_time', microtime(TRUE) - $_ts );
         return $res;
     }
@@ -82,7 +82,7 @@ class Instrumented extends Base  {
     public function delete( $k ){
         $_ts = microtime(TRUE);
         self::stat('mc_delete_count');
-        $res = parent::delete( $k, 0);
+        $res = $this->core->delete( $k, 0);
         self::stat('mc_delete_time', microtime(TRUE) - $_ts );
         return $res;
     }

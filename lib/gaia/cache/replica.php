@@ -1,15 +1,13 @@
 <?php
 namespace Gaia\Cache;
-use Memcache;
 
-class Replica extends Base {
+class Replica extends Wrap {
 
     private $replicas;
-    private $core;
     const DEFAULT_TTL = 259200;
-    function __construct( Memcache $core, $replicas = NULL ){ 
-        $this->core = $core;
+    function __construct( Iface $core, $replicas = NULL ){ 
         $this->replicas = ( $replicas && is_numeric( $replicas) && $replicas > 1) ? intval($replicas) : 3;
+        parent::__construct( $core );
     }
     
     function get( $__key, $options = NULL ){
@@ -43,11 +41,11 @@ class Replica extends Base {
             if( $diff > 0 && // if the soft ttl is too old, reset it
                 mt_rand(1, pow( $diff, 3) ) != 1 // randomly reset it based on a parabolic curve approaching timeout.
             ) continue;
-            if( ! $this->core->add( $k . '/REPLICA/r-lock', 1, 0, 5) && 
+            if( ! $this->core->add( $k . '/REPLICA/r-lock', 1, 5) && 
                   $this->core->get( $k . '/REPLICA/r-lock') ) continue;
             if( $diff < 10 ){
                 foreach( $replicas as $i ){
-                    $this->core->set($k . '/REPLICA/' . $i, $now + 10, 0);
+                    $this->core->set($k . '/REPLICA/' . $i, $now + 10);
                 }
             }
             unset( $matches[ $parent_key ] );
@@ -62,15 +60,15 @@ class Replica extends Base {
         return $res;
     }
     
-    function set($k, $v, $flag = NULL, $expire = NULL ){
-        $this->core->set($k . '/REPLICA/lock', 1, 0, $expire );
+    function set($k, $v, $expire = NULL ){
+        $this->core->set($k . '/REPLICA/lock', 1, $expire );
         $res = FALSE;
         if( ! $expire ) $expire = self::DEFAULT_TTL;
         $replicas = range(1, $this->replicas );
         foreach( $replicas as $i){
-            $r = $this->core->set($k . '/REPLICA/' . $i, $v, $flag );
+            $r = $this->core->set($k . '/REPLICA/' . $i, $v);
             if( $r ) $res = $r;
-            $this->core->set('/exp/' . $k . '/REPLICA/' . $i, time() + $expire, 0);
+            $this->core->set('/exp/' . $k . '/REPLICA/' . $i, time() + $expire);
         }
         return $res;
     }
@@ -86,28 +84,28 @@ class Replica extends Base {
         return $res;
     }   
     
-    function add($k, $v, $flag = NULL, $expire = NULL ){
-        if( ! $this->core->add($k . '/REPLICA/lock', 1, 0, $expire ) ) return FALSE;
+    function add($k, $v, $expire = NULL ){
+        if( ! $this->core->add($k . '/REPLICA/lock', 1, $expire ) ) return FALSE;
         $res = FALSE;
         if( ! $expire ) $expire = self::DEFAULT_TTL;
         $replicas = range(1, $this->replicas );
         foreach( $replicas as $i){
-            $r = $this->core->set($k . '/REPLICA/' . $i, $v, $flag );
+            $r = $this->core->set($k . '/REPLICA/' . $i, $v );
             if( $r ) $res = $r;
-            $this->core->set('/exp/' . $k . '/REPLICA/' . $i, time() + $expire, 0);
+            $this->core->set('/exp/' . $k . '/REPLICA/' . $i, time() + $expire);
         }
         return $res;
     }
     
-    function replace($k, $v, $flag = NULL, $expire = NULL ){
-        if( ! $this->core->replace($k . '/REPLICA/lock', 1, 0, $expire ) ) return FALSE;
+    function replace($k, $v, $expire = NULL ){
+        if( ! $this->core->replace($k . '/REPLICA/lock', 1, $expire ) ) return FALSE;
         $res = FALSE;
         if( ! $expire ) $expire = self::DEFAULT_TTL;
         $replicas = range(1, $this->replicas );
         foreach( $replicas as $i){
-            $r = $this->core->set($k . '/REPLICA/' . $i, $v, $flag );
+            $r = $this->core->set($k . '/REPLICA/' . $i, $v );
             if( $r ) $res = $r;
-            $this->core->set('/exp/' . $k . '/REPLICA/' . $i, time() + $expire, 0);
+            $this->core->set('/exp/' . $k . '/REPLICA/' . $i, time() + $expire);
         }
         return $res;
     }
@@ -139,16 +137,8 @@ class Replica extends Base {
                 $method = 'set';
                 $v = $res;
             }
-            $this->core->set('/exp/' . $k . '/REPLICA/' . $i, time() + self::DEFAULT_TTL, 0);
+            $this->core->set('/exp/' . $k . '/REPLICA/' . $i, time() + self::DEFAULT_TTL);
         }
         return $res;
-    }
-    
-    function flush(){
-        return FALSE;
-    }
-    
-    function addServer(){
-        return FALSE;
     }
 }

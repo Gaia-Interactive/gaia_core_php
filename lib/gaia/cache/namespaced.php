@@ -1,15 +1,12 @@
 <?php
 namespace Gaia\Cache;
-use Memcache;
 
-class Namespaced extends Base
+class Namespaced extends Wrap
 {
     private $namespace = '';
-    private $core;
-    const UNDEF = "\0__undef__\0";
     
-    function __construct( Memcache $core, $namespace ){ 
-        $this->core = $core; 
+    function __construct( Wrap $core, $namespace ){ 
+        parent::__construct( $core );
         $this->namespace = $namespace;
     }
     
