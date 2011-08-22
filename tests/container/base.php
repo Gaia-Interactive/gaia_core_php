@@ -16,3 +16,8 @@ foreach( $input as $k=>$v ){
     $result_unset[ $k ] = $c->$k;
 }
 
+Tap::is( $input, $result_set, 'set works properly' );
+Tap::is( $input, $result_get, 'get works properly' );
+Tap::is( array_fill_keys( array_keys( $input ), TRUE), $result_isset, 'isset works properly' );
+Tap::is( array_fill_keys( array_keys( $input ), NULL), $result_unset, 'unset works properly' );
+Tap::is( $c->non_existent, NULL, 'non-existent variables are null' );
