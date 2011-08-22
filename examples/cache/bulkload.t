@@ -75,7 +75,6 @@ class User {
             'timeout'=> self::CACHE_TIMEOUT,
             'cache_missing' => TRUE,
             'method' => 'set',
-            'compression'=>MEMCACHE_COMPRESSED,
         );
         return self::cache()->get( $ids, $options );
     }

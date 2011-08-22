@@ -81,7 +81,6 @@ class AnimalFarm {
             'timeout'=> self::CACHE_TIMEOUT,
             'cache_missing' => TRUE,
             'method' => 'set',
-            'compression'=>MEMCACHE_COMPRESSED,
         );
         
         return self::cache()->get( $ids, $options );
@@ -125,7 +124,6 @@ class AnimalFoodTracker {
             'timeout'=> self::CACHE_TIMEOUT,
             'cache_missing' => TRUE,
             'method' => 'set',
-            'compression'=>MEMCACHE_COMPRESSED,
         );
         
         return self::cache()->get( $ids, $options );
@@ -163,7 +161,6 @@ class AnimalFood {
             'timeout'=> self::CACHE_TIMEOUT,
             'cache_missing' => TRUE,
             'method' => 'set',
-            'compression'=>MEMCACHE_COMPRESSED,
         );
         
         return self::cache()->get( $ids, $options );
