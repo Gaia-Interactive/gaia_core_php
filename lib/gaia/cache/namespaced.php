@@ -75,7 +75,7 @@ class Namespaced extends Wrap
                         
             foreach( $result as $k=>$v ) {
                 $matches[ $k ] = $v;
-                $this->core->{$options['method']}($this->namespace . $k, $v, $options['compression'], $options['timeout']);
+                $this->core->{$options['method']}($this->namespace . $k, $v, $options['timeout']);
             }
         }
         
