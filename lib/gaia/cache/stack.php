@@ -74,17 +74,13 @@ class Stack {
         return $this->core->get('a');
     }
     
-    public function getRecent( $limit = 10, $reverse = false ){
+    public function getRecent( $limit = 10 ){
         if( ! is_numeric( $limit ) || $limit > self::MAX_RANGE || $limit < 1 ) $limit = self::MAX_RANGE;
         $high = $this->core->get('i');
         if( $high < 1 ) return array();
         $low = $high - $limit;
         if( $low < 1 ) $low = 1;
-        if (!$reverse) {
-	        return $this->get( range(  $high - ( $limit - 1), $high) );
-	    } else {
-	    	return $this->get( range(  $high, $high - ( $limit - 1 ) ) );
-	    }
+        return $this->get( range(  $high - ( $limit - 1), $high) );
     }
     
     public function reset() {
