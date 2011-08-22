@@ -81,7 +81,7 @@ class GlobalData {
     // use singleton instantiation, like in ./connection.php
     // this is just for demo purposes.
     protected static function cache(){
-        return new Cache\Namespaced( new Cache\Replica(Connection::cache(), 3), __CLASS__ . '/');
+        return new Cache\Namespaced( new Cache\Replica(Connection::memcache(), 3), __CLASS__ . '/');
     }
 }
 

@@ -75,7 +75,7 @@ class UserRev {
     * factory method of instantiation of the cache.
     */
     protected static function rev(){
-        return new Cache\Revision( new Cache\Namespaced( Connection::cache(), __CLASS__ . '/') );
+        return new Cache\Revision( new Cache\Namespaced( Connection::memcache(), __CLASS__ . '/') );
     }
 
 }
@@ -153,7 +153,7 @@ class UserMessage {
     
     //  instantiate the cache.
     protected static function cache(){
-        return new Cache\Namespaced( Connection::cache(), __CLASS__ . '/');
+        return new Cache\Namespaced( Connection::memcache(), __CLASS__ . '/');
     }
 }
 

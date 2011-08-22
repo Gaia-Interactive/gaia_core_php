@@ -1,5 +1,7 @@
 <?
-class Local Implements Iface {
+namespace Gaia\Cache;
+
+class Apc Implements Iface {
 
     function get( $request, $options = NULL ){
         return apc_fetch( $request );
@@ -13,7 +15,7 @@ class Local Implements Iface {
         return apc_add( $k, $v, $expires );
     }
     
-    function replace( $k, $v, $expires ){
+    function replace( $k, $v, $expires = 0 ){
         if( ! $this->get( $k ) ) return FALSE;
         return $this->set( $k, $v, $expires );
     }
