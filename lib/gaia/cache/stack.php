@@ -3,29 +3,24 @@
 * Class that implements a list of memcache objects
 */
 namespace Gaia\Cache;
+use Memcache;
 
 class Stack {
 
-	private $_cacher = NULL;
-    protected $namespace;
+	private $core;
     const MAX_RANGE = 5000;
 
-    public function __construct( $namespace ){
-    	$this->setNamespace($namespace);
+    public function __construct( Memcache $core ){
+    	$this->core = $core;
     }
-    
-    public function setNamespace ( $namespace ) {
-        $this->namespace = $namespace;
-        $this->_cacher = $this->cacher();
-	}
 	
     public function add( $value, $expires = NULL ){
-        if( ! ( $pos = $this->_cacher->increment('i') ) ){
-            if(! $this->_cacher->add('i', 1) ) return FALSE;
+        if( ! ( $pos = $this->core->increment('i') ) ){
+            if(! $this->core->add('i', 1) ) return FALSE;
             $pos = 1;
         }
         if( ! is_numeric( $expires ) || $expires < 1 ) $expires = NULL;
-        $this->_cacher->set($pos, $value, 0, $expires);
+        $this->core->set($pos, $value, 0, $expires);
         return $pos;
     }
     
@@ -41,7 +36,7 @@ class Stack {
     }
 
 	public function shift( $depth = NULL ){
-	        $data = $this->_cacher->get( array('i', 'a') );
+	        $data = $this->core->get( array('i', 'a') );
 	        if( ! is_array( $data ) ) return FALSE;
 	        if( ! isset( $data['i'] ) ) return FALSE;
 	        if( ! isset( $data['a'] ) ) {
@@ -50,13 +45,13 @@ class Stack {
 	        }
 	        if( $data['a'] < 0 ) $data['a'] = 0;
 	        if( $depth !== NULL &&  $data['i'] - $data['a'] > $depth  ) $data['a'] = $depth;
-	        if( $a_unset ) $this->_cacher->add('a', $data['a']);
-	        while( ( $data['a'] = $this->_cacher->increment('a') ) ){
-	            $res = $this->_cacher->get($data['a']);
-	            $this->_cacher->delete( $data['a'] );
+	        if( $a_unset ) $this->core->add('a', $data['a']);
+	        while( ( $data['a'] = $this->core->increment('a') ) ){
+	            $res = $this->core->get($data['a']);
+	            $this->core->delete( $data['a'] );
 	            if( $res !== FALSE ) return $res;
 	            if( $data['a'] >= $data['i'] ) {
-	                $this->_cacher->decrement('a');
+	                $this->core->decrement('a');
 	                return FALSE;
 	            }
 	        }
@@ -64,24 +59,24 @@ class Stack {
 	}
 
     public function get( $k ){
-        return $this->_cacher->get($k);
+        return $this->core->get($k);
     }
     
     public function delete( $k ) {
-    	return $this->_cacher->delete($k);
+    	return $this->core->delete($k);
     }
     
     public function end(){
-        return $this->_cacher->get('i');
+        return $this->core->get('i');
     }
     
     public function start(){
-        return $this->_cacher->get('a');
+        return $this->core->get('a');
     }
     
     public function getRecent( $limit = 10, $reverse = false ){
         if( ! is_numeric( $limit ) || $limit > self::MAX_RANGE || $limit < 1 ) $limit = self::MAX_RANGE;
-        $high = $this->_cacher->get('i');
+        $high = $this->core->get('i');
         if( $high < 1 ) return array();
         $low = $high - $limit;
         if( $low < 1 ) $low = 1;
@@ -93,12 +88,7 @@ class Stack {
     }
     
     public function reset() {
-    	$this->_cacher->delete('i');
+    	$this->core->delete('i');
     }
-    
-    protected function cacher(){
-        return new Namespaced(memcache(), __CLASS__ . $this->namespace );
-    }
-
 }
 

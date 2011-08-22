@@ -87,10 +87,19 @@ class AnimalFarm {
         return self::cache()->get( $ids, $options );
     }
     
+    /*
+    * fake data, from a query like:
+    * SELECT id from animals WHERE type = 'farm';
+    */
     static function _allIdsFromDB(){
         return array(1,2,3,4,5);
     }
     
+    /*
+    * fake data returned from running a query like:
+    * SELECT id, name FROM animals WHERE id IN( ?, ?, ? ....);
+    * and return the list of names keyed by id.
+    */
     static function _FromDB( array $ids ){
         return array(
             1=>'horse',
@@ -122,6 +131,11 @@ class AnimalFoodTracker {
         return self::cache()->get( $ids, $options );
     }
     
+    /*
+    * fake data, for a query like:
+    * SELECT * FROM animalfoods WHERE animal_id IN (?, ... );
+    * key the result set by animal id, with a list of food ids for each.
+    */
     static function _FromDB( array $ids ){
         return array(
             1=> array(1,3),

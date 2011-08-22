@@ -78,6 +78,7 @@ class UserController {
     /*
     * write to the database, and the cache at the same time.
     * since we have no database, we gotta fake it.
+    * UPDATE users set name = ? WHERE user_id = ?;
     */
     public static function setName($id, $name ){
         $row = array_pop( self::get( array( $id ) ) );

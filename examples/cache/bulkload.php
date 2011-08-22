@@ -43,6 +43,13 @@ class User {
 
     protected $data = array();
     
+    /**
+    * Overloaded constructor.
+    * if you pass it an integer, it will load the user information for that user id.
+    * if you pass an array, it populates the user information for that user.
+    * This allows us to have the static load method construct objects and hydrate them with
+    * information bulk loaded from the cache and the database.
+    */
     public function __construct($v){
         if( is_array( $v ) ){
             $this->data = $v;
@@ -51,6 +58,9 @@ class User {
         }
     }
     
+    /**
+    * load a bunch of users at once.
+    */
     public static function load( array $ids ){
         $objects = array();
         foreach( self::loadData( $ids ) as $id => $data ){
@@ -70,6 +80,11 @@ class User {
         return self::cache()->get( $ids, $options );
     }
     
+    /**
+    * faking the database here, to keep the example simple. query might look something like:
+    * SELECT name, id FROM users where id IN (?, ?, ? ....)
+    * return a result set with each row keyed by the user id.
+    */
     public static function fromDB( array $ids ){
         $names = array(1=>'fred', 2 =>'marla', 3=>'punky');
         $rows = array();

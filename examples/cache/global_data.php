@@ -66,7 +66,8 @@ class GlobalData {
         if( $data ) return $data;
         
         // fake data ... here is where you would connect and fetch data from the database.
-        $data = array('date'=>date('Y/m/d H:i:s'), 'time'=>time(), 'foo'=>'bar', 'bazz'=>'quux');
+        // QUERY: SELECT name, value FROM config;
+        $data = array('foo'=>'bar', 'bazz'=>'quux', 'modified'=>date('Y/m/d H:i:s'), );
         
         // gzip the data transparently so less overhead over the wire.
         // the date and time values will change each time the cache is refreshed.
