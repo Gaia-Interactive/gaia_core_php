@@ -65,7 +65,6 @@ class Namespaced extends Wrap
         if( count($missing) > 0 && is_array( $options ) && isset( $options['callback']) && is_callable($options['callback']) ){
             $result = call_user_func( $options['callback'],$missing);
             if( ! is_array( $result ) ) return $matches;
-            if( ! isset( $options['compression']) ) $options['compression'] = 0;
             if( ! isset( $options['timeout'] ) ) $options['timeout'] = 0;
             if( ! isset( $options['method']) ) $options['method'] = 'set';
             if( isset( $options['cache_missing'] ) && $options['cache_missing'] ){

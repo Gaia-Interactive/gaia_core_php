@@ -48,12 +48,12 @@ include __DIR__ . '/connection.php';
 * of the 'thundering herd' problem when the data needs to be refreshed.
 */
 
-class GlobalData {
+class SiteConfig {
 
     // only caching for a short time for demo purposes, so you can see it refresh.
     const CACHE_TIMEOUT = 10;
 
-    public static function config(){
+    public static function data(){
     
         // get the cache object, which is a namespaced replica cache object.
         $cacher = self::cache();
@@ -81,13 +81,15 @@ class GlobalData {
     // use singleton instantiation, like in ./connection.php
     // this is just for demo purposes.
     protected static function cache(){
-        return new Cache\Namespaced( new Cache\Replica(Connection::memcache(), 3), __CLASS__ . '/');
+        $memcache = new Cache\Namespaced( new Cache\Replica(Connection::memcache(), 3), __CLASS__ . '/');
+        $apc = new Cache\Namespaced(Connection::apc(), __CLASS__ . '/');
+        return new Cache\Tier( $memcache, $apc );
     }
 }
 
 // ---------------------------------
 
-$data = GlobalData::config();
+$data = SiteConfig::data();
 
 Tap::plan(1);
 Tap::ok(is_array( $data ), 'globaldata::config() returned an array of data ');

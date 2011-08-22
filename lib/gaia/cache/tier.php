@@ -1,0 +1,93 @@
+<?php
+namespace Gaia\Cache;
+
+class Tier extends Wrap {
+    protected $tier1;
+    protected $tier1_expires = 60;
+    
+    public function __construct( Iface $core, Iface $tier1, $tier1_expires = 60 ){
+        parent::__construct( $core );
+        $this->tier1 = $tier1;
+        $this->tier1_expires = $tier1_expires;
+    }
+    
+    public function add( $key, $value, $expires = 0){
+        $res = $this->core->add( $key, $value, $expires );
+        if( ! $res ) return $res;
+        return $this->tier1->set( $key, $value, $this->tier1_expires( $expires ) );
+    }
+    
+    public function set( $key, $value, $expires = 0){
+        $res = $this->core->set( $key, $value, $expires );
+        if( ! $res ) return $res;
+        return $this->tier1->set( $key, $value, $this->tier1_expires( $expires ) );    
+    }
+    
+    public function replace( $key, $value, $expires = 0){
+        $res = $this->core->replace( $key, $value, $expires );
+        if( ! $res ) return $res;
+        return $this->tier1->set( $key, $value, $this->tier1_expires( $expires ) );
+    }
+    
+    public function increment( $key, $value = 1 ){
+        $res = $this->core->increment( $key, $value );
+        if( ! $res ) return $res;
+        $this->tier1->set( $key, $value, $this->tier1_expires() );
+        return $res;
+    }
+    
+    public function decrement( $key, $value = 1 ){
+        $res = $this->core->decrement( $key, $value, $this->tier1_expires() );
+        if( ! $res ) return $res;
+        $this->tier1->set( $key, $value );
+        return $res;
+    }
+    
+    public function get( $request, $options = NULL ){
+    
+        // we want to work with a list of keys
+        $keys =  ( $single = is_scalar( $request ) ) ? array( $request ) : $request;
+        
+        // if we couldn't convert the value to an array, skip out
+        if( ! is_array($keys ) ) return FALSE;
+        
+         // initialize the array for keeping track of all the results.
+        $matches = array();
+        
+        // write all the keynames with the namespace prefix as null values into our result set
+        foreach( $keys as $k ) $matches[ $k ] = NULL;
+        
+        foreach( $this->tier1->get( $keys ) as $k => $v ){
+            $matches[ $k ] = $v;
+        }
+        $missing = array_keys( $matches, NULL, TRUE);
+        foreach( $missing as $k ) unset( $matches[ $k] );
+
+        if( count( $missing ) < 1 ) {
+            if( $single ) return isset( $matches[ $request ] ) ? $matches[ $request ] : FALSE;
+            return $matches;
+        }
+        $expires = (    isset( $options ) && 
+                        is_array( $options ) && 
+                        isset( $options['timeout'] ) 
+                    ) ? $options['timeout'] : 0;
+        $expires = $this->tier1_expires($expires);
+        foreach( $this->core->get( $missing, $options ) as $k => $v ){
+            $this->tier1->set( $k, $v, $expires);
+            $matches[ $k ] = $v;
+        }
+        if( $single ) return isset( $matches[ $request ] ) ? $matches[ $request ] : FALSE;
+        return $matches;
+    }
+    
+    protected function tier1_expires( $expires = 0 ){
+        if( $expires < 1 ) return $this->tier1_expires;
+        $expires = floor( $expires / 2 );
+        return ( $expires < $this->tier1_expires ) ? $expires : $this->tier1_expires;
+    }
+    
+    public function __call($method, array $args ){
+        return call_user_func_array( array( $this->core, $method ), $args );
+    }
+    
+}
