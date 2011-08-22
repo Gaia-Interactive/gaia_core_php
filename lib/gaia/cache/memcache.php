@@ -49,6 +49,5 @@ class Memcache extends \Memcache implements Iface {
         if( is_object( $v ) ) return MEMCACHE_COMPRESSED;
         $len = is_scalar( $v ) ? strlen( strval($v) ) : strlen( print_r($v, TRUE) );
         return $len < self::COMPRESS_THRESHOLD ? 0 : MEMCACHE_COMPRESSED;
-        
     }
 }

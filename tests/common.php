@@ -9,3 +9,5 @@ spl_autoload_register(function($class) {
         return true;
     }
 });
+
+if( strpos(php_sapi_name(), 'apache') !== FALSE ) print "\n<pre>\n";

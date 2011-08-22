@@ -17,7 +17,7 @@ class Instrumented extends Wrap  {
         }
         self::stat('mc_get_count');
         $_ts = microtime(TRUE);
-        $res = $this->core->get( $k );
+        $res = $this->core->get( $k, $options );
         self::stat('mc_get_time', microtime(TRUE) - $_ts );
 
         if( $multi ){
@@ -39,7 +39,7 @@ class Instrumented extends Wrap  {
         Instrumentation::increment($key, $value);
     }
     
-    public function add( $k, $v, $ttl = NULL ){
+    public function add( $k, $v, $ttl = 0 ){
         $_ts = microtime(TRUE);
         self::stat('mc_add_count');
         $res = $this->core->add($k, $v, $ttl );
@@ -47,7 +47,7 @@ class Instrumented extends Wrap  {
         return $res;
     }
     
-    public function set( $k, $v, $ttl = NULL ){
+    public function set( $k, $v, $ttl = 0 ){
         $_ts = microtime(TRUE);
         self::stat('mc_set_count');
         $res = $this->core->set($k, $v, $ttl );
@@ -55,7 +55,7 @@ class Instrumented extends Wrap  {
         return $res;
     }
     
-    public function replace( $k, $v, $ttl = NULL ){
+    public function replace( $k, $v, $ttl = 0 ){
         $_ts = microtime(TRUE);
         self::stat('mc_replace_count');
         $res = $this->core->replace($k, $v, $ttl );
