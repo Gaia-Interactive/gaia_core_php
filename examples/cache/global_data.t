@@ -83,12 +83,12 @@ class SiteConfig {
         
     }
     
-    // use singleton instantiation, like in ./connection.php
-    // this is just for demo purposes.
+    // wrapper method for instantiating a multi-tier caching system, with apc in front of memcache.
     protected static function cache(){
-        $memcache = new Cache\Namespaced( new Cache\Replica(Connection::memcache(), 3), __CLASS__ . '/');
-        $apc = new Cache\Namespaced(new Cache\Replica( Connection::apc(), 1), __CLASS__ . '/');
-        return new Cache\Tier( $memcache, $apc );
+        return new Cache\Tier( 
+            new Cache\Namespaced( new Cache\Replica(Connection::memcache(), 3), __CLASS__ . '/'),
+            new Cache\Namespaced( new Cache\Replica(Connection::apc(), 1), __CLASS__ . '/')
+        );
     }
 }
 
