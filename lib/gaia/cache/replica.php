@@ -60,7 +60,7 @@ class Replica extends Wrap {
         return $res;
     }
     
-    function set($k, $v, $expire = NULL ){
+    function set($k, $v, $expire = 0 ){
         $this->core->set($k . '/REPLICA/lock', 1, $expire );
         $res = FALSE;
         if( ! $expire ) $expire = self::DEFAULT_TTL;
@@ -84,7 +84,7 @@ class Replica extends Wrap {
         return $res;
     }   
     
-    function add($k, $v, $expire = NULL ){
+    function add($k, $v, $expire = 0 ){
         if( ! $this->core->add($k . '/REPLICA/lock', 1, $expire ) ) return FALSE;
         $res = FALSE;
         if( ! $expire ) $expire = self::DEFAULT_TTL;
@@ -97,7 +97,7 @@ class Replica extends Wrap {
         return $res;
     }
     
-    function replace($k, $v, $expire = NULL ){
+    function replace($k, $v, $expire = 0 ){
         if( ! $this->core->replace($k . '/REPLICA/lock', 1, $expire ) ) return FALSE;
         $res = FALSE;
         if( ! $expire ) $expire = self::DEFAULT_TTL;
