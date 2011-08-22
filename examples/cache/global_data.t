@@ -41,6 +41,11 @@ include __DIR__ . '/connection.php';
 * on that client to know what to do to re-populate the cache. It uses some other nice tricks for
 * performance like probabilistic cache refreshing to avoid the overhead of network mutex locks on 
 * the cache key. 
+* 
+* In additon, this example also demonstrates how to set up multiple tiers of caching. We can use 
+* apc as our first layer cache, and then fallback to memcache if the value isn't in apc. Since 
+* our memcache cache layer is wrapped in Cache\Replica, that protects us from the thundering herd as
+* well.
 *
 * The important thing to take away from this example is this: data that is used heavily in your 
 * application and changes infrequently should be cached for as long as possible while keeping 
@@ -82,7 +87,7 @@ class SiteConfig {
     // this is just for demo purposes.
     protected static function cache(){
         $memcache = new Cache\Namespaced( new Cache\Replica(Connection::memcache(), 3), __CLASS__ . '/');
-        $apc = new Cache\Namespaced(Connection::apc(), __CLASS__ . '/');
+        $apc = new Cache\Namespaced(new Cache\Replica( Connection::apc(), 1), __CLASS__ . '/');
         return new Cache\Tier( $memcache, $apc );
     }
 }
