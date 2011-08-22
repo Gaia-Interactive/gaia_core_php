@@ -85,10 +85,11 @@ class SiteConfig {
     
     // wrapper method for instantiating a multi-tier caching system, with apc in front of memcache.
     protected static function cache(){
-        return new Cache\Tier( 
-            new Cache\Namespaced( new Cache\Replica(Connection::memcache(), 3), __CLASS__ . '/'),
-            new Cache\Namespaced( new Cache\Replica(Connection::apc(), 1), __CLASS__ . '/')
-        );
+        return new Cache\Namespaced( 
+                new Cache\Tier( 
+                    new Cache\Replica(Connection::memcache(), 3),
+                    new Cache\Replica(Connection::apc(), 1)
+                ), __CLASS__ . '/');
     }
 }
 
