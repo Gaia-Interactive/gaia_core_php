@@ -11,6 +11,7 @@ use Gaia\Exception;
 class Router {
 
     const ABORT = '__ABORT__';
+    const UNDEF = '__UNDEF__';
     
     protected static $request;
     protected static $config;
@@ -23,6 +24,7 @@ class Router {
     public static function config(){
         if( isset( self::$config ) ) return self::$config;
         self::$config = new Container();
+        self::$config->controller = 'Gaia\ShortCircuit\Controller';
         self::$config->view = 'Gaia\ShortCircuit\View';
         self::$config->uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/';
         $r = self::request();
@@ -66,46 +68,22 @@ class Router {
     public static function dispatch( $name, $skip_render = FALSE ){
         $invoke = FALSE;
         $r = self::request();
-        $shortcircuit = $fallback = FALSE;
-        $target = '';
         $data = $view = NULL;
         try {
             $args = explode('/', $name);
-            while( $a = array_shift($args) ){
-                if( strlen( $a ) < 1 ) continue;
-                if( strlen( $target ) > 0 ) $target .= '\\';
-                $target .= $a;
-                $class = $target . '\shortcircuit';
-                $shortcircuit = class_exists( $class ) ? $class : FALSE;
-                if( ! $shortcircuit ){
-                    array_unshift( $args, $a);
-                    break;
-                }
-                $fallback = $shortcircuit;
-                $invoke = array_shift( $args );
-                if( ! $invoke ) break;
-                if( method_exists( $shortcircuit, $invoke . 'action') ) break;
-                array_unshift( $args, $invoke);
-                $invoke = FALSE;
-            }
-            if( ( $ct = count($args) ) > 0 ){
-                for( $i = 0; $i < $ct; $i+=2){
-                    if( ! isset( $args[ $i+1 ]) ) continue;
-                    $r->set( $args[$i], $args[ $i+1 ]);
-                }
-                
-            }
-            if( ! $shortcircuit ) $shortcircuit = $fallback;
-            if( ! $invoke ) $invoke = 'index';
-            if( ! $shortcircuit || ! method_exists( $shortcircuit, $invoke . 'action')) return FALSE;
             $r->set('__args__', $args );
-            $name = str_replace('\\', '/', substr($shortcircuit, 0, -12));
-            $shortcircuit = new $shortcircuit();
-            $data = $shortcircuit->{$invoke . 'action'}( $r );
-            if( $data === self::ABORT || $skip_render ) return $data;
-            $viewclass = self::config()->view;
-            $view = new $viewclass($data);
-            return $view->render( $name . '/' . $invoke );
+            $controllerclass = self::config()->controller;
+            $controller = new $controllerclass();
+            do{
+                $n = implode('/', $args );
+                $path = self::resolve( $n, 'action');
+                if( ! $path ) continue;
+                $data = $controller->execute( $n );
+                if( $data === self::ABORT || $skip_render ) return $data;
+                $viewclass = self::config()->view;
+                $view = new $viewclass($data);
+                return $view->render( $n );
+            } while( array_pop( $args ) );
         } catch( Exception $e ){
             if( $skip_render ) throw $e;
             if( ! $view ){
@@ -127,12 +105,21 @@ class Router {
     public static function forward( $action_name ){
     	return self::dispatch( $action_name, TRUE );
     }
+    
+    public static function resolve($name, $type ) {
+        $name = strtolower($name);
+        $type = strtolower($type);
+        if( strpos($name, '.') !== FALSE ) return FALSE;
+        $dir =  Router::appdir();
+        $apc_key = 'shortcircuit/' . $type . '/' . $dir . '/' . $name;
+        $path = apc_fetch( $apc_key );
+        if( $path == self::UNDEF ) return '';
+        if( $path ) return $path;
+        $path = $dir . $name . '.' . $type . '.php';
+        if( ! file_exists( $path ) ) $path = $dir . $name . '/index.' . $type . '.php';
+        if( ! file_exists( $path ) ) $path = self::UNDEF;
+        apc_store( $apc_key, $path, $path != self::UNDEF ? 300 : 60 );
+        return ( $path != self::UNDEF ) ? $path : '';
+    } 
+    
 }
-
-spl_autoload_register(function($class) {
-    $class = strtolower( $class );
-    if( ! preg_match('/^([a-z][\\a-z0-9_]+)shortcircuit$/', $class, $matches ) ) return;
-    $path = Router::appdir() . str_replace('\\', '/', strtolower($matches[1])) . 'shortcircuit.php';
-    if( ! file_exists( $path ) ) return FALSE;
-    include $path;
-});
