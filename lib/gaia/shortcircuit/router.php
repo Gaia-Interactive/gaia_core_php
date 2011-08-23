@@ -5,10 +5,8 @@ use Gaia\Exception;
 
 
 /**
- * The controller object dispatches the request and is responsible
- * for instantiating the models, views, actions and frames.
- * @package CircuitMVC
- * be sure to define DIR_APP_SHORTCIRCUIT
+ * Routes requests to the correct shortcircuit object, performs the action, and routes
+ * the response to a view to render the output.
  */
 class Router {
 
@@ -25,8 +23,24 @@ class Router {
     public static function config(){
         if( isset( self::$config ) ) return self::$config;
         self::$config = new Container();
-        if( defined('SHORTCIRCUIT_APPDIR' ) ) self::$config->appdir = SHORTCIRCUIT_APPDIR;
         self::$config->view = 'Gaia\ShortCircuit\View';
+        self::$config->uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/';
+        $r = self::request();
+        if (isset($r->{'_'})) {
+            $action = $r->{'_'};
+        }
+        else if (isset($_SERVER['PATH_INFO'])) {
+            $action = $_SERVER['PATH_INFO'];
+        }
+        else {
+            $pos = strpos(self::$config->uri, '?');
+            $action =( $pos === FALSE ) ? 
+                self::$config->uri : substr(self::$config->uri , 0, $pos);
+        }
+        $script_name = isset($_SERVER['SCRIPT_NAME']) ? $_SERVER['SCRIPT_NAME'] : '';
+        $action = str_replace(array($script_name.'/', $script_name.'?_='), '', $action);
+        $action = trim($action, "/\n\r\0\t\x0B ");
+        self::$config->action = $action;
         return self::$config;
     }
     
@@ -34,34 +48,15 @@ class Router {
         return self::config()->appdir;
     }
 
-
+    // the URL path should be the implicit path in the request URI.  We remove
+    // the following for universal compatibility:
+    // (note: all ending slashes are trimmed)
+    // /foo/bar/                remove leading slash
+    // /index.php/foo/bar       remove leading slash, then remove /index.php/
+    // /index.php?_=            remove leading slash, index.php, and the special controller _=
+    // if there is ?_=, use that first
     public function run(){        
-        // the URL path should be the implicit path in the request URI.  We remove
-        // the following for universal compatibility:
-        // (note: all ending slashes are trimmed)
-        // /foo/bar/                remove leading slash
-        // /index.php/foo/bar       remove leading slash, then remove /index.php/
-        // /index.php?_=            remove leading slash, index.php, and the special controller _=
-        // if there is ?_=, use that first
-        $r = self::request();
-        if (isset($r->{'_'})) {
-            $url_path = $r->{'_'};
-        }
-        else if (isset($_SERVER['PATH_INFO'])) {
-            $url_path = $_SERVER['PATH_INFO'];
-        }
-        else {
-            $pos = strpos($_SERVER['REQUEST_URI'], '?');
-            $url_path =( $pos === FALSE ) ? 
-                $_SERVER['REQUEST_URI'] : substr($_SERVER['REQUEST_URI'], 0, $pos);
-        }
-        
-        $script_name = $_SERVER['SCRIPT_NAME'];
-        $url_path = str_replace(array($script_name.'/', $script_name.'?_='), '', $url_path);
-        $url_path = trim($url_path, "/\n\r\0\t\x0B ");
-        
-        if( self::dispatch( $url_path ) !== FALSE ) return;
-        
+        return self::dispatch( self::config()->action  );
     }
     
    /**
@@ -73,6 +68,7 @@ class Router {
         $r = self::request();
         $shortcircuit = $fallback = FALSE;
         $target = '';
+        $data = $view = NULL;
         try {
             $args = explode('/', $name);
             while( $a = array_shift($args) ){
@@ -104,23 +100,18 @@ class Router {
             if( ! $shortcircuit || ! method_exists( $shortcircuit, $invoke . 'action')) return FALSE;
             $r->set('__args__', $args );
             $name = str_replace('\\', '/', substr($shortcircuit, 0, -12));
-            $viewclass = self::config()->view;
-            $view = new $viewclass();
             $shortcircuit = new $shortcircuit();
             $data = $shortcircuit->{$invoke . 'action'}( $r );
-            if( $data === self::ABORT ) return;
-            if( is_array( $data ) ) {
-                foreach( $data as $k=>$v) $view->set($k, $v);
-            } elseif( $data instanceof Container ) {
-                foreach( $data->all() as $k=>$v) $view->set($k, $v);
-            } else {
-                $view->set('result', $data);
-            }
-            if( $skip_render ) return $view->all();
+            if( $data === self::ABORT || $skip_render ) return $data;
+            $viewclass = self::config()->view;
+            $view = new $viewclass($data);
             return $view->render( $name . '/' . $invoke );
         } catch( Exception $e ){
             if( $skip_render ) throw $e;
-            if( ! $view ) $view = new View();
+            if( ! $view ){
+                $viewclass = self::config()->view;
+                $view = new $viewclass($data);
+            }
             $view->set('exception', $e );
             return $view->render( $name .  '/' . $invoke . 'error');
         }
