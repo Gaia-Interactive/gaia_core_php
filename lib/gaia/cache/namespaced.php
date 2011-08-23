@@ -1,5 +1,6 @@
 <?php
 namespace Gaia\Cache;
+use Gaia\Container;
 
 class Namespaced extends Wrap
 {
@@ -23,6 +24,9 @@ class Namespaced extends Wrap
     }
     
     function get($request, $options = NULL){
+        
+        $options = new Container( $options );
+        
         // we want to work with a list of keys
         $keys =  ( $single = is_scalar( $request ) ) ? array( $request ) : $request;
         
@@ -62,12 +66,12 @@ class Namespaced extends Wrap
         
         // here is where we call a callback function to get any additional rows missing.
         
-        if( count($missing) > 0 && is_array( $options ) && isset( $options['callback']) && is_callable($options['callback']) ){
-            $result = call_user_func( $options['callback'],$missing);
+        if( count($missing) > 0 && isset( $options->callback) && is_callable($options->callback) ){
+            $result = call_user_func( $options->callback,$missing);
             if( ! is_array( $result ) ) return $matches;
-            if( ! isset( $options['timeout'] ) ) $options['timeout'] = 0;
-            if( ! isset( $options['method']) ) $options['method'] = 'set';
-            if( isset( $options['cache_missing'] ) && $options['cache_missing'] ){
+            if( ! isset( $options->timeout ) ) $options->timeout = 0;
+            if( ! isset( $options->method) ) $options->method = 'set';
+            if( $options->cache_missing ){
                 foreach( $missing as $k ){
                     if( ! isset( $result[ $k ] ) ) $result[$k] = self::UNDEF;
                 }
@@ -75,16 +79,16 @@ class Namespaced extends Wrap
                         
             foreach( $result as $k=>$v ) {
                 $matches[ $k ] = $v;
-                $this->core->{$options['method']}($this->namespace . $k, $v, $options['timeout']);
+                $this->core->{$options->method}($this->namespace . $k, $v, $options->timeout);
             }
         }
         
         foreach( $matches as $k => $v ){
             if( $v === self::UNDEF ) unset( $matches[ $k ] );
         }
-        if( isset( $options['default'] ) ) {
+        if( isset( $options->default ) ) {
             foreach( $missing as $k ){
-                if( ! isset( $matches[ $k ] ) ) $matches[$k] = $options['default'];
+                if( ! isset( $matches[ $k ] ) ) $matches[$k] = $options->default;
             }
         }
         if( $single ) return isset( $matches[ $request ] ) ? $matches[ $request ] : FALSE;
@@ -96,16 +100,16 @@ class Namespaced extends Wrap
         return $this->core->increment($this->namespace . $key, $value); 
     }
     
-    function replace($key, $value, $flag = NULL, $expire = NULL){ 
-        return $this->core->replace($this->namespace . $key, $value, $flag, $expire); 
+    function replace($key, $value, $expire = NULL){ 
+        return $this->core->replace($this->namespace . $key, $value, $expire); 
     }
     
-    function set($key, $value, $flag = NULL, $expire = NULL){ 
-        return $this->core->set($this->namespace . $key, $value, $flag, $expire); 
+    function set($key, $value, $expire = NULL){ 
+        return $this->core->set($this->namespace . $key, $value, $expire); 
     }
     
-    function add($key, $value, $flag = NULL, $expire = NULL){
-        return $this->core->add($this->namespace . $key, $value, $flag, $expire);
+    function add($key, $value, $expire = NULL){
+        return $this->core->add($this->namespace . $key, $value, $expire);
     }
     
     function __call($method, $args){

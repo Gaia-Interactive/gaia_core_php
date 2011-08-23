@@ -47,7 +47,7 @@ include __DIR__ . '/common.php';
 *
 * You can enhance the nonce protection one layer further, by making it a single-use token. The easiest
 * way to do this is to add the nonce as a memcache key. If the nonce key fails to be added to the 
-* cache, we know the token has been used already once on a page load. (Example available on request).
+* cache, we know the token has been used already once on a page load (see /cache/lock.t).
 *
 */
 class AddFriendPage {
