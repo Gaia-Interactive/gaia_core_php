@@ -9,14 +9,7 @@ class Container implements Iterator {
     private $__d = array();
     
     public function __construct( $input = NULL ){
-        // optimize for the most common cases first. if null, do nothing.
-        if( $input === NULL ) return;
-        if( is_array( $input ) ) {
-            $this->__d = $input;
-        } elseif( $input instanceof Iterator ) {
-            foreach( $input as $k=>$v ) $this->__set( $k, $v);
-        }
-        // all done.
+        $this->load( $input );
     }
     
     public function set($name, $value){
@@ -43,8 +36,16 @@ class Container implements Iterator {
         return ! isset( $this->__d[$name] ) && ! empty( $this->__d[$name] ) ? TRUE : FALSE;
     }
     
-    function all(){
+    public function all(){
         return $this->__d;
+    }
+    
+    public function load( $input ){
+        if( $input === NULL ) return;
+        if( is_array( $input ) || $input instanceof Iterator ) {
+            foreach( $input as $k=>$v ) $this->__set( $k, $v);
+        }
+        // all done.
     }
     
    /**
