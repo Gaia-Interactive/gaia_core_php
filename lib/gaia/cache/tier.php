@@ -1,6 +1,13 @@
 <?php
 namespace Gaia\Cache;
 
+/**
+* Combine two different caching layers in a tiered arrangement, where we fetch data from a 1st-tier
+* source first and then from the second-tier caching layer. A good example of this might be fetching
+* first from APC with a short and somewhat random timeout, and refreshing from replica memcache. APC
+* skips network overhead so it is much faster, but if it fails, we want to make sure we don't hit the
+* database if we can help it.
+*/
 class Tier extends Wrap {
     protected $tier1;
     protected $tier1_expires = 60;

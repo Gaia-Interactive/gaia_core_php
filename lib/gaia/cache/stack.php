@@ -1,6 +1,7 @@
 <?php
 /*
 * Class that implements a list of memcache objects
+* you can pop items off the list, or get the most recent items added.
 */
 namespace Gaia\Cache;
 

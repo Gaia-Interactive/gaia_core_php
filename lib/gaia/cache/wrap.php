@@ -1,6 +1,13 @@
 <?php
 namespace Gaia\Cache;
 
+/**
+* The wrap class implements the caching interface and allows us to pass calls inward to a core
+* object with the same interface. This allows us to intercept the calls on their way inward if 
+* we want and change the behavior.
+*
+* We can append a namespace to the key, or do key replicas, or any number of other tricks. 
+*/
 class Wrap implements Iface {
     protected $core;
     const UNDEF = "\0__undef__\0";

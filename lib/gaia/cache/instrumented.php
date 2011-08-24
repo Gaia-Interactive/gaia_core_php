@@ -2,6 +2,10 @@
 namespace Gaia\Cache;
 use Gaia\Instrumentation;
 
+/**
+* Connect instrumentation to the caching calls. Optional add-on so we can know how many memcache calls
+* are being made per page.
+*/
 class Instrumented extends Wrap  {
 
     public function get( $k, $options = NULL ){

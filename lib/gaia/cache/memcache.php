@@ -4,6 +4,13 @@
  */
 namespace Gaia\Cache;
 
+/*
+* conform the pecl memcache client to our own interface. Most notable difference is the compression
+* flag is auto-populated here based on the data passed to the client rather than letting the app
+* determine what to do. Easier and better for us to determine based on the data value whether or not
+* to compress it. Devs usually mess that up when left to their own devices, and it clutters the
+* interface.
+*/
 class Memcache extends \Memcache implements Iface {
 
     const COMPRESS_THRESHOLD = 1000;

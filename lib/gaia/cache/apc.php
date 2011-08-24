@@ -1,6 +1,10 @@
 <?
 namespace Gaia\Cache;
 
+/**
+* make APC conform to our cache interface. Works pretty well except for the replace call, since apc
+* doesn't exactly support that. I can fake it though.
+*/
 class Apc Implements Iface {
 
     function get( $request, $options = NULL ){
