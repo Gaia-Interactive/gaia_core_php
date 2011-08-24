@@ -65,13 +65,16 @@ class Router {
     * Alternate approach to the general dispatch method.
     * gets called if there is no entry in the config.
     */
-    public static function dispatch( $name, $skip_render = FALSE ){
+    public static function dispatch( $input, $skip_render = FALSE ){
         $invoke = FALSE;
         $r = self::request();
         $data = $view = NULL;
         try {
             $controller = self::controller();
-            $name = $controller->resolveRoute( $name );
+            $name = $controller->resolveRoute( $input );
+            if( strpos($input, $name) !== FALSE ) {
+                $r->set('__args__', explode('/', substr($input, strlen($name)+1)));
+            }
             $data = $controller->execute( $name );
             if( $data === self::ABORT || $skip_render ) return $data;
             $view = self::view($data);
