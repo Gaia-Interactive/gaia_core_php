@@ -11,12 +11,17 @@ class Controller extends Container
     * Render a template
     */
     public function execute($name, $strict = TRUE ){
-        $path = Router::resolve( $name, 'action' );
+        $path = Resolver::get( $name, 'action' );
         if( ! $path ){
             if( $strict ) trigger_error('invalid action: ' . $name, E_USER_WARNING );
             return;
         }
         return include( $path );
+    }
+    
+    public function resolveRoute( $name ){
+         $name = Resolver::search( $name, 'action');
+         return ( $name ) ? $name : '404';
     }
     
     function request(){

@@ -12,7 +12,7 @@ class View extends Container
     * Render a template
     */
     public function render($name, $strict = TRUE ){
-        $path = Router::resolve( $name, 'view' );
+        $path = Resolver::get( $name, 'view' );
         if( ! $path ){
             if( $strict ) trigger_error('invalid view: ' . $name, E_USER_WARNING );
             return;

@@ -11,7 +11,6 @@ use Gaia\Exception;
 class Router {
 
     const ABORT = '__ABORT__';
-    const UNDEF = '__UNDEF__';
     
     protected static $request;
     protected static $config;
@@ -70,30 +69,29 @@ class Router {
         $r = self::request();
         $data = $view = NULL;
         try {
-            $args = explode('/', $name);
-            $r->set('__args__', $args );
-            $controllerclass = self::config()->controller;
-            $controller = new $controllerclass();
-            do{
-                $n = implode('/', $args );
-                $path = self::resolve( $n, 'action');
-                if( ! $path ) continue;
-                $data = $controller->execute( $n );
-                if( $data === self::ABORT || $skip_render ) return $data;
-                $viewclass = self::config()->view;
-                $view = new $viewclass($data);
-                return $view->render( $n );
-            } while( array_pop( $args ) );
+            $controller = self::controller();
+            $name = $controller->resolveRoute( $name );
+            $data = $controller->execute( $name );
+            if( $data === self::ABORT || $skip_render ) return $data;
+            $view = self::view($data);
+            return $view->render( $name );
         } catch( Exception $e ){
             if( $skip_render ) throw $e;
-            if( ! $view ){
-                $viewclass = self::config()->view;
-                $view = new $viewclass($data);
-            }
+            if( ! $view ) $view = self::view($data);
             $view->set('exception', $e );
             return $view->render( $name .  '/' . $invoke . 'error');
         }
         return FALSE;
+    }
+    
+    public static function controller( $data = NULL ){
+        $class = self::config()->controller;
+        return new $class($data);
+    }
+    
+    public static function view( $data = NULL ){
+        $class = self::config()->view;
+        return new $class($data);
     }
 
     /**
@@ -105,21 +103,4 @@ class Router {
     public static function forward( $action_name ){
     	return self::dispatch( $action_name, TRUE );
     }
-    
-    public static function resolve($name, $type ) {
-        $name = strtolower($name);
-        $type = strtolower($type);
-        if( strpos($name, '.') !== FALSE ) return FALSE;
-        $dir =  Router::appdir();
-        $apc_key = 'shortcircuit/' . $type . '/' . $dir . '/' . $name;
-        $path = apc_fetch( $apc_key );
-        if( $path == self::UNDEF ) return '';
-        if( $path ) return $path;
-        $path = $dir . $name . '.' . $type . '.php';
-        if( ! file_exists( $path ) ) $path = $dir . $name . '/index.' . $type . '.php';
-        if( ! file_exists( $path ) ) $path = self::UNDEF;
-        apc_store( $apc_key, $path, $path != self::UNDEF ? 300 : 60 );
-        return ( $path != self::UNDEF ) ? $path : '';
-    } 
-    
 }
