@@ -3,7 +3,7 @@
 include_once __DIR__ . '/common.php';
 use Gaia\Test\Tap;
 use Gaia\Nonce;
-Tap::plan(4);
+Tap::plan(3);
 $token = 'demo' . time();
 $secret = 'abc123demo' . microtime(TRUE);
 $n = new Nonce($secret);
