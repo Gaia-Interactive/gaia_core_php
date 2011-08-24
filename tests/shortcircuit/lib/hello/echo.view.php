@@ -1,4 +1,4 @@
 <?php
-$this->render('hello/tpl/header');
-$this->render('hello/tpl/message');
-$this->render('hello/tpl/footer');
+$this->render('site/tpl/header');
+$this->render('site/tpl/message');
+$this->render('site/tpl/footer');

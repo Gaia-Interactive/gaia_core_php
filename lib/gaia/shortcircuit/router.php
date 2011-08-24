@@ -41,6 +41,7 @@ class Router {
         $script_name = isset($_SERVER['SCRIPT_NAME']) ? $_SERVER['SCRIPT_NAME'] : '';
         $action = str_replace(array($script_name.'/', $script_name.'?_='), '', $action);
         $action = trim($action, "/\n\r\0\t\x0B ");
+        if( ! $action ) $action = '/';
         self::$config->action = $action;
         return self::$config;
     }
