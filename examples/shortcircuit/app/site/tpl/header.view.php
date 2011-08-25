@@ -1,5 +1,5 @@
 <html>
 <head>
-<title><?=$this->title;?></title>
+<title><?php echo $this->title;?></title>
 </head>
 <body>
