@@ -14,6 +14,8 @@ namespace Gaia\Cache;
 class Memcache extends \Memcache implements Iface {
 
     const COMPRESS_THRESHOLD = 1000;
+    
+    protected $servers = array();
 
     // fixing a problem introduced by the upgrade of the Pecl Memcache Extension from 2.2.4 -> 3.0.3
     // the newer pecl extension returns false on no results, whereas the older version returned an

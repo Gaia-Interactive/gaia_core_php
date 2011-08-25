@@ -13,7 +13,7 @@ include __DIR__ . '/connection.php';
 * of data that doesn't change often and cache it. This takes a lot of load off the database server
 * and distributes it over a pool of memcache servers.
 *
-* The Cache\Replica class uses a probabilistic approach to refreshing the cache and avoiding the
+* The Cache\Gate class uses a probabilistic approach to refreshing the cache and avoiding the
 * problem of the 'thundering herd'. The most common approach to refreshing data in the cache is to 
 * let the cache expire. The next client to ask for the data sees that it is missing and repopulates
 * it back into the cache. This approach has the benefit of having to only code the logic for updating 
@@ -32,25 +32,25 @@ include __DIR__ . '/connection.php';
 * results of the query. The highly parallel stampede of clients can even topple and crash a Database
 * server in the worst case scenario.
 *
-* Cache\Replica attempts to solve this problem as much as it can. It keeps many copies of the data 
-* available in the cache. This spreads the load of a single 'hot' key in the cache around to many servers
-* and makes it less likely that the cache key will disappear due to network instability or temporary
-* server outages. Cache\Replica also elects just one client to refresh the data periodically. It does
-* this transparently by caching the data forever and holding onto a soft timeout value in the cache.
-* when the soft timeout is reached the Replica class tells one client that no data was found, relying
-* on that client to know what to do to re-populate the cache. It uses some other nice tricks for
-* performance like probabilistic cache refreshing to avoid the overhead of network mutex locks on 
-* the cache key. 
+* Cache\Gate attempts to solve this problem as much as it can. It elects just one client to refresh 
+* the data periodically. It does this transparently by caching the data forever and holding onto a 
+* soft timeout value in a separate cache key. When the soft timeout is reached the Gate class tells 
+* one client that no data was found, relying on that client to know what to do to re-populate the cache. 
+* It uses some other nice tricks for performance like probabilistic cache refreshing to avoid the 
+* overhead of network mutex locks on the cache key. 
 * 
 * In additon, this example also demonstrates how to set up multiple tiers of caching. We can use 
 * apc as our first layer cache, and then fallback to memcache if the value isn't in apc. Since 
-* our memcache cache layer is wrapped in Cache\Replica, that protects us from the thundering herd as
-* well.
+* our memcache cache layer is wrapped in Cache\Gate, that protects us from the thundering herd hitting
+* the database. If we are worried about one cache server going down periodically, we can keep multiple
+* copies of the data in the cache using Cache\Replica. This insulates us from cache server outages or
+* intermittent network problems.
 *
 * The important thing to take away from this example is this: data that is used heavily in your 
 * application and changes infrequently should be cached for as long as possible while keeping 
-* closely in-sync with your database. Cache\Replica provides a nice API for reducing the likelihood 
-* of the 'thundering herd' problem when the data needs to be refreshed.
+* closely in-sync with your database. Cache\Gate provides a nice API for reducing the likelihood 
+* of the 'thundering herd' problem when the data needs to be refreshed, and Cache\Replica keeps 
+* several copies of the data in the cache to insulate against cache outages and hotspots.
 */
 
 class SiteConfig {
@@ -87,8 +87,8 @@ class SiteConfig {
     protected static function cache(){
         return new Cache\Namespaced( 
                 new Cache\Tier( 
-                    new Cache\Replica(Connection::memcache(), 3),
-                    new Cache\Replica(Connection::apc(), 1)
+                    new Cache\Gate(new Cache\Replica(Connection::memcache()), 3),
+                    Connection::apc()
                 ), __CLASS__ . '/');
     }
 }

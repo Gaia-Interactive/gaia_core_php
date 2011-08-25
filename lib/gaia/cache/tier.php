@@ -44,9 +44,9 @@ class Tier extends Wrap {
     }
     
     public function decrement( $key, $value = 1 ){
-        $res = $this->core->decrement( $key, $value, $this->tier1_expires() );
+        $res = $this->core->decrement( $key, $value );
         if( ! $res ) return $res;
-        $this->tier1->set( $key, $value );
+        $this->tier1->set( $key, $value, $this->tier1_expires() );
         return $res;
     }
     

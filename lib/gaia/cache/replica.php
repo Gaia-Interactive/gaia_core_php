@@ -15,7 +15,6 @@ class Replica extends Wrap {
         if( ! is_array($keys ) ) return FALSE;
         foreach( $keys as $k ) {
             $matches[ $k ] = NULL;
-            $matches[ $exp_keys[] = '/exp/' . $k ] = NULL;
         }
         
         $replicas = range(1, $this->replicas);
@@ -35,21 +34,6 @@ class Replica extends Wrap {
             }
         }
         $now = time();
-        foreach( $exp_keys as $k ){
-            if( ! isset( $matches[ ($parent_key = substr( $k,5)) ] ) ) continue;
-            $diff = ( ctype_digit( (string) $matches[ $k ] ) ) ? $matches[ $k ] - $now : 0;
-            if( $diff > 0 && // if the soft ttl is too old, reset it
-                mt_rand(1, pow( $diff, 3) ) != 1 // randomly reset it based on a parabolic curve approaching timeout.
-            ) continue;
-            if( ! $this->core->add( $k . '/REPLICA/r-lock', 1, 5) && 
-                  $this->core->get( $k . '/REPLICA/r-lock') ) continue;
-            if( $diff < 10 ){
-                foreach( $replicas as $i ){
-                    $this->core->set($k . '/REPLICA/' . $i, $now + 10);
-                }
-            }
-            unset( $matches[ $parent_key ] );
-        }
         $res = array();
         foreach( $keys as $k ){
             if( ! isset( $matches[ $k ] ) ) continue;
@@ -61,14 +45,11 @@ class Replica extends Wrap {
     }
     
     function set($k, $v, $expire = 0 ){
-        $this->core->set($k . '/REPLICA/lock', 1, $expire );
         $res = FALSE;
-        if( ! $expire ) $expire = self::DEFAULT_TTL;
         $replicas = range(1, $this->replicas );
         foreach( $replicas as $i){
-            $r = $this->core->set($k . '/REPLICA/' . $i, $v);
+            $r = $this->core->set($k . '/REPLICA/' . $i, $v, $expire);
             if( $r ) $res = $r;
-            $this->core->set('/exp/' . $k . '/REPLICA/' . $i, time() + $expire);
         }
         return $res;
     }
@@ -77,7 +58,6 @@ class Replica extends Wrap {
         $res = TRUE;
         $replicas = range(1, $this->replicas );
         foreach( $replicas as $i){
-            $this->core->delete('/exp/' . $k . '/REPLICA/' . $i );
             $r = $this->core->delete($k . '/REPLICA/' . $i);
             if( ! $r ) $res = FALSE;
         }
@@ -85,27 +65,29 @@ class Replica extends Wrap {
     }   
     
     function add($k, $v, $expire = 0 ){
-        if( ! $this->core->add($k . '/REPLICA/lock', 1, $expire ) ) return FALSE;
         $res = FALSE;
-        if( ! $expire ) $expire = self::DEFAULT_TTL;
         $replicas = range(1, $this->replicas );
+        $method = __FUNCTION__;
         foreach( $replicas as $i){
-            $r = $this->core->set($k . '/REPLICA/' . $i, $v );
-            if( $r ) $res = $r;
-            $this->core->set('/exp/' . $k . '/REPLICA/' . $i, time() + $expire);
+            $r = $this->core->{$method}($k . '/REPLICA/' . $i, $v, $expire );
+            if( $r ){
+                $res = $r;
+                $method = 'set';
+            }
         }
         return $res;
     }
     
     function replace($k, $v, $expire = 0 ){
-        if( ! $this->core->replace($k . '/REPLICA/lock', 1, $expire ) ) return FALSE;
         $res = FALSE;
-        if( ! $expire ) $expire = self::DEFAULT_TTL;
         $replicas = range(1, $this->replicas );
+        $method = __FUNCTION__;
         foreach( $replicas as $i){
             $r = $this->core->set($k . '/REPLICA/' . $i, $v );
-            if( $r ) $res = $r;
-            $this->core->set('/exp/' . $k . '/REPLICA/' . $i, time() + $expire);
+            if( $r ){
+                $res = $r;
+                $method = 'set';
+            }
         }
         return $res;
     }
@@ -121,7 +103,6 @@ class Replica extends Wrap {
                 $method = 'set';
                 $v = $res;
             }
-            $this->core->set('/exp/' . $k . '/REPLICA/' . $i, time() + self::DEFAULT_TTL );
         }
         return $res;
     }
@@ -137,7 +118,6 @@ class Replica extends Wrap {
                 $method = 'set';
                 $v = $res;
             }
-            $this->core->set('/exp/' . $k . '/REPLICA/' . $i, time() + self::DEFAULT_TTL);
         }
         return $res;
     }
