@@ -11,46 +11,59 @@ namespace Gaia\Cache;
 * to compress it. Devs usually mess that up when left to their own devices, and it clutters the
 * interface.
 */
-class Memcache extends \Memcache implements Iface {
+class Memcache extends Wrap implements Iface {
 
-    const COMPRESS_THRESHOLD = 1000;
+    const COMPRESS_THRESHOLD = 2000;
     
-    protected $servers = array();
-
+    
+    public function __construct(){
+        if( class_exists( '\Memcached' )){
+            $this->core = new \Memcached;
+        } elseif( class_exists('\Memcache') ) {
+            $this->core = new \Memcache;
+        } else {
+            trigger_error('no memcache class found', E_USER_ERROR);
+            exit();
+        }
+    }
+    
     // fixing a problem introduced by the upgrade of the Pecl Memcache Extension from 2.2.4 -> 3.0.3
     // the newer pecl extension returns false on no results, whereas the older version returned an
     // empty array. we want the older behavior.
     public function get( $k, $options = NULL ){
-        if( is_scalar( $k ) ) return parent::get( $k );
+        if( is_scalar( $k ) ) return $this->core->get( $k );
         if( ! is_array( $k ) ) return FALSE;
         if( count( $k ) < 1 ) return array();
-        $res = parent::get( $k );
+        $res = ( $this->core instanceof \Memcached ) ? $this->core->getMulti( $k ) : $this->core->get( $k );
         if( is_array( $res ) ) return $res;
         return array();
     }
     
     public function add( $k, $v, $ttl = NULL ){
-        return parent::add($k, $v, self::should_compress( $v ), $ttl );
+        if( $this->core instanceof \Memcached ) return $this->core->add( $k, $v, $ttl );
+        return $this->core->add($k, $v, self::should_compress( $v ), $ttl );
     }
     
     public function set( $k, $v, $ttl = NULL ){
-        return parent::set($k, $v, self::should_compress( $v ), $ttl );
+        if( $this->core instanceof \Memcached ) return $this->core->set( $k, $v, $ttl );
+        return $this->core->set($k, $v, self::should_compress( $v ), $ttl );
     }
     
     public function replace( $k, $v, $ttl = NULL ){
-        return parent::replace($k, $v, self::should_compress( $v ), $ttl );
+        if( $this->core instanceof \Memcached ) return $this->core->replace( $k, $v, $ttl );
+        return $this->core->replace($k, $v, self::should_compress( $v ), $ttl );
     }
     
     public function increment( $k, $v = 1 ){
-        return parent::increment($k, $v );
+        return $this->core->increment($k, $v );
     }
     
     public function decrement( $k, $v = 1 ){
-        return parent::decrement($k, $v );
+        return $this->core->decrement($k, $v );
     }
     
     public function delete( $k ){
-        return parent::delete( $k, 0);
+        return $this->core->delete( $k, 0);
     }
     
     protected static function should_compress( $v ){
