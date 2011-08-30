@@ -54,6 +54,7 @@ class Tap {
     
     public static function debug( $var, $comment = NULL ){
        if( $comment ) echo "#  " . $comment . "\n# ----\n";
+       if( is_object( $var ) && method_exists($var, '__toString') ) $var = $var->__toString();
        echo "#  " . str_replace("\n", "\n#  ",print_r( $var, TRUE ) ) . "\n#\n";
     }
     
