@@ -34,7 +34,10 @@ class DB {
                 if( ! isset( $params['pass'] ) ) $params['pass'] = ini_get("mysqli.default_pw");
                 if( ! isset( $params['path'] ) ) $params['path'] = '';
                 $params['path'] = trim($params['path'], '/');
-                return self::$instances[ $name ] = new DB\MySQLi( $params['host'], $params['user'], $params['pass'], $params['path'], $params['port']);
+                $db = new DB\MySQLi( $params['host'], $params['user'], $params['pass'], $params['path'], $params['port']);
+                if( $db->connect_error ) throw new Exception('database error', $db );
+                return self::$instances[ $name ] = $db;
+                
         }
         throw new Exception('invalid db layer', $params );
 

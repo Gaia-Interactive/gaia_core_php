@@ -6,9 +6,12 @@ use Gaia\DB;
 
 
 
-DB::load( __DIR__ . '/lib/config.php');
-$db = DB::instance('test');
-if( $db->connect_error ) Tap::plan('skip_all', $db->connect_error);
+try {
+    DB::load( __DIR__ . '/lib/config.php');
+    $db = DB::instance('test');
+} catch( Exception $e ){
+    Tap::plan('skip_all', $e->__toString());
+}
 Tap::plan(10);
 Tap::ok( DB::instance('test') === $db, 'db instance returns same object we instantiated at first');
 
