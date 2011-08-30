@@ -20,7 +20,7 @@ class MySQLi extends \MySQLi {
         $conn = $this;
         $modify_funcs = array(
             's' => function($v) use ($conn) { return "'".$conn->real_escape_string($v)."'"; },
-            'i' => function($v) { $v = strval($v); return preg_match('/^-?[1-9][0-9]+$/', $v ) ? $v : 0; },
+            'i' => function($v) { $v = strval($v); return preg_match('/^-?[1-9]([0-9]+)?$/', $v ) ? $v : 0; },
             'f' => function($v) {  $v = strval($v); return preg_match('/^-?[0-9]+(\.[0-9]+)?$/', $v ) ? $v : 0; }
         );
     
