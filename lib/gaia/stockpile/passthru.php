@@ -78,13 +78,6 @@ abstract class Passthru implements IFace {
     }
     
    /**
-    * @see Stockpile_Interface::history();
-    */
-    public function history( array $params = array() ){
-        return $this->core->history( $params );
-    }
-    
-   /**
     * @see Stockpile_Interface::defaultQuantity();
     */
     public function defaultQuantity( $v = NULL ){

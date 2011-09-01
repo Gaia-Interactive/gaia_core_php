@@ -72,18 +72,6 @@ interface Iface  {
     public function set( $item_id, $quantity, array $data = NULL );
     
    /**
-    * pass in the following params to search by:
-    *   limit
-    *   item_id -- technically you can pass in an array of item ids, but not recommended.
-    *   limit       int     how many records to return - default 50
-    *   offset      int     skip ahead in the result set - default 0
-    *   daylimit    int     how many days do you want to include in the result set - default 7
-    *   dayoffset   int     how many days to skip backward in time - default 0
-    *   Still in a rudimentary state. not ready for primetime.
-    */
-    public function history( array $params = array() );
-    
-   /**
     * utility method to determine what is at the core of this object.
     * will be either tally or serial. 
     * Used by transfer primarily so it can do validation and sanitization.

@@ -7,7 +7,7 @@ use Gaia\DB;
 
 
 try {
-    DB\Connection::loadFile( __DIR__ . '/lib/config.php');
+    DB\Connection::load( require __DIR__ . '/lib/config.php' );
     $db = DB\Connection::instance('test');
 } catch( Exception $e ){
     Tap::plan('skip_all', $e->__toString());

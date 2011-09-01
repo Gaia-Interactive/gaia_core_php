@@ -15,16 +15,11 @@ class Connection {
 
     protected static $map = array();
     protected static $instances = array();
-    
+    protected static $version = '__EMPTY__';
     
     public static function load( array $conf ){
         foreach( $conf as $name => $config )self::$map[ $name ] = $config;
-    }
-    
-    public static function loadFile( $file ){
-        $res = require $file;
-        if( ! is_array( $res ) ) throw new Exception('invalid db config file', $file );
-        self::load( $res );
+        self::$version =  md5( print_r(self::$map, TRUE ) );
     }
     
     public static function instance( $name ){
@@ -49,6 +44,10 @@ class Connection {
                 
         }
         throw new Exception('invalid db layer', $params );
+    }
+    
+    public static function version(){
+        return self::$version;
     }
     
     public static function config( $name ){

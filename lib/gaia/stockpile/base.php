@@ -22,11 +22,6 @@ class Base implements Iface {
     protected $user_id;
     
    /**
-    * @DAO_TransactionManager   optional
-    */
-    protected $tran = NULL;
-    
-   /**
     * @see self::newId()
     */
     const ID_OFFSET = '1000000000';
@@ -121,13 +116,6 @@ class Base implements Iface {
     }
     
    /**
-    * @see Stockpile_Interface::history()
-    */
-    public function history( array $params = array() ){
-        return array(); // without logger, not implemented. stub here, for consistency.
-    }
-    
-   /**
     * if an exception is thrown, make sure we roll back the transaction.
     */
     public function handle( Exception $e ){
@@ -214,22 +202,16 @@ class Base implements Iface {
     public static function inTran(){
         return Transaction::atStart() ? FALSE : TRUE;
     }
-    
-    // hash the user id against vbuckets and determine wich database name to use.
-    protected function dsn(){
-        return 'stockpile_1';
-    }
-    
+
     public function storage($name){
-        $dsn = $this->dsn();
+        $dsn = ConnectionResolver::get( $this );
         $db = $this->inTran() ? Transaction::instance( $dsn ) : Connection::instance( $dsn );
         switch( get_class( $db ) ){
             case 'Gaia\DB\Driver\MySQLi': 
                 $classname = 'Gaia\Stockpile\Storage\MySQLi\\' . $name;
                 $storage = new $classname( $db, $this->app(), $this->user() );
                 $apc = new Apc();
-                $key = 'st/t/' . $dsn . '/' . $this->app() . '/' . $name . '/' . 
-                    md5(__FILE__ . serialize(connection::config($name)));
+                $key = 'st/t/' . $dsn . '/' . $this->app() . '/' . $name . '/' . Connection::version();
                 if( $apc->get( $key ) ) return $storage;
                 if( ! $apc->add( $key, 1, 60 ) ) return $storage;
                 $storage->create();
