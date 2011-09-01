@@ -1,12 +1,30 @@
 <?php
-namespace Gaia\DB;
+namespace Gaia\DB\Driver;
 
-class MySQLi extends \MySQLi {
-
+class MySQLi extends \MySQLi implements \Gaia\DB\Transaction_Iface {
+    
+    protected $locked = FALSE;
+    
     public function execute( $query /*, ... */ ){
         $args = func_get_args();
         array_shift($args);
         return $this->query( $this->format_query_args( $query, $args ) );
+    }
+    
+    public function query( $query, $mode = MYSQLI_STORE_RESULT ){
+        return ( $this->locked ) ?  FALSE : parent::query( $query, $mode );
+    }
+    
+    public function begin(){
+        return $this->query('BEGIN WORK');
+    }
+    
+    public function lock(){
+       $this->lock = TRUE;
+    }
+    
+    public function unlock(){
+        $this->lock = FALSE;
     }
     
     public function format_query( $query /*, ... */ ){
@@ -15,7 +33,7 @@ class MySQLi extends \MySQLi {
         return $this->format_query_args( $query, $args );
     }
 
-    protected function format_query_args($query, array $args) {
+    public function format_query_args($query, array $args) {
         if( ! $args || count( $args ) < 1 ) return $query;
         $conn = $this;
         $modify_funcs = array(

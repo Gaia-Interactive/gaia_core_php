@@ -7,13 +7,13 @@ use Gaia\DB;
 
 
 try {
-    DB::load( __DIR__ . '/lib/config.php');
-    $db = DB::instance('test');
+    DB\Connection::loadFile( __DIR__ . '/lib/config.php');
+    $db = DB\Connection::instance('test');
 } catch( Exception $e ){
     Tap::plan('skip_all', $e->__toString());
 }
 Tap::plan(10);
-Tap::ok( DB::instance('test') === $db, 'db instance returns same object we instantiated at first');
+Tap::ok( DB\Connection::instance('test') === $db, 'db instance returns same object we instantiated at first');
 
 $rs = $db->execute('SELECT %s as foo, %s as bar', 'dummy\'', 'rummy');
 Tap::ok( $rs, 'query executed successfully');

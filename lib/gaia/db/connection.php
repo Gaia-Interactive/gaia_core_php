@@ -1,5 +1,5 @@
 <?php
-namespace Gaia;
+namespace Gaia\DB;
 /*
 the config file you load should look something like:
 <?php
@@ -11,19 +11,28 @@ return array(
 
 use Gaia\Exception;
  
-class DB {
+class Connection {
 
     protected static $map = array();
     protected static $instances = array();
     
-    public static function load( $file ){
+    
+    public static function load( array $conf ){
+        foreach( $conf as $name => $config )self::$map[ $name ] = $config;
+    }
+    
+    public static function loadFile( $file ){
         $res = require $file;
         if( ! is_array( $res ) ) throw new Exception('invalid db config file', $file );
-        foreach( $res as $name => $config )self::$map[ $name ] = $config;
+        self::load( $res );
     }
     
     public static function instance( $name ){
         if( isset( self::$instances[ $name ] ) ) return self::$instances[ $name ];
+        return self::$instances[ $name ] = self::get( $name );
+    }
+    
+    public static function get( $name ){
         $params = self::config( $name );
         if( ! $params ) throw new Exception('invalid config', $name );
         switch( $params['scheme'] ) {
@@ -34,14 +43,12 @@ class DB {
                 if( ! isset( $params['pass'] ) ) $params['pass'] = ini_get("mysqli.default_pw");
                 if( ! isset( $params['path'] ) ) $params['path'] = '';
                 $params['path'] = trim($params['path'], '/');
-                $db = new DB\MySQLi( $params['host'], $params['user'], $params['pass'], $params['path'], $params['port']);
+                $db = new Driver\MySQLi( $params['host'], $params['user'], $params['pass'], $params['path'], $params['port']);
                 if( $db->connect_error ) throw new Exception('database error', $db );
-                return self::$instances[ $name ] = $db;
+                return $db;
                 
         }
         throw new Exception('invalid db layer', $params );
-
-        
     }
     
     public static function config( $name ){
