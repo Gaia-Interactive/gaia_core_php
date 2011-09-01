@@ -9,9 +9,7 @@ Tap::plan(96);
 
 // utility function for instantiating the object 
 function stockpile( $app, $user_id ){
-    $cacher = new \Gaia\Cache\Memcache;
-    $cacher->addServer('127.0.0.1', '11211');
-    return new Cacher( new Hybrid( $app, $user_id ), $cacher );
+    return new Cacher( new Hybrid( $app, $user_id ), memcache() );
 }
 
 // wrap in try/catch so we can fail and print out debug.

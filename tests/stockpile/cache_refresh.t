@@ -9,9 +9,7 @@ Tap::plan(58);
 
 // utility function for instantiating the object 
 function stockpile( $app, $user_id ){
-    $cacher = new \Gaia\Cache\Memcache;
-    $cacher->addServer('127.0.0.1', '11211');
-    $s = new Cacher( new Tally( $app, $user_id ), $cacher );
+    $s = new Cacher( new Tally( $app, $user_id ), memcache() );
     $s->forceRefresh(TRUE);
     return $s;
 }

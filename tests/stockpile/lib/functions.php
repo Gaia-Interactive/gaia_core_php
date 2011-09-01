@@ -2,6 +2,14 @@
 namespace Gaia\Stockpile;
 
 
+function memcache(){
+    static $cacher;
+    if( isset( $cacher ) ) return $cacher;
+    $cacher = new \Gaia\Cache\Memcache;
+    $cacher->addServer('127.0.0.1', '11211');
+    return $cacher;
+}
+
 function quantify( $v ){
     return  Base::quantify( $v );
 }
