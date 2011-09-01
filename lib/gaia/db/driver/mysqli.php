@@ -3,7 +3,8 @@ namespace Gaia\DB\Driver;
 
 class MySQLi extends \MySQLi implements \Gaia\DB\Transaction_Iface {
     
-    protected $locked = FALSE;
+    protected $lock = FALSE;
+    protected $txn = FALSE;
     
     public function execute( $query /*, ... */ ){
         $args = func_get_args();
@@ -12,19 +13,26 @@ class MySQLi extends \MySQLi implements \Gaia\DB\Transaction_Iface {
     }
     
     public function query( $query, $mode = MYSQLI_STORE_RESULT ){
-        return ( $this->locked ) ?  FALSE : parent::query( $query, $mode );
+        if( $this->lock ) return FALSE;
+        $res = parent::query( $query, $mode );
+        if( $res ) return $res;
+        if( $this->txn ) $this->lock = TRUE;
+        return $res;
     }
     
     public function begin(){
+        $this->txn = TRUE;
         return $this->query('BEGIN WORK');
     }
     
-    public function lock(){
-       $this->lock = TRUE;
+    public function rollback(){
+        $this->txn = FALSE;
+        return parent::rollback();
     }
     
-    public function unlock(){
-        $this->lock = FALSE;
+    public function commit(){
+        $this->txn = FALSE;
+        return parent::commit();
     }
     
     public function format_query( $query /*, ... */ ){
