@@ -122,6 +122,7 @@ $stockpile2 = stockpile($app, $user_id2);
 $start = microtime(TRUE);
 $total1 = $stockpile1->add($item_id);
 $total2 = $stockpile2->add($item_id);
+$elapsed = microtime(TRUE) - $start;
 Transaction::commit();
 Tap::cmp_ok($elapsed, '<', 1, 'two users adding the same item doesnt create deadlock. took ' . number_format($elapsed, 2) . ' seconds');
 
