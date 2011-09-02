@@ -17,24 +17,25 @@ class Transaction
         if( ! $obj instanceof Transaction_Iface ){
             throw new Exception('invalid object', $obj );
         }
-        if( ! $obj->begin() ) {
-            self::rollback();
+        if( ! $obj->begin( function (){ Transaction::block(); }) ) {
             return FALSE;
         }
         return self::$tran[$name] = $obj;
     }
     
-    public static function rollback(){
-        if(empty(self::$tran)) {
-            self::$at_start = TRUE;
-            return false;
-        }
+    public static function block(){
         foreach( self::$tran as $obj ){
             $obj->rollback();
         }
         foreach( self::$rollback_callbacks as $info ){
             self::triggerCallback( $info['cb'], $info['params'] );
         }
+        self::$commit_callbacks = array();
+        self::$rollback_callbacks = array();
+    }
+    
+    public static function rollback(){
+        self::block();
         self::reset();
         return true;
     }
@@ -53,12 +54,11 @@ class Transaction
                 self::rollback();
                 return FALSE;
             }
-        }
-        $commit_callbacks = self::$commit_callbacks;
-        self::reset();
-        foreach( $commit_callbacks as $info ){
+        }    
+        foreach( self::$commit_callbacks as $info ){
             self::triggerCallback( $info['cb'], $info['params'] );
         }
+        self::reset();
         return $status;
     }
     public static function reset(){

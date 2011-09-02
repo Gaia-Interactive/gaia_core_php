@@ -16,22 +16,66 @@ class MySQLi extends \MySQLi implements \Gaia\DB\Transaction_Iface {
         if( $this->lock ) return FALSE;
         $res = parent::query( $query, $mode );
         if( $res ) return $res;
-        if( $this->txn ) $this->lock = TRUE;
+        if( $this->txn ) {
+            if( is_callable( $this->txn ) ) call_user_func( $cb, $this );
+            $this->lock = TRUE;
+        }
         return $res;
     }
     
-    public function begin(){
-        $this->txn = TRUE;
+    public function multi_query( $query ){
+        if( $this->lock ) return FALSE;
+        $res = parent::multi_query( $query );
+        if( $res ) return $res;
+        if( $this->txn ) {
+            if( is_callable( $this->txn ) ) call_user_func( $cb, $this );
+            $this->lock = TRUE;
+        }
+        return $res;
+    }
+    
+    public function real_query( $query ){
+        if( $this->lock ) return FALSE;
+        $res = parent::real_query( $query );
+        if( $res ) return $res;
+        if( $this->txn ) {
+            if( is_callable( $this->txn ) ) call_user_func( $cb, $this );
+            $this->lock = TRUE;
+        }
+        return $res;
+    }
+    
+    public function close(){
+        if( $this->lock ) return FALSE;
+        $rs = parent::close();
+        $this->lock = TRUE;
+        return $rs;
+    }
+    
+    public function prepare(){
+        trigger_error('unsupported method ' . __CLASS__ . '::' . __FUNCTION__, E_USER_ERROR);
+        exit;
+    }
+    
+    
+    public function begin( $txn = FALSE ){
+        if( $this->lock ) return FALSE;
+        $this->txn = $txn;
         return $this->query('BEGIN WORK');
     }
     
     public function rollback(){
-        $this->txn = FALSE;
-        return parent::rollback();
+        if( ! $this->txn ) return parent::rollback(); 
+        if( $this->lock ) return TRUE;
+        $rs = parent::rollback();
+        parent::close();
+        $this->lock = TRUE;
+        return $rs;
     }
     
     public function commit(){
-        $this->txn = FALSE;
+        if( ! $this->txn ) return parent::rollback(); 
+        if( $this->lock ) return FALSE;
         return parent::commit();
     }
     

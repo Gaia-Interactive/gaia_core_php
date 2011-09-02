@@ -12,28 +12,35 @@ try {
 } catch( Exception $e ){
     Tap::plan('skip_all', $e->__toString());
 }
-Tap::plan(4);
 
 //print_r( $db );
 
-$db = DB\Transaction::instance('test');
+$table = 'trantest_' . str_replace('.', '_',  microtime(TRUE));
 
-$rs = $db->query('CREATE TEMPORARY TABLE test1( id int unsigned NOT NULL PRIMARY KEY ) ENGINE=INNODB');
-$db->query('INSERT into test1 (id) VALUES(1)');
-$rs = $db->query('SELECT id from test1 WHERE id = 1');
+
+$rs = DB\Connection::instance('test')->query("CREATE TABLE $table( id int unsigned NOT NULL PRIMARY KEY ) ENGINE=INNODB");
+if( ! $rs ) {
+    Tap::plan('skip_all', 'unable to create table');
+}
+Tap::plan(4);
+
+$db = DB\Transaction::instance('test');
+$db->query("INSERT into $table (id) VALUES(1)");
+$rs = $db->query("SELECT id from $table WHERE id = 1");
 Tap::is( $rs->fetch_assoc(), array('id'=>1), 'inserted a new row and selected it back');
 
 DB\Transaction::rollback();
 
-$rs = $db->query('SELECT id from test1 WHERE id = 1');
+$rs = DB\Connection::instance('test')->query("SELECT id from $table WHERE id = 1");
 Tap::is( $rs->fetch_assoc(), NULL, 'after rollback, no row found');
-$db->close();
+
 
 $db = DB\Transaction::instance('test');
-$rs = $db->query('CREATE TEMPORARY TABLE test1( id int unsigned NOT NULL PRIMARY KEY ) ENGINE=INNODB');
-$db->query('INSERT into test1 (id) VALUES(1)');
-$rs = $db->query('SELECT id from test1 WHERE id = 1');
-Tap::is( $rs->fetch_assoc(), array('id'=>1), 'inserted a new row and selected it back');
+$db->query("INSERT into $table (id) VALUES(2)");
+$rs = $db->query("SELECT id from $table WHERE id = 2");
+Tap::is( $rs->fetch_assoc(), array('id'=>2), 'inserted a new row and selected it back');
 DB\Transaction::commit();
-$rs = $db->query('SELECT id from test1 WHERE id = 1');
-Tap::is( $rs->fetch_assoc(), array('id'=>1), 'after commiting can still select the row');
+$rs = DB\Connection::instance('test')->query("SELECT id from $table WHERE id = 2");
+Tap::is( $rs->fetch_assoc(), array('id'=>2), 'after commiting can still select the row');
+
+DB\Connection::instance('test')->query("DROP TABLE IF EXISTS $table");
