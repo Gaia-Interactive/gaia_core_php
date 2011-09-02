@@ -208,17 +208,25 @@ class Base implements Iface {
         $db = $this->inTran() ? Transaction::instance( $dsn ) : Connection::instance( $dsn );
         switch( get_class( $db ) ){
             case 'Gaia\DB\Driver\MySQLi': 
-                $classname = 'Gaia\Stockpile\Storage\MySQLi\\' . $name;
-                $storage = new $classname( $db, $this->app(), $this->user() );
-                $apc = new Apc();
-                $key = 'st/t/' . $dsn . '/' . $this->app() . '/' . $name . '/' . Connection::version();
-                if( $apc->get( $key ) ) return $storage;
-                if( ! $apc->add( $key, 1, 60 ) ) return $storage;
-                $storage->create();
-                return $storage;
-                
+                        $classname = 'Gaia\Stockpile\Storage\MySQLi\\' . $name;
+                        break;
+            
+            case 'Gaia\DB\Driver\PDO': 
+                        $classname = 'Gaia\Stockpile\Storage\MyPDO\\' . $name;
+                        break;
+            default:
+                throw new Exception('invalid db driver', $db );
+
+
         }
-        throw new Exception('invalid db driver', $db );
+        
+        $storage = new $classname( $db, $this->app(), $this->user() );
+        $apc = new Apc();
+        $key = 'st/t/' . $dsn . '/' . $this->app() . '/' . $name . '/' . Connection::version();
+        if( $apc->get( $key ) ) return $storage;
+        if( ! $apc->add( $key, 1, 60 ) ) return $storage;
+        $storage->create();
+        return $storage;
     }
     
     public static function time(){

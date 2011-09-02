@@ -42,6 +42,20 @@ class Connection {
                 if( $db->connect_error ) throw new Exception('database error', $db );
                 return $db;
                 
+            case 'mypdo':
+                $uri = 'mysql:';
+                if( isset( $params['host'] ) ) $uri .= 'host=' . $params['host'] . ';';
+                if( ! isset( $params['port'] ) )  $uri .= 'port=' . $params['port'] . ';';
+                if( ! isset( $params['user'] ) ) $params['user'] = '';
+                if( ! isset( $params['pass'] ) ) $params['pass'] = '';
+                if( ! isset( $params['path'] ) ) $params['path'] = '';
+                $params['path'] = trim($params['path'], '/');
+                if( $params['path'] ) $uri .= 'dbname=' . $params['path'] . ';';
+                
+                $db = new Driver\PDO( $uri, $params['user'], $params['pass']);
+                if( $db->connect_error ) throw new Exception('database error', $db );
+                $db->setAttribute(\PDO::ATTR_STATEMENT_CLASS, array('Gaia\DB\Driver\PDOStatement', array($db)));
+                return $db;                
         }
         throw new Exception('invalid db layer', $params );
     }
