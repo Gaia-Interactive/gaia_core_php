@@ -49,7 +49,7 @@ class Hybrid extends Passthru {
             }
             return $this->quantity( array('tally'=>$tally, 'serial'=>$serial ) );        
     
-        } catch( Exception $e ){
+        } catch( \Exception $e ){
             if( $local_txn) {
                 if( Transaction::inProgress() ) Transaction::rollback();
             }
@@ -82,7 +82,7 @@ class Hybrid extends Passthru {
             }
             return $result;       
     
-        } catch( Exception $e ){
+        } catch( \Exception $e ){
             if( $local_txn) {
                 if( Transaction::inProgress() ) Transaction::rollback();
             }
@@ -115,7 +115,7 @@ class Hybrid extends Passthru {
                 Transaction::commit();
             }
             return $this->quantity( array('tally'=>$tally, 'serial'=>$serial ) );
-        } catch( Exception $e ){
+        } catch( \Exception $e ){
             if( $local_txn) {
                 if(Transaction::inProgress() ) Transaction::rollback();
             }

@@ -12,7 +12,7 @@ $total = stockpile( $app, $user_id )->add( $item_id, 4 );
 
 
 // add a large amount
-if( ! isset( $large_number ) ) $large_number = bcsub(bcpow(2, 63), 1);
+if( ! isset( $large_number ) ) $large_number = bcsub(bcpow(2, 62), 1);
 $previous_total = $total;
 $total = stockpile( $app, $user_id )->add( $item_id, $large_number );
 Tap::is( quantify( $total ), bcadd(quantify($large_number), quantify( $previous_total )), 'add a large quantity');

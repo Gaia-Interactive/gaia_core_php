@@ -27,7 +27,7 @@ class Tally extends Base {
         }
         try {
             return $this->storage('tally')->add( $item_id, $quantity );
-        } catch( Exception $e ){
+        } catch( \Exception $e ){
             throw $this->handle( $e );
         }
     }
@@ -53,7 +53,7 @@ class Tally extends Base {
         }
         try {
             return $this->storage('tally')->subtract( $item_id, $quantity );
-        } catch( Exception $e ){
+        } catch( \Exception $e ){
             throw $this->handle( $e );
         }
     }

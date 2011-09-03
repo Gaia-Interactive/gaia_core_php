@@ -19,7 +19,7 @@ class FirstAddedSorter extends Sorter {
         $now = Base::time();
         try {
             $ct = $this->storage('sorter')->sort( $now, array( $item_id ), $ignore = TRUE );
-        } catch( Exception $e ){
+        } catch( \Exception $e ){
             throw $this->handle( $e );
         }
         if( $ct < 1 || ! $this->cacher) return $res;        

@@ -88,7 +88,7 @@ interface Iface  {
     * if an exception is encountered, make sure we roll back the transaction.
     * return $e;
     */
-    public function handle( Exception $e );
+    public function handle( \Exception $e );
     
     
 } // EOC

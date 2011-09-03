@@ -31,7 +31,7 @@ class Serial extends Base {
         }
         try {
             $this->storage('serial')->add( $item_id, $quantity );
-        } catch( Exception $e ){
+        } catch( \Exception $e ){
             throw $this->handle( $e );
         }
         return $this->get( $item_id );
@@ -65,7 +65,7 @@ class Serial extends Base {
         }
         try {
             $ct = $this->storage('serial')->subtract( $item_id, $quantity->serials() );
-        } catch( Exception $e ){
+        } catch( \Exception $e ){
             throw $this->handle( $e );
         }
         if( $ct < $quantity->value() ) throw $this->handle( new Exception('not enough left to subtract', $ct ) );
@@ -91,7 +91,7 @@ class Serial extends Base {
         }
         try {
             $list = $this->storage('serial')->fetch( $item_ids );
-        } catch( Exception $e ){
+        } catch( \Exception $e ){
             throw $this->handle( $e );
         }
         foreach( $list as $item=>$quantity ){

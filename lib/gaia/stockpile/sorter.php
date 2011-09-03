@@ -125,7 +125,7 @@ class Sorter extends Passthru {
     protected function maxPos(){
         try {
             return $this->storage('sorter')->maxPos();
-        } catch( Exception $e ){
+        } catch( \Exception $e ){
             throw $this->handle( $e );
         }
     }

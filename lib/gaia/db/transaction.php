@@ -8,9 +8,20 @@ class Transaction
     protected static $at_start = TRUE;
     protected static $commit_callbacks = array();
     protected static $rollback_callbacks = array();
-
-
-    function instance( $name ){
+    
+    function add( Transaction_Iface $obj ){
+        self::claimStart();
+        if( ! $obj->begin( function (){ Transaction::block(); }) ) {
+            return FALSE;
+        }
+        return self::$tran[spl_object_hash($obj)] = $obj;
+    }
+    
+    public static function connections(){
+        return self::$tran;
+    }
+    
+    public static function instance( $name ){
         if (isset( self::$tran[$name] ) ) return self::$tran[$name];
         self::claimStart();
         $obj = Connection::get( $name );
@@ -45,7 +56,7 @@ class Transaction
     }
 
     public static function commit(){
-        if (!self::inProgress()) return false;
+        if (!self::inProgress()) return FALSE;
         $status = false;
         foreach( self::$tran  as $k => $obj )
         {

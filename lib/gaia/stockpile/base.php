@@ -85,7 +85,7 @@ class Base implements Iface {
             $result = $this->add( $item_id, $quantity, $data );
             if( $local_txn ) $result = Transaction::commit();
             return $result;
-        } catch( Exception $e ){
+        } catch( \Exception $e ){
             $this->handle( $e );
             throw $e;
         }
@@ -118,7 +118,7 @@ class Base implements Iface {
    /**
     * if an exception is thrown, make sure we roll back the transaction.
     */
-    public function handle( Exception $e ){
+    public function handle( \Exception $e ){
         if( Transaction::inProgress() ) Transaction::rollback();
         return $e;
     }
@@ -212,7 +212,21 @@ class Base implements Iface {
                         break;
             
             case 'Gaia\DB\Driver\PDO': 
-                        $classname = 'Gaia\Stockpile\Storage\MyPDO\\' . $name;
+                        switch( $db->driver() ){
+                            case 'mysql': 
+                                $driver = 'MyPDO';
+                                break;
+                            
+                            case 'sqlite':
+                                $driver = 'LitePDO';
+                                break;
+                            
+                            default:
+                                throw new Exception('invalid db driver', $db );
+
+                        }
+                        
+                        $classname = 'Gaia\Stockpile\Storage\\' . $driver . '\\' . $name;
                         break;
             default:
                 throw new Exception('invalid db driver', $db );

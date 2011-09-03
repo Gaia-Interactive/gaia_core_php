@@ -6,11 +6,24 @@ class PDO extends \PDO implements \Gaia\DB\Transaction_Iface {
 
     protected $lock = FALSE;
     protected $txn = FALSE;
+    protected $driver;
     
+    public function __construct( $dsn ){
+        $args = func_get_args();
+        call_user_func_array( array('\PDO', '__construct'), $args );
+        $this->driver = substr( $dsn, 0, strpos($dsn, ':'));
+    }
+    
+    public function driver(){
+        return $this->driver;
+    }
+        
     public function execute( $query /*, ... */ ){
         $args = func_get_args();
         array_shift($args);
-        return $this->query( $this->format_query_args( $query, $args ) );
+        $query = $this->format_query_args( $query, $args );
+        //print "#    $query\n";
+        return $this->query( $query );
     }
     
     public function query( $query ){
@@ -64,7 +77,7 @@ class PDO extends \PDO implements \Gaia\DB\Transaction_Iface {
     }
     
     public function commit(){
-        if( ! $this->txn ) return parent::rollback(); 
+        if( ! $this->txn ) return parent::commit(); 
         if( $this->lock ) return FALSE;
         return parent::commit();
     }

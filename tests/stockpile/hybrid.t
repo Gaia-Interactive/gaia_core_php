@@ -23,7 +23,7 @@ try {
     include __DIR__ . '/lib/trade_tests.php';
     include __DIR__ . '/lib/hybrid_tests.php';
 
-} catch( Exception $e ){
+} catch( \Exception $e ){
     Tap::fail( 'unexpected exception thrown' );
     print $e;
 }
