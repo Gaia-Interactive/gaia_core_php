@@ -26,6 +26,10 @@ class Base implements Iface {
     */
     const ID_OFFSET = '1000000000';
     
+    /**
+    * for test purposes to simulate passage of time.
+    *
+    */
     public static $time_offset = 0;
     
    /**

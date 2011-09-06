@@ -24,10 +24,11 @@ class Transaction
     public static function instance( $name ){
         if (isset( self::$tran[$name] ) ) return self::$tran[$name];
         self::claimStart();
-        $obj = Connection::get( $name );
+        $obj = Connection::instance( $name );
         if( ! $obj instanceof Transaction_Iface ){
             throw new Exception('invalid object', $obj );
         }
+        Connection::remove( $name );
         if( ! $obj->begin( function (){ Transaction::block(); }) ) {
             return FALSE;
         }
@@ -69,6 +70,10 @@ class Transaction
         foreach( self::$commit_callbacks as $info ){
             self::triggerCallback( $info['cb'], $info['params'] );
         }
+        foreach( self::$tran as $name => $obj ){
+            Connection::add( $name, $obj );
+            unset( self::$tran[ $name ] );
+        }
         self::reset();
         return $status;
     }
@@ -76,6 +81,7 @@ class Transaction
         self::$at_start = TRUE;
         self::$commit_callbacks = array();
         self::$rollback_callbacks = array();
+        foreach( self::$tran as $t ) Connection::remove( $t );
         self::$tran = array();
     }
 

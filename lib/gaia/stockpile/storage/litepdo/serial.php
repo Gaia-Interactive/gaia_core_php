@@ -1,6 +1,7 @@
 <?php
 namespace Gaia\Stockpile\Storage\LitePDO;
 use \Gaia\Stockpile\Exception;
+use \Gaia\DB\Transaction;
 
 class Serial extends Core {
     
@@ -48,13 +49,20 @@ WHERE `user_id` = %i AND `item_id` = %i AND `serial` IN ( %i )';
 
     public function add( $item_id, $quantity ){
         $batches = array();
+        $local_txn = $this->claimStart();
         foreach( $quantity->all() as $serial => $properties ){
             $properties = json_encode( $properties );
             $rs = $this->execute($this->sql('ADD'), $this->user_id, $item_id, $serial, $properties);
             if( $rs->rowCount() < 1 ) {
                 $rs = $this->execute($this->sql('UPDATE'), $properties, $this->user_id, $item_id, $serial);
-                if( $rs->rowCount() < 1 ) throw new Exception('database error', $this->dbInfo() );
+                if( $rs->rowCount() < 1 ) {
+                    if( $local_txn ) Transaction::rollback();
+                    throw new Exception('database error', $this->dbInfo() );
+                }
             }
+        }
+        if( $local_txn ) {
+            if( ! Transaction::commit()) throw new Exception('database error', $this->dbInfo() );
         }
         return TRUE;
     }

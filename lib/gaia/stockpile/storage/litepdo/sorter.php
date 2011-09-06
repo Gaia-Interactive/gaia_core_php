@@ -1,6 +1,7 @@
 <?php
 namespace Gaia\Stockpile\Storage\LitePDO;
 use \Gaia\Stockpile\Exception;
+use \Gaia\DB\Transaction;
 
 /**
  * base class for sorting.
@@ -41,6 +42,7 @@ const SQL_MAXPOS =
     public function sort( $pos, array $item_ids, $ignore_dupes = FALSE ){
         $batch = array();
         $ct = 0;
+        $local_txn = $this->claimStart();
         foreach( $item_ids as $item_id ){
             $pos = bcadd($pos, 1);
             $rs = $this->execute($this->sql('INSERT'), $this->user_id, $item_id, $pos );
@@ -49,6 +51,9 @@ const SQL_MAXPOS =
                 $rs = $this->execute($this->sql('UPDATE'), $pos, $this->user_id, $item_id );
                 $ct += $rs->rowCount();
             }
+        }
+         if( $local_txn ) {
+            if( ! Transaction::commit()) throw new Exception('database error', $this->dbInfo() );
         }
         return $ct;
     }

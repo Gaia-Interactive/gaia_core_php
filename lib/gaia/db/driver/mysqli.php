@@ -76,7 +76,10 @@ class MySQLi extends \MySQLi implements \Gaia\DB\Transaction_Iface {
     public function commit(){
         if( ! $this->txn ) return parent::commit(); 
         if( $this->lock ) return FALSE;
-        return parent::commit();
+        $res = parent::commit();
+        if( ! $res ) return $res;
+        $this->txn = FALSE;
+        return $res;
     }
     
     public function format_query( $query /*, ... */ ){

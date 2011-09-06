@@ -42,6 +42,22 @@ class Connection {
         throw new Exception('invalid db layer', $params );
     }
     
+    public static function remove( $name ){
+        if( is_scalar( $name ) ) {
+            unset( self::$instances[ $name ] );
+            return;
+        }
+        
+        foreach( self::$instances as $k => $v ){
+            if( $v === $name ) unset( self::$instances[ $k ] );
+        }
+    }
+    
+    public static function add( $name, $db, $force = FALSE ){
+        if( $force || ! isset( self::$instances[ $name ] ) ) self::$instances[ $name ] = $db;
+        return $db;
+    }
+    
     protected static function mysqli( $params ){
         if( ! isset( $params['host'] ) ) $params['host'] = ini_get("mysqli.default_host");
         if( ! isset( $params['port'] ) ) $params['port'] = ini_get("mysqli.default_port");

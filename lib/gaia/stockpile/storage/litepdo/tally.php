@@ -36,12 +36,12 @@ const SQL_FETCH =
 'SELECT `item_id`, `quantity` FROM `{TABLE}` WHERE user_id = %i';
     
     public function add( $item_id, $quantity ){
-        //$local_txn = $this->claimStart();
+        $local_txn = $this->claimStart();
         $rs = $this->execute($this->sql('ADD'),$this->user_id, $item_id, $quantity );
         if( ! $rs->rowCount() ){
             $rs = $this->execute($this->sql('UPDATE'),$quantity, $this->user_id, $item_id );
             if( ! $rs->rowCount() ){
-                //if( $local_txn ) Transaction::rollback();
+                if( $local_txn ) Transaction::rollback();
                 throw new Exception('database error', $this->dbInfo() );
             }
         }
@@ -49,36 +49,36 @@ const SQL_FETCH =
         $row = $rs->fetch(\PDO::FETCH_ASSOC);
         $rs->closeCursor();
         if( ! $row ) {
-            //if( $local_txn ) Transaction::rollback();
+            if( $local_txn ) Transaction::rollback();
             throw new Exception('database error', $this->dbInfo() );
         }
-        /*
+        
         if( $local_txn ) {
             if( ! Transaction::commit()) throw new Exception('database error', $this->dbInfo() );
         }
-        */
+        
         return $row['quantity'];
     }
     
     public function subtract( $item_id, $quantity ){
-        //$local_txn = $this->claimStart();
+        $local_txn = $this->claimStart();
         $rs = $this->execute($this->sql('SUBTRACT'), $quantity, $this->user_id,$item_id, $quantity );        
         if( $rs->rowCount() < 1 ) {
-            //if( $local_txn ) Transaction::rollback();
+            if( $local_txn ) Transaction::rollback();
             throw new Exception('not enough', $this->dbInfo() );
         }
         $rs = $this->execute($this->sql('SELECT'), $this->user_id, $item_id);
         $row = $rs->fetch(\PDO::FETCH_ASSOC);
         $rs->closeCursor();
         if( ! $row ) {
-            //if( $local_txn ) Transaction::rollback();
+            if( $local_txn ) Transaction::rollback();
             throw new Exception('database error', $this->dbInfo() );
         }
-        /*
+        
         if( $local_txn ) {
             if( ! Transaction::commit()) throw new Exception('database error', $this->dbInfo() );
         }
-        */
+        
         return $row['quantity']; 
     }
     
