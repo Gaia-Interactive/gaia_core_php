@@ -46,6 +46,7 @@ class MySQLi extends \MySQLi implements \Gaia\DB\Transaction_Iface {
     }
     
     public function close(){
+        Connection::remove( $this );
         if( $this->lock ) return FALSE;
         $rs = parent::close();
         $this->lock = TRUE;

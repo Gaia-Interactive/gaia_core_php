@@ -2,7 +2,7 @@
 namespace Gaia\Stockpile;
 use \Gaia\DB\Transaction;
 use \Gaia\DB\Connection;
-use \Gaia\Cache\APC;
+use \Gaia\Cache;
 
 /**
  * Core functionality of the stockpile class.
@@ -239,10 +239,10 @@ class Base implements Iface {
         }
         
         $storage = new $classname( $db, $this->app(), $this->user() );
-        $apc = new Apc();
+        $cache = new Cache\Gate( new Cache\Apc() );
         $key = 'st/t/' . $dsn . '/' . $this->app() . '/' . $name . '/' . Connection::version();
-        if( $apc->get( $key ) ) return $storage;
-        if( ! $apc->add( $key, 1, 60 ) ) return $storage;
+        if( $cache->get( $key ) ) return $storage;
+        if( ! $cache->add( $key, 1, 60 ) ) return $storage;
         $storage->create();
         return $storage;
     }
