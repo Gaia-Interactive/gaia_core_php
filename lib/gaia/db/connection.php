@@ -72,14 +72,13 @@ class Connection {
     
     protected static function litepdo( $uri ){
         $db = new Driver\PDO( 'sqlite:' . $uri );
-        if( $db->connect_error ) throw new Exception('database error', $db );
         $db->setAttribute(\PDO::ATTR_STATEMENT_CLASS, array('Gaia\DB\Driver\PDOStatement', array($db)));
         $db->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_SILENT );
         return $db;
     }
     
     protected static function mypdo( $params ){
-        $uri = $driver . 'mysql:';
+        $uri = 'mysql:';
         if( isset( $params['host'] ) ) $uri .= 'host=' . $params['host'] . ';';
         if( ! isset( $params['port'] ) )  $uri .= 'port=' . $params['port'] . ';';
         if( ! isset( $params['user'] ) ) $params['user'] = '';
@@ -87,12 +86,9 @@ class Connection {
         if( ! isset( $params['path'] ) ) $params['path'] = '';
         $params['path'] = trim($params['path'], '/');
         if( $params['path'] ) $uri .= 'dbname=' . $params['path'] . ';';
-        
         $db = new Driver\PDO( $uri, $params['user'], $params['pass']);
-        if( $db->connect_error ) throw new Exception('database error', $db );
         $db->setAttribute(\PDO::ATTR_STATEMENT_CLASS, array('Gaia\DB\Driver\PDOStatement', array($db)));
         $db->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_SILENT );
-
         return $db;
     }
     
