@@ -1,7 +1,6 @@
 <?php
 require __DIR__ . '/../../common.php';
 include __DIR__ . '/functions.php';
-Gaia\DB\Connection::load(array('test'=>'litepdo:///tmp/stockpile.db'));
 Gaia\DB\Resolver::load( array('test0'=>'test', 'test1'=>'test') );
 
 Gaia\Stockpile\ConnectionResolver::attach( 
