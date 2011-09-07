@@ -6,23 +6,19 @@ class Fragment {
     protected $f = '';
     const FRAG_SIZE = 1000;
     
-    // either pass in a string, or pass in an array of shard/swap values
-    // array(0=>array('shard'=>1, 'swap'=>NULL), ... )
-    // array(0=>1, ... );
+    // either pass in a string, or pass in an array of frabment => shard  key value pairs.
+    // array(0=>1, ... )
     // '|0-1:| ...'
     public function __construct( $fragments = NULL ){
         if( is_array( $fragments ) && count( $fragments ) == self::FRAG_SIZE ){
             $f = '|';
-            foreach( $fragments as $fragment => $row ) {
-                if( is_array( $row ) && isset( $row['shard'] ) ){
-                    if( ! isset ($row['swap'] ) ) $row['swap'] = '';
-                    $f .= $fragment . '-' . $row['shard'] . ':' . $row['swap'] . '|';
-                } elseif( is_scalar( $row ) && ctype_digit( strval( $row ) ) ){
-                    $f .= $fragment . '-' . $row . ':|';
+            foreach( $fragments as $fragment => $shard ) {
+                if( is_scalar( $shard ) && ctype_digit( strval( $shard ) ) ){
+                    $f .= $fragment . '-' . $shard . '|';
                 }
             }
             $this->f = $f;
-        } elseif( preg_match('/^\|[0-9\-\|:]+\|$/', strval($fragments)) ) {
+        } elseif( preg_match('/^\|[0-9\-\|]+\|$/', strval($fragments)) ) {
             $this->f = $fragments;
         }
     }
@@ -32,7 +28,7 @@ class Fragment {
         $ct = count( $shards );
         for( $i = 0; $i < self::FRAG_SIZE; $i++){
             $shard = $shards[ floor( $i / (self::FRAG_SIZE / $ct )) ];
-            $list .= $i . '-' . $shard .':|';
+            $list .= $i . '-' . $shard .'|';
         }
         return $this->f = $list;
     }
@@ -56,16 +52,7 @@ class Fragment {
         $pos = strpos( $this->f, $key );
         if( $pos === FALSE ) return NULL;
         $pos += strlen( $key );
-        return substr($this->f, $pos, strpos($this->f, ':', $pos + 1 ) - $pos);
-    }
-    
-    public function swap($id){
-        $key = '|' . (self::hash($id) % self::FRAG_SIZE ) . '-';
-        $pos = strpos( $this->f, $key );
-        if( $pos === FALSE ) return NULL;
-        $pos += strlen( $key );
-        $pos = strpos($this->f, ':', $pos + 1 );
-        return substr($this->f, $pos +1, strpos($this->f, '|', $pos + 1 ) - $pos - 1);
+        return substr($this->f, $pos, strpos($this->f, '|', $pos + 1 ) - $pos);
     }
     
     public function shards(){        
@@ -74,7 +61,7 @@ class Fragment {
         while( TRUE ){
             $next_pos = strpos($this->f, '-', $pos + 1);
             if( $next_pos === FALSE ) break;
-            $key = substr( $this->f, $pos, strpos( $this->f, ':', $pos + 1) - $pos );
+            $key = substr( $this->f, $pos, strpos( $this->f, '|', $pos + 1) - $pos );
             $pos = $next_pos + 1;
             $shards[ $key ] = $key;
         }
@@ -91,8 +78,7 @@ class Fragment {
         foreach( explode('|', $this->f) as $data ){
             if( ! $data ) continue;
             list( $fragment, $shard) = explode('-', $data );
-            list( $shard, $swap ) = explode(':', $shard );
-            $map[ $fragment ] = array('shard'=>$shard, 'swap'=>$swap );
+            $map[ $fragment ] = $shard;
         }
         return $map;
     }
