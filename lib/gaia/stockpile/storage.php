@@ -3,7 +3,6 @@ namespace Gaia\Stockpile;
 use \Gaia\Exception;
 use \Gaia\DB\Transaction;
 use \Gaia\DB\Connection;
-use \Gaia\Cache;
 
 class Storage {
 
@@ -54,14 +53,7 @@ class Storage {
 
 
         }
-        
-        $storage = new $classname( $db, $stockpile->app(), $stockpile->user() );
-        $cache = new Cache\Gate( new Cache\Apc() );
-        $key = 'st/t/' . $dsn . '/' . $stockpile->app() . '/' . $name . '/' . Connection::version();
-        if( $cache->get( $key ) ) return $storage;
-        if( ! $cache->add( $key, 1, 60 ) ) return $storage;
-        $storage->create();
-        return $storage;
+        return new $classname( $db, $stockpile->app(), $stockpile->user(), $dsn . '.' . Connection::version() );
     }
 }
 

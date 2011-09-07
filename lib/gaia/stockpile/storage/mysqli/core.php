@@ -3,15 +3,21 @@ namespace Gaia\Stockpile\Storage\MySQLi;
 use \Gaia\DB\Driver\MySQLi;
 use \Gaia\Stockpile\Exception;
 use \Gaia\Stockpile\Storage\Iface;
+use \Gaia\Cache;
 
 class Core implements IFace {
     protected $db;
     protected $app;
     protected $user_id;
-    public function __construct( MySQLi $db, $app, $user_id){
+    public function __construct( MySQLi $db, $app, $user_id, $dsn){
         $this->db = $db;
         $this->app = $app;
         $this->user_id = $user_id;
+        $cache = new Cache\Gate( new Cache\Apc() );
+        $key = 'stockpile/storage/__create/' . md5( $dsn . '/' . $app . '/' . __FILE__ );
+        if( $cache->get( $key ) ) return;
+        if( ! $cache->add( $key, 1, 60 ) ) return;
+        $this->create();
     }
     
     public function create(){
