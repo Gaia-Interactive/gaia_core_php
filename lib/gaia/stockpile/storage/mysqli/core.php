@@ -2,9 +2,9 @@
 namespace Gaia\Stockpile\Storage\MySQLi;
 use \Gaia\DB\Driver\MySQLi;
 use \Gaia\Stockpile\Exception;
+use \Gaia\Stockpile\Storage\Iface;
 
-
-class Core {
+class Core implements IFace {
     protected $db;
     protected $app;
     protected $user_id;

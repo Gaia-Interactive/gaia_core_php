@@ -2,9 +2,9 @@
 namespace Gaia\Stockpile\Storage\MyPDO;
 use \Gaia\DB\Driver\PDO;
 use \Gaia\Stockpile\Exception;
+use \Gaia\Stockpile\Storage\Iface;
 
-
-class Core {
+class Core implements Iface {
     protected $db;
     protected $app;
     protected $user_id;

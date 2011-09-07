@@ -1,8 +1,6 @@
 <?php
 namespace Gaia\Stockpile;
 use \Gaia\DB\Transaction;
-use \Gaia\DB\Connection;
-use \Gaia\Cache;
 
 /**
  * Core functionality of the stockpile class.
@@ -36,7 +34,6 @@ class Base implements Iface {
     * class constructor.
     * @param string                     app
     * @param int                        user_id
-    * @param DAO_TransactionManager     optional, if not spefified, no transaction will be used.
     */
     public function __construct( $app, $user_id){
         if( ! self::validateApp( $app ) ) {
@@ -208,43 +205,7 @@ class Base implements Iface {
     }
 
     public function storage($name){
-        $dsn = ConnectionResolver::get( $this );
-        $db = $this->inTran() ? Transaction::instance( $dsn ) : Connection::instance( $dsn );
-        switch( get_class( $db ) ){
-            case 'Gaia\DB\Driver\MySQLi': 
-                        $classname = 'Gaia\Stockpile\Storage\MySQLi\\' . $name;
-                        break;
-            
-            case 'Gaia\DB\Driver\PDO': 
-                        switch( $db->driver() ){
-                            case 'mysql': 
-                                $driver = 'MyPDO';
-                                break;
-                            
-                            case 'sqlite':
-                                $driver = 'LitePDO';
-                                break;
-                            
-                            default:
-                                throw new Exception('invalid db driver', $db );
-
-                        }
-                        
-                        $classname = 'Gaia\Stockpile\Storage\\' . $driver . '\\' . $name;
-                        break;
-            default:
-                throw new Exception('invalid db driver', $db );
-
-
-        }
-        
-        $storage = new $classname( $db, $this->app(), $this->user() );
-        $cache = new Cache\Gate( new Cache\Apc() );
-        $key = 'st/t/' . $dsn . '/' . $this->app() . '/' . $name . '/' . Connection::version();
-        if( $cache->get( $key ) ) return $storage;
-        if( ! $cache->add( $key, 1, 60 ) ) return $storage;
-        $storage->create();
-        return $storage;
+        return Storage::get( $this, $name );
     }
     
     public static function time(){
