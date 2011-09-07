@@ -7,7 +7,13 @@ use Gaia\DB;
 
 
 try {
-    DB\Connection::load( array('test'=>'mypdo://127.0.0.1:3306/test') );
+    DB\Connection::load( array('test'=>function () {
+        $db = new DB\Driver\PDO('mysql://host=127.0.0.1;dbname=test');
+        $db->setAttribute(\PDO::ATTR_STATEMENT_CLASS, array('Gaia\DB\Driver\PDOStatement', array($db)));
+        $db->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_SILENT );
+        return $db;
+    }
+    ) );
     $db = DB\Connection::instance('test');
 } catch( Exception $e ){
     Tap::plan('skip_all', $e->__toString());

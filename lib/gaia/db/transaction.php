@@ -9,7 +9,7 @@ class Transaction
     protected static $commit_callbacks = array();
     protected static $rollback_callbacks = array();
     
-    function add( Transaction_Iface $obj ){
+    function add( Iface $obj ){
         self::claimStart();
         if( ! $obj->begin( function (){ Transaction::block(); }) ) {
             return FALSE;
@@ -25,7 +25,7 @@ class Transaction
         if (isset( self::$tran[$name] ) ) return self::$tran[$name];
         self::claimStart();
         $obj = Connection::instance( $name );
-        if( ! $obj instanceof Transaction_Iface ){
+        if( ! $obj instanceof Iface ){
             throw new Exception('invalid object', $obj );
         }
         Connection::remove( $name );

@@ -15,9 +15,9 @@ const TABLE = 'sort';
     
 const SQL_CREATE =
 "CREATE TABLE IF NOT EXISTS `{TABLE}` (
-  `user_id` BIGINT NOT NULL,
+  `user_id` INTEGER NOT NULL,
   `item_id` INTEGER NOT NULL,
-  `pos` BIGINT NOT NULL default '0',
+  `pos` INTEGER NOT NULL default '0',
   UNIQUE  (`user_id`,`item_id`)
 )";
 

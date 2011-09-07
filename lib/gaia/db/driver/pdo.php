@@ -1,7 +1,7 @@
 <?php
 namespace Gaia\DB\Driver;
 
-class PDO extends \PDO implements \Gaia\DB\Transaction_Iface {
+class PDO extends \PDO implements \Gaia\DB\Iface {
 
 
     protected $lock = FALSE;

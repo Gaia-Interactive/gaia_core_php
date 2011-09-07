@@ -1,7 +1,7 @@
 <?php
 namespace Gaia\DB\Driver;
 
-class MySQLi extends \MySQLi implements \Gaia\DB\Transaction_Iface {
+class MySQLi extends \MySQLi implements \Gaia\DB\Iface {
     
     protected $lock = FALSE;
     protected $txn = FALSE;

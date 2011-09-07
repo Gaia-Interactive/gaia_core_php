@@ -7,7 +7,17 @@ use Gaia\DB;
 
 
 try {
-    DB\Connection::load( require __DIR__ . '/lib/config.php' );
+    DB\Connection::load( array(
+        'test'=> function(){
+             $db = new DB\Driver\MySQLi( 
+                $host = '127.0.0.1', 
+                $user = NULL, 
+                $pass = NULL, 
+                $db = 'test', 
+                '3306');
+                return $db;
+        }
+    ));
     $db = DB\Connection::instance('test');
 } catch( Exception $e ){
     Tap::plan('skip_all', $e->__toString());

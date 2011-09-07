@@ -7,7 +7,14 @@ use Gaia\DB;
 
 
 try {
-    DB\Connection::load( array('test'=>'litepdo://:memory:') );
+    DB\Connection::load( array(
+    'test'=> function () {
+        $db = new Gaia\DB\Driver\PDO( 'sqlite:memory:');
+        $db->setAttribute(\PDO::ATTR_STATEMENT_CLASS, array('Gaia\DB\Driver\PDOStatement', array($db)));
+        $db->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_SILENT );
+        return $db;
+    }
+    ) );
     $db = DB\Connection::instance('test');
 } catch( \Exception $e ){
     Tap::plan('skip_all', $e->__toString());
