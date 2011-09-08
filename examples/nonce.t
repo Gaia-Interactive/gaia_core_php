@@ -5,51 +5,7 @@ use Gaia\Nonce;
 use Gaia\Test\Tap;
 include __DIR__ . '/common.php';
 
-/**
-* This class is a somewhat artificial demonstration of how you might use a nonce to verify the input
-* came from a form. Why do you need a nonce? For starters, read:
-*
-* http://en.wikipedia.org/wiki/Cryptographic_nonce
-*
-* Nonces do not protect from SQL injection but they do help with a particular form of cross-site
-* scripting attack. The hacker embeds an image or a link on a page. The embedded url is to a page 
-* you have on your site that you didn't intend the user to go to without their consent. For example,
-* a link where you add a friend.
-* 
-* The exploit might embed the url as an image in a profile picture or signature, where the image is
-* sure to be seen by many people:
-*
-*   /site/addfriend?friend=HaxxAttack
-*
-* Every person who loads the image in their browser by visiting their profile page will unintentionally
-* add HaxxAttack as a friend. The nonce validation is an easy way to prevent this attack, since it
-* will only perform the request if the user clicks through the form. This example is a bit simplistic.
-* You could probably secure the page by only accepting $_POST variables instead of $_GET or $_REQUEST 
-* variables. But there are other cases where you might need to use a $_GET parameter. A nonce is an 
-* easy way to keep your form from being exploited. In other cases, the exploit might use a javascript
-* attack to perform an AJAX $_POST request. In this case, a nonce is a very good way to prevent the problem.
-*
-* Another real-world example is where an admin page for a site moderator provides tools for authorizing 
-* other users to become moderators. If the hacker can embed an image on the site that the moderator sees,
-* that image link could point to the admin page and uninentionally authorize users that shouldn't have access.
-* When in doubt, use a nonce on all forms. It is easy to do, and prevents exploits you may not even 
-* think of.
-*
-* The nonce is only as good as the token you use. If all i want to do is make sure that the form
-* submitted came from the same user that generated the form, i can make a token out of the user id.
-* other options include checksumming all of the known input values of the form and creating the token
-* from that. The token must stay consistent between the input and the validation requests for the 
-* nonce to work. 
-* 
-* We also specify how long the nonce is good for. If we want the form to only be valid for two minutes,
-* we can set the NONCE_TIMEOUT class constant here to 120 seconds. This example only allows 10 seconds.
-* Completely artificial example, but it works for us.
-*
-* You can enhance the nonce protection one layer further, by making it a single-use token. The easiest
-* way to do this is to add the nonce as a memcache key. If the nonce key fails to be added to the 
-* cache, we know the token has been used already once on a page load (see /cache/lock.t).
-*
-*/
+// @see https://github.com/gaiaops/gaia_core_php/wiki/nonce
 class AddFriendPage {
 
     protected static $session_id;
