@@ -1,6 +1,6 @@
 <?php
 namespace Gaia\Shard;
-
+// @see: https://github.com/gaiaops/gaia_core_php/wiki/shard-vbucket
 class VBucket {
 
     protected $map = array();
