@@ -7,60 +7,8 @@ use Gaia\Test\Tap;
 
 include __DIR__ . '/../common.php';
 include __DIR__ . '/connection.php';
+// @see https://github.com/gaiaops/gaia_core_php/wiki/cache-revisions
 
-/**
-* When writing applications, it is often best to use the 'domain' model approach.(see 
-* http://en.wikipedia.org/wiki/Domain_model )The domain controls business logic and caching 
-* related to that domain. This means you have many unique peices of data all independently 
-* populated into the cache. Unfortunately, this can be very inefficient for requests that aggregate 
-* data from many sources of data independently. Each domain model has to be instantiated and queried,
-* then all the information assembled into a composite every time the request comes in. 
-*
-* Caching composite information avoids having to instantiate and query all the individual models.
-* Just consume the data from the cache and rebuild it as needed. But what happens when the data changes? 
-* If there is only one composite of information, it is easy enough to have each domain model delete
-* the cache that is related to the domain and let the cache repopulate. But what if there are many
-* different composite datasets related to the changed data in the original domain object? The domain 
-* objects have to know about all the related composite cached data. This approach follows the 
-* observer - observable pattern ( see http://en.wikipedia.org/wiki/Observer_pattern ). Nice concept, 
-* but messy to maintain.
-* 
-*  We need a way to loosely couple the composite with the domain. We solve this problem using a layer
-* of indirection. We attach a revision number to the cache key. When we increment the revision number,
-* it changes the cache key, in effect forcing a refresh of the cache. This is a variation on the
-* publish - subscribe pattern (see http://en.wikipedia.org/wiki/Publish/subscribe):
-
-* ----------\                /-----------
-* publishers > - revision - < subscribers 
-* ----------/                \-----------
-*
-* This pattern allows many different publishers to increment a revision number as things change, and 
-* the subscribers use that changed revision number to know they need to update the cache. Now the 
-* domain object and the composite cache are decoupled.
-*
-* An example may help to clarify my point. For example, you might want to cache a user's
-* entire profile page. Profile pages are difficult to cache because they usually contain lots
-* of information from many different tables. This means they are also expensive to render. If I cache 
-* the entire profile page, I skip instantiating all those different objects and making all those queries.
-* I can get it all from one cache key.
-*
-* But what if information changes? This is where revisions come in handy. The cache revision is a layer 
-* of indirection in the cache key. Normally when constructing a cache key for something, I might do 
-* something like:
-*    /user/profile/{$user_id}
-* But I can bust the cache, if I also append a revision to that key. Every time I change something related 
-* to that page, I make sure to also increment the revision. 
-*    /user/profile/{$user_id}/rev/{$rev}
-* I can use another cache key to store that revision. This means each time I want to load the profile
-* page cache, I must first get the revision that is associated with it.
-*
-* There are some tricks to make this work though. If all I do is increment a cache key for the revision 
-* number, what happens if the revision number gets evicted from the cache? Instead of using a simple 
-* incrementing id, I can instead create a revision out of the current time, along with another integer 
-* that is unlikely to collide with other numbers in our server farm. Now, even if the revision gets 
-* evicted from the cache, I wont accidentally repeat an old revision number and get a stale version of 
-* a cached page.
-*/
 class UserRev {
     
     /**
