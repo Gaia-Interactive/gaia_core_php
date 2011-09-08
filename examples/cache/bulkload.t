@@ -7,35 +7,7 @@ use Gaia\Test\Tap;
 
 include __DIR__ . '/../common.php';
 include __DIR__ . '/connection.php';
-
-/*
-* this example demonstrates the case where a user row is self-loaded on instantiation.
-* A common in pattern where the object always represents the data as well as manipulates
-* it. This works well when only manipulating one row of data:
-*
-* $user = new User( $id );
-*
-* But what if you need to load many users at once? Most programmers when faced 
-* with this problem, will do something like:
-*
-*  foreach( $ids as $id ) $users[ $id ] = new User( $id );
-*
-* THIS IS BAD! Why? because each time you instantiate the object, you make another call to the 
-* cache and another call to the database if the cache is empty. That means another trip across
-* the network to the cache and to the database each time. Both the database and the cache allow
-* us to ask for many rows of data at once. 
-* 
-* We need a pattern where we can do this, but still keep the data encapsulation. Here's how it is
-* done:
-* 
-* $users = User::load( $ids );
-*
-* I refactor my class constructor to allow a row of data to be passed in instead of just the id. Then
-* i move all the caching and query logic out of the constructor and into methods that can load many
-* rows at once. My original example still works and returns a cached row. But now I can efficiently
-* query the cache and database for many rows of data in only two network calls ... one for the cache
-* and one for the database.
-*/
+// see https://github.com/gaiaops/gaia_core_php/wiki/cache-bulk-load
 
 
 class User {
