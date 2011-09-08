@@ -1,8 +1,8 @@
 #!/usr/bin/env php
 <?php
 include_once __DIR__ . '/../common.php';
-define('BASEPATH', __DIR__ . '/lib/codeigniter/system/');
-define('APPPATH', __DIR__ . '/lib/codeigniter/app/');
+define('BASEPATH', __DIR__ . '/../vendor/codeigniter/system/');
+define('APPPATH', __DIR__ . '/../vendor/codeigniter/app/');
 require BASEPATH . 'database/DB.php';
 require BASEPATH . 'core/Common.php';
 

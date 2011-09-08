@@ -3,34 +3,25 @@ namespace Gaia\Shard;
 
 class Fragment {
 
-    protected $f = '';
+    protected $f = array();
     const FRAG_SIZE = 1000;
     
     // either pass in a string, or pass in an array of frabment => shard  key value pairs.
     // array(0=>1, ... )
     // '|0-1:| ...'
     public function __construct( $fragments = NULL ){
-        if( is_array( $fragments ) && count( $fragments ) == self::FRAG_SIZE ){
-            $f = '|';
+        if( is_array( $fragments ) ){
             foreach( $fragments as $fragment => $shard ) {
-                if( is_scalar( $shard ) && ctype_digit( strval( $shard ) ) ){
-                    $f .= $fragment . '-' . $shard . '|';
-                }
+                $this->f[ $fragment ] = $shard;
             }
-            $this->f = $f;
-        } elseif( preg_match('/^\|[0-9\-\|]+\|$/', strval($fragments)) ) {
-            $this->f = $fragments;
         }
     }
     
     public function populate( array $shards ){
-        $list = '|';
         $ct = count( $shards );
         for( $i = 0; $i < self::FRAG_SIZE; $i++){
-            $shard = $shards[ floor( $i / (self::FRAG_SIZE / $ct )) ];
-            $list .= $i . '-' . $shard .'|';
+            $this->f[ $i ] = $shards[ floor( $i / (self::FRAG_SIZE / $ct )) ];
         }
-        return $this->f = $list;
     }
     
     public function resolve( array $ids ){
@@ -48,39 +39,17 @@ class Fragment {
     }
     
     public function shard($id){        
-        $key = '|' . (self::hash($id) % self::FRAG_SIZE ) . '-';
-        $pos = strpos( $this->f, $key );
-        if( $pos === FALSE ) return NULL;
-        $pos += strlen( $key );
-        return substr($this->f, $pos, strpos($this->f, '|', $pos + 1 ) - $pos);
+        $key = (self::hash($id) % self::FRAG_SIZE );
+        if( isset( $this->f[ $key ] ) ) return $this->f[ $key ];
+        return 0;
     }
     
     public function shards(){        
-        $shards = array();
-        $pos = strpos($this->f, '-') + 1;
-        while( TRUE ){
-            $next_pos = strpos($this->f, '-', $pos + 1);
-            if( $next_pos === FALSE ) break;
-            $key = substr( $this->f, $pos, strpos( $this->f, '|', $pos + 1) - $pos );
-            $pos = $next_pos + 1;
-            $shards[ $key ] = $key;
-        }
-        sort( $shards );
-        return array_values( $shards );
-    }
-    
-    public function exportString(){
-        return $this->f;
+        return array_unique( $this->f );
     }
     
     public function export(){
-        $map = array();
-        foreach( explode('|', $this->f) as $data ){
-            if( ! $data ) continue;
-            list( $fragment, $shard) = explode('-', $data );
-            $map[ $fragment ] = $shard;
-        }
-        return $map;
+        $this->f;
     }
     
     // make sure we generate a consistent hash whether on 64bit or 32bit machine.
