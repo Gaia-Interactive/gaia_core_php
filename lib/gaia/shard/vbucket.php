@@ -1,27 +1,27 @@
 <?php
 namespace Gaia\Shard;
 
-class Fragment {
+class VBucket {
 
-    protected $f = array();
+    protected $map = array();
     const FRAG_SIZE = 1000;
     
-    // either pass in a string, or pass in an array of frabment => shard  key value pairs.
+    // either pass in an array of frabment => shard  key value pairs.
     // array(0=>1, ... )
     // '|0-1:| ...'
-    public function __construct( $fragments = NULL ){
-        if( is_array( $fragments ) ){
-            foreach( $fragments as $fragment => $shard ) {
-                $this->f[ $fragment ] = $shard;
-            }
-        }
+    public function __construct( array $shards = NULL ){
+        if( $shards ) $this->populate( $shards );
     }
     
     public function populate( array $shards ){
         $ct = count( $shards );
-        for( $i = 0; $i < self::FRAG_SIZE; $i++){
-            $this->f[ $i ] = $shards[ floor( $i / (self::FRAG_SIZE / $ct )) ];
+        if( $ct == self::FRAG_SIZE ){
+            return $this->map = $shards;
         }
+        for( $vbucket = 0; $vbucket < self::FRAG_SIZE; $vbucket++){
+            $this->map[ $vbucket ] = $shards[ floor( $vbucket / (self::FRAG_SIZE / $ct )) ];
+        }
+        return $this->map;
     }
     
     public function resolve( array $ids ){
@@ -39,17 +39,17 @@ class Fragment {
     }
     
     public function shard($id){        
-        $key = (self::hash($id) % self::FRAG_SIZE );
-        if( isset( $this->f[ $key ] ) ) return $this->f[ $key ];
-        return 0;
+        $vbucket = self::hash($id) % self::FRAG_SIZE;
+        if( isset( $this->map[ $vbucket ] ) ) return $this->map[ $vbucket ];
+        return NULL;
     }
     
     public function shards(){        
-        return array_unique( $this->f );
+        return array_unique( $this->map );
     }
     
     public function export(){
-        $this->f;
+        $this->map;
     }
     
     // make sure we generate a consistent hash whether on 64bit or 32bit machine.
