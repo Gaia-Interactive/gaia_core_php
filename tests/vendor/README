@@ -1,0 +1,3 @@
+The code in this directory is not a direct dependency of gaia code libraries, and is used for
+demonstration purposes only. Obtain the real vendor libraries and couple them with the 
+gaia code as indicated in the examples.
