@@ -18,10 +18,10 @@ class VBucket {
     }
     
     public function shard($id){        
-        $vbucket = self::hash($id) % self::FRAG_SIZE;
-        if( isset( $this->map[ $vbucket ] ) ) return $this->map[ $vbucket ];
-        return NULL;
+        $vbucket = self::hash($id);
+        return ( isset( $this->map[ $vbucket ] ) ) ? $this->map[ $vbucket ] : NULL;
     }
+    
     
     public function shards(){        
         return array_unique( $this->map );
@@ -32,13 +32,13 @@ class VBucket {
     }
     
     // make sure we generate a consistent hash whether on 64bit or 32bit machine.
-    protected static function hash($str){
+    public static function hash($str){
         $crc = abs(crc32($str));
         if( $crc & 0x80000000){
             $crc ^= 0xffffffff;
             $crc += 1;
         }
-        return $crc;
+        return $crc % self::FRAG_SIZE;
     }
     
 }

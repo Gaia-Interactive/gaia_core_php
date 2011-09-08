@@ -8,12 +8,12 @@ class Connection {
     protected static $instances = array();
     protected static $version = '__EMPTY__';
     
-    public static function load( array $conf ){
+    public static function load( array $conf , $version = NULL){
         foreach( $conf as $name => $cb ){
             if( ! is_callable( $cb ) ) continue;
             self::$map[ $name ] = $cb;
         }
-        self::$version =  md5( print_r(self::$map, TRUE ) );
+        self::$version = $version ? md5( $version ) : md5( var_export(self::$map, TRUE ) );
     }
     
     public static function instance( $name ){
@@ -49,11 +49,6 @@ class Connection {
     }
     
     public static function config( $name ){
-        if( ! isset( self::$map[ $name ] ) ) return FALSE;
-        $params = parse_url( self::$map[ $name] );
-        if( ! is_array( $params ) ) return FALSE;
-        if( ! isset( $params['scheme'] ) ) return FALSE;
-        return $params;
-
+        return ( isset( self::$map[ $name ] ) ) ? self::$map[ $name ] : FALSE;
     }
 }
