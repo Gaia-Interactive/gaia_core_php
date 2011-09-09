@@ -22,18 +22,35 @@ class NoAuthFacebook extends BaseFacebook {
 
 }
 
+$config = include __DIR__ . '/config.php';
+$cache = new Gaia\Cache\Memcache();
+$cache->addServer('127.0.0.1', '11211');
+if( is_array( $config ) ) {
+    Gaia\Cache\Session::init( $cache );
+    session_start();
+}
+
 try {
-    $cache = new Gaia\Cache\Memcache();
-    $cache->addServer('127.0.0.1', '11211');
+    
     $fb = new Gaia\Facebook\APICache( new NoAuthFacebook(array()), $cache );
-    print_R( $fb );
 } catch( Exception $e ){
     Tap::plan('skip_all', $e->__toString());
 }
-Tap::plan(3);
+Tap::plan(is_array( $config ) ? 6 : 3);
 
 $res = $fb->api('/19292868552');
 Tap::ok( is_array( $res ), 'response is an array');
 Tap::is( $res['id'], '19292868552', 'returned the facebook id in the json response');
 Tap::is( $res['name'], 'Facebook Platform', 'name is facebook platform');
+
+if( ! is_array( $config ) ) exit;
+
+$fb = new Gaia\Facebook\ApiCache( new Facebook( $config ), $cache );
+$res = $fb->api('/19292868552');
+
+Tap::ok( is_array( $res ), 'response is an array');
+Tap::is( $res['id'], '19292868552', 'returned the facebook id in the json response');
+Tap::is( $res['name'], 'Facebook Platform', 'name is facebook platform');
+
+
 //Tap::Debug($res);
