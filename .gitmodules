@@ -1,3 +1,9 @@
 [submodule "vendor/CodeIgniter"]
 	path = vendor/CodeIgniter
 	url = http://github.com/EllisLab/CodeIgniter.git
+[submodule "vendor/php-sdk"]
+	path = vendor/facebook/php-sdk
+	url = http://github.com/facebook/php-sdk.git
+[submodule "vendor/facebook/php-sdk"]
+	path = vendor/facebook/php-sdk
+	url = http://github.com/facebook/php-sdk.git
