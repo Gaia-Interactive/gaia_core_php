@@ -63,17 +63,18 @@ class Facebook {
         // copy the params so we can modify it slightly to get a more reusable cache key
         $_cacheparams = $params;
 
-        // if this is personal data, we need the fb id or access token in the cache key checksum
-        if( substr( $url, 0, 3) == '/me' ){
-            $uid = $this->facebook->getUser();
-            $_cacheparams['access_token'] = (  $uid ) ? $uid : $this->facebook->getAccessToken();
-        }
-
+        // we need the fb id or access token in the cache key checksum ...
+        // if you want generic caching for objects that are not user specific,
+        // check out the example of the NoAuthFacebook:
+        // @see https://github.com/gaiaops/gaia_core_php/blob/master/tests/cache/facebook.t
+        $uid = $this->facebook->getUser();
+        $_cacheparams['access_token'] = (  $uid ) ? $uid : $this->facebook->getAccessToken();
+        
         // if it is the /me url, lower the soft timeout so we can be more accurate.
         $soft_timeout = ( $url == '/me' ) ? self::$SHORT_CACHE_TTL : self::$LONG_CACHE_TTL;
 
         // create a cache key based off of the url and params
-        $cacheKey = 'graph/' . self::$VERSION . '/'. md5($url . serialize($_cacheparams));
+        $cacheKey = 'graph/' . self::$VERSION . '/'. sha1($url . serialize($_cacheparams));
 
         // grab the data from the cache
         $data = $cache->get($cacheKey);
