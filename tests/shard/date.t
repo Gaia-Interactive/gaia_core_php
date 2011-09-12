@@ -3,7 +3,7 @@
 include_once __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\Shard;
-Tap::plan(8);
+Tap::plan(9);
 
 
 $d = new Shard\Date(array('by'=>'month', 'cutoff'=>365, 'start'=>strtotime('2011/01/01 00:00:00')));
@@ -75,5 +75,20 @@ $d = new Shard\Date(array('by'=>'week', 'cutoff'=>30, 'timestamp'=>strtotime('20
 
 Tap::is( $d->shard(), '202000', 'timestamp works into the future');
 
+$d = new Shard\Date(array('by'=>'day', 'cutoff'=>5, 'start'=>strtotime('2011/01/01 00:00:00')));
 
+$actual = array();
+foreach( $d as $shard ){
+   $actual[] = $shard;
+}
 
+$expected = array(
+    "20110101",
+    "20101231",
+    "20101230",
+    "20101229",
+    "20101228",
+    "20101227",
+);
+
+Tap::is( $actual, $expected, 'iteration interface works correctly');

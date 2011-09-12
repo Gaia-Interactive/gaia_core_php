@@ -1,7 +1,7 @@
 <?php
 namespace Gaia\Shard;
 
-class Date {
+class Date implements \Iterator {
 
     protected $by = 'month';
     protected $cutoff = '365'; // days
@@ -33,6 +33,22 @@ class Date {
             }
             if( ! isset( $this->start ) ) $this->start = time();
         }
+    }
+    
+    public function rewind(){
+        $this->ts = $this->start;
+    }
+    
+    public function valid(){
+        return ( $this->ts !== NULL );
+    }
+    
+    public function key(){
+        return $this->timestamp();
+    }
+    
+    public function current(){
+        return $this->shard();
     }
 
     public function shard(){ 
