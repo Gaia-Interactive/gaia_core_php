@@ -4,7 +4,7 @@ namespace Gaia\Shard;
 class VBucket {
 
     protected $map = array();
-    const FRAG_SIZE = 1000;
+    const COUNT = 1000;
     
     // either pass in an array of frabment => shard  key value pairs.
     // array(0=>1, ... )
@@ -12,8 +12,8 @@ class VBucket {
     public function __construct( array $shards = NULL ){
         if( ! $shards ) return;
         $ct = count( $shards );
-        for( $vbucket = 0; $vbucket < self::FRAG_SIZE; $vbucket++){
-            $this->map[ $vbucket ] = $shards[ floor( $vbucket / (self::FRAG_SIZE / $ct )) ];
+        for( $vbucket = 0; $vbucket < self::COUNT; $vbucket++){
+            $this->map[ $vbucket ] = $shards[ floor( $vbucket / (self::COUNT / $ct )) ];
         }
     }
     
@@ -28,7 +28,7 @@ class VBucket {
     }
     
     public function export(){
-        $this->map;
+        return $this->map;
     }
     
     // make sure we generate a consistent hash whether on 64bit or 32bit machine.
@@ -38,7 +38,7 @@ class VBucket {
             $crc ^= 0xffffffff;
             $crc += 1;
         }
-        return $crc % self::FRAG_SIZE;
+        return $crc % self::COUNT;
     }
     
 }
