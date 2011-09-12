@@ -9,10 +9,6 @@ use Gaia\Cache;
 use Gaia\DB\Connection;
 use Gaia\Exception;
 
-// ----              SETUP START                ---- //
-
-
-
 Connection::load( array(
     'main'=>function(){
             return new \Gaia\DB\Driver\MySQLi($host = '127.0.0.1', $user = NULL, $pass = NULL, $db = 'test', '3306');
@@ -23,21 +19,14 @@ class UserDSN {
     
     const CONNECTION_PREFIX = 'user';
     protected static $cache;
-
+    protected static $vb;
+    
+    // what database do we need to connect to for a given user id?
     public static function get( $id ){
-        $cache =self::cache();
-        $vb = $cache->get('vbucket');
-        if( $vb instanceof VBucket ) return self::CONNECTION_PREFIX . $vb->shard( $id );
-        $db = Connection::instance('main');
-        $rs = $db->execute( 'SELECT `vbucket`, `shard` FROM `user_vbuckets`' );
-        if( ! $rs ) throw new Exception('database error', $db );
-        $list = array();
-        while( $row = $rs->fetch_array() ) $list[ $row['vbucket'] ] = $row['shard'];
-        $vb = new VBucket( $list );
-        $cache->set('vbucket', $vb, 60);
-        return  self::CONNECTION_PREFIX . $vb->shard( $id );
+        return self::CONNECTION_PREFIX . self::vb()->shard( $id );
     }
     
+    // set up the table if it doesn't exist. only needs to be done once.
     public static function initialize(){
         $db = Connection::instance('main');
         $rs = $db->execute('CREATE TEMPORARY TABLE `user_vbuckets` (`vbucket` INT UNSIGNED NOT NULL PRIMARY KEY, `shard` INT UNSIGNED NOT NULL) ENGINE=InnoDB');
@@ -50,9 +39,24 @@ class UserDSN {
         self::cache()->set('vbucket', $vb, 60);
     }
     
+    protected static function vb(){
+        if( isset( self::$vb ) ) return self::$vb;
+        $cache =self::cache();
+        $vb = $cache->get('vbucket');
+        if( $vb instanceof VBucket ) return self::$vb = $vb;
+        $db = Connection::instance('main');
+        $rs = $db->execute( 'SELECT `vbucket`, `shard` FROM `user_vbuckets`' );
+        if( ! $rs ) throw new Exception('database error', $db );
+        $list = array();
+        while( $row = $rs->fetch_array() ) $list[ $row['vbucket'] ] = $row['shard'];
+        $vb = new VBucket( $list );
+        $cache->set('vbucket', $vb, 60);
+        return self::$vb = $vb;
+    }
+    
     // normally the cache object core will come from a factory method, but we are hacking it in
     // here since this is a stand-alone example.
-    public static function cache(){
+    protected static function cache(){
         if( isset( self::$cache ) ) return self::$cache;
         $core = new Cache\Memcache();
         $core->addServer('127.0.0.1', '11211');
