@@ -71,7 +71,7 @@ $d = new Shard\Date(array('by'=>'day', 'cutoff'=>5));
 
 Tap::is( $d->shard(), date('Ymd'), 'when no start is specified, current timestamp is set');
 
-$d = new Shard\Date(array('by'=>'week', 'cutoff'=>30, 'start'=>strtotime('2020/01/01 00:00:00')));
+$d = new Shard\Date(array('by'=>'week', 'cutoff'=>30, 'timestamp'=>strtotime('2020/01/01 00:00:00')));
 
 Tap::is( $d->shard(), '202000', 'timestamp works into the future');
 
