@@ -47,6 +47,7 @@ class UserDSN {
             $rs = $db->execute('INSERT IGNORE INTO `user_vbuckets` (`vbucket`, `shard`) VALUES (%i, %i)', $vbucket, $shard );
             if( ! $rs ) throw new Exception('database error', $db );
         }
+        self::cache()->set('vbucket', $vb, 60);
     }
     
     // normally the cache object core will come from a factory method, but we are hacking it in
