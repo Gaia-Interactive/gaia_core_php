@@ -7,13 +7,19 @@ class APICache {
     protected $facebook;
     protected $cache;
     
-    const VERSION = 1;
+    public static $VERSION = 1;
     
-    const SHORT_TIMEOUT = 60;
+    public static $SHORT_CACHE_TTL = 60;
     
-    const LONG_TIMEOUT = 3600;
+    public static $LONG_CACHE_TTL = 3600;
     
-    const RETRIES = 3;
+    public static $API_CONN_TIMEOUT = 15;
+    public static $API_CONN_RETRY_TIMEOUT = 2;
+
+    public static $API_TIMEOUT = 30;
+    public static $API_RETRY_TIMEOUT = 15;
+    
+    public static $RETRIES = 3;
     
     public function __construct( \BaseFacebook $facebook, Cache\Iface $cache ){
         $this->facebook = $facebook;
@@ -65,10 +71,10 @@ class APICache {
         }
 
         // if it is the /me url, lower the soft timeout so we can be more accurate.
-        $soft_timeout = ( $url == '/me' ) ? self::SHORT_TIMEOUT : self::LONG_TIMEOUT;
+        $soft_timeout = ( $url == '/me' ) ? self::$SHORT_CACHE_TTL : self::$LONG_CACHE_TTL;
 
         // create a cache key based off of the url and params
-        $cacheKey = 'graph/' . self::VERSION . '/'. md5($url . serialize($_cacheparams));
+        $cacheKey = 'graph/' . self::$VERSION . '/'. md5($url . serialize($_cacheparams));
 
         // grab the data from the cache
         $data = $cache->get($cacheKey);
@@ -98,9 +104,9 @@ class APICache {
         // override facebook curl opts temporarily, but hold on to what they were
         // so we can restore them when we are done.
         $orig_opts = \BaseFacebook::$CURL_OPTS;
-         \BaseFacebook::$CURL_OPTS[ CURLOPT_CONNECTTIMEOUT] = $is_cached ? 2 : 15;
-         \BaseFacebook::$CURL_OPTS[ CURLOPT_TIMEOUT ] = $is_cached ? 5 : 30;
-        $tries = $is_cached ? 1 : self::RETRIES;
+         \BaseFacebook::$CURL_OPTS[ CURLOPT_CONNECTTIMEOUT] = $is_cached ? self::$API_CONN_RETRY_TIMEOUT : self::$API_CONN_TIMEOUT;
+         \BaseFacebook::$CURL_OPTS[ CURLOPT_TIMEOUT ] = $is_cached ? self::$API_RETRY_TIMEOUT : self::$API_TIMEOUT;
+        $tries = $is_cached ? 1 : self::$RETRIES;
         // try to get data from facebook. loop a few times.
         for( $i = 0; $i < $tries; $i++){
             try {
@@ -115,7 +121,7 @@ class APICache {
                 // restore facebook curl opts to what they were.
                  \BaseFacebook::$CURL_OPTS = $orig_opts;
 
-                $cache->set($cacheKey, $data, 86400 * 7);
+                $cache->set($cacheKey, $data, 86400 * 7); // set the data into the cache for a week.
                 // return the data from the array.
                 return $data['response'];
             } catch (Exception $e){
@@ -130,7 +136,7 @@ class APICache {
 
             // did we run out of time?
             // if so, bail.
-            if( ( time() - $start ) > 15 ) {
+            if( ( time() - $start ) > self::$API_RETRY_TIMEOUT ) {
                 if( ! $e instanceof Exception ) $e = new Exception('took too long to fetch '.$url.' from Facebook.');
                 break;
             }
@@ -160,7 +166,7 @@ class APICache {
         throw new Exception('retries exceeded');
     }
     
-    protected function time(){
+    protected static function time(){
         return time();
     }
 
