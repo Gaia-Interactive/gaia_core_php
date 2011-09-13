@@ -4,15 +4,11 @@ include __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\Cache;
 
-Tap::plan(8);
+Tap::plan(7);
 
-$cache = new Cache\Memcache();
+$cache = new Cache\Mock();
 
-Tap::ok( $cache instanceof Cache\Memcache, 'instantiated memcache cache object');
-
-$result = $cache->addServer('127.0.0.1', '11211');
-
-Tap::ok( $result, 'connected to localhost server');
+Tap::ok( $cache instanceof Cache\Mock, 'instantiated mock cache object');
 
 $data = array();
 for( $i = 1; $i <= 3; $i++){

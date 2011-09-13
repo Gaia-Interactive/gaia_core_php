@@ -23,8 +23,7 @@ class NoAuthFacebook extends BaseFacebook {
 }
 
 $config = @include __DIR__ . '/facebook.config.php';
-$cache = new Gaia\Cache\Memcache();
-$cache->addServer('127.0.0.1', '11211');
+$cache = new Gaia\Cache\Mock();
 if( is_array( $config ) ) {
     Gaia\Cache\Session::init( $cache );
     session_start();

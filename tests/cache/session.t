@@ -8,10 +8,8 @@ ob_start();
 $limit = 10;
 
 
-$cache = new Cache\Memcache;
-$result = $cache->addServer('127.0.0.1', '11211');
-Tap::plan(9);
-Tap::ok( $result, 'connected to localhost server');
+$cache = new Cache\Mock;
+Tap::plan(8);
 
 $s = Cache\Session::init( $o = new Cache\Observe( $cache ) );
 session_start();

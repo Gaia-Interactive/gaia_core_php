@@ -7,7 +7,7 @@ Tap::plan(92);
 
 // utility function for instantiating the object 
 function stockpile( $app, $user_id ){
-    return new Cacher( new Serial( $app, $user_id ), memcache() );
+    return new Cacher( new Serial( $app, $user_id ), cachemock() );
 }
 
 $user_id = uniqueUserID();

@@ -8,9 +8,9 @@ Tap::plan(4);
 
 
 // on production should always use memcache pointing at a global pool of cache servers
-// consistent with all the webservers in the farm, but for this test, I can cheat and use Apc
-// since it only applies to this local box and the interface is the same.
-$cache = new Cache\Namespaced( new Cache\Apc, 'test');
+// consistent with all the webservers in the farm, but for this test, I can cheat and use the mock
+// since it only applies to this local test and the interface is the same.
+$cache = new Cache\Namespaced( new Cache\Mock, 'test');
 
 
 $new = new NewId\TimeRandLock( $cache );

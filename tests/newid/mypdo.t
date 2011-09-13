@@ -8,7 +8,7 @@ Tap::plan(4);
 
 $db = new Gaia\DB\Driver\PDO('mysql://host=127.0.0.1;dbname=test');
 $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT );
-$cache = new Cache\Apc();
+$cache = new Cache\Mock();
 $app = 'test';
 $new = new NewId\MyPDO( $db, $cache, $app );
 $res = $new->testInit();

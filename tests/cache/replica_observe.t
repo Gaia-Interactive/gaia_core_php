@@ -8,8 +8,7 @@ Tap::plan(21);
 
 $ids = array('1', '2');
 
-$m = new Cache\Memcache();
-$m->addServer('127.0.0.1', '11211');
+$m = new Cache\Mock();
 $m = new Cache\Replica( $o = new Cache\Observe( $m ), 2);
 
 Tap::ok( $m instanceof Cache\Iface, 'wrapped the object in an observer');

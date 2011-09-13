@@ -12,7 +12,7 @@ $db = new MySQLi(
                 $pass = NULL, 
                 $dbname = 'test', 
                 '3306');
-$cache = new Cache\Apc();
+$cache = new Cache\Mock();
 $app = 'test';
 $new = new NewId\MySQLi( $db, $cache, $app );
 $res = $new->testInit();

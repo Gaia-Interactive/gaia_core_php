@@ -10,6 +10,14 @@ function memcache(){
     return $cacher;
 }
 
+function cachemock(){
+    static $cacher;
+    if( isset( $cacher ) ) return $cacher;
+    $cacher = new \Gaia\Cache\Mock;
+    return $cacher;
+}
+
+
 function quantify( $v ){
     return  Base::quantify( $v );
 }

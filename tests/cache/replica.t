@@ -6,8 +6,7 @@ use Gaia\Cache;
 
 Tap::plan(17);
 
-$m = new Cache\Memcache();
-$m->addServer('127.0.0.1', '11211');
+$m = new Cache\Mock();
 $m = new Cache\Replica($m, 2);
 Tap::ok( $m instanceof Cache\Iface, 'replicamemcache instantiated successfully');
 

@@ -7,7 +7,7 @@ Tap::plan(74);
 
 // utility function for instantiating the object 
 function stockpile( $app, $user_id ){
-    return new Cacher( new Tally( $app, $user_id ), memcache() );
+    return new Cacher( new Tally( $app, $user_id ), cachemock() );
 }
 
 // wrap in try/catch so we can fail and print out debug.

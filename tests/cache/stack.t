@@ -6,11 +6,9 @@ use Gaia\Cache;
 
 $limit = 10;
 
-Tap::plan(2);
+Tap::plan(1);
 
-$cache = new Cache\Memcache;
-$result = $cache->addServer('127.0.0.1', '11211');
-Tap::ok( $result, 'connected to localhost server');
+$cache = new Cache\Mock;
 $app = 'test/cache/stack/' . microtime(TRUE) .'/';
 $cl = new Cache\Stack( new Cache\Namespaced( $cache, $app ) );
 $values = array();
