@@ -13,6 +13,7 @@ use Gaia\Exception;
 class FloodControl {
 
     const DEFAULT_DECAY = 60;
+    public static $time_offset = 0;
 	protected $storage = array ( 1.0, 0);
 	protected $options;
 	protected $core;
@@ -44,12 +45,12 @@ class FloodControl {
 	 * try to run an event against flood control
 	 * @return (bool) $success - this tells you if you pass flood control
 	 */
-	public function checkIn(){		
+	public function go(){		
 		$value = $this->calculate();
 		if ($value > $this->options->max) return FALSE;
 		$res = $this->core->add($this->options->scope . '_SHORT', 1, $this->options->short);
 		if (! $res ) return FALSE;
-		$this->storage = array(++$value, time());
+		$this->storage = array(++$value, self::time());
         $this->core->set($this->options->scope, $this->storage);
 		return TRUE;
 	}	
@@ -77,7 +78,7 @@ class FloodControl {
 	protected function calculate(){
 			
 		list ($value, $time) = $this->storage;	
-		$elapsed_time = time() - $time;
+		$elapsed_time = self::time() - $time;
 		if ($elapsed_time != 0){ 
 			$value -= (float) $elapsed_time / $this->options->decay;		
 		}
@@ -89,8 +90,12 @@ class FloodControl {
 	// get time left before short interval is met
 	protected function calculateShort(){
 		list ($value, $time) = $this->storage;		
-		$elapsed_time = time() - $time;
+		$elapsed_time = self::time() - $time;
 		if ($elapsed_time < $this->options->short) return $this->options->short - $elapsed_time;
 		return 0;
+	}
+	
+	protected function time(){
+	    return time() + self::$time_offset;
 	}
 }

@@ -13,7 +13,7 @@ $scope = 'floodcontrol/test/userid-' . microtime(TRUE) .'/';
 $fc = new Cache\FloodControl( $cache, array('scope'=>$scope, 'max'=>2 ) );
 $actual = array();
 for( $i = 0; $i < 3; $i++){
-    $actual[] = $fc->checkin();
+    $actual[] = $fc->go();
     sleep(1);
 }
 $expected = array(
@@ -22,4 +22,4 @@ $expected = array(
     false,
 );
 
-Tap::is( $actual, $expected, 'first two checkins work, last one fails on long flood control');
+Tap::is( $actual, $expected, 'first two attempts work, last one fails on long flood control');
