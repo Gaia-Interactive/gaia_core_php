@@ -17,12 +17,15 @@ class Connection {
     */
     public static function memcache(){
         if( isset( self::$memcache ) ) return self::$memcache;
+        return self::$memcache = new Cache\Mock;
+        /*
         self::$memcache = new Cache\Namespaced( new Cache\Memcache, self::cacheprefix() );
         foreach( self::cacheservers() as $entry){
             list( $host, $port, $weight ) = $entry;
             self::$memcache->addServer($host, $port, $weight);
         }
         return self::$memcache;
+        */
      }
      
      public static function apc(){
