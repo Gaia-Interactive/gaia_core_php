@@ -19,16 +19,13 @@ class Base implements Iface {
     */
     protected $user_id;
     
-   /**
-    * @see self::newId()
-    */
-    const ID_OFFSET = '1000000000';
-    
     /**
     * for test purposes to simulate passage of time.
     *
     */
     public static $time_offset = 0;
+    
+    protected static $id_generator;
     
    /**
     * class constructor.
@@ -176,19 +173,23 @@ class Base implements Iface {
     * shouldn't hit big int max for 80 years. at that point we'll rewrite our app :)
     */
     public static function newId(){
-        $prefix = bcsub( Base::time(), self::ID_OFFSET );
-        if( $prefix < 1 ) throw new Exception('invalid serial generated', $prefix );
-        return $prefix . str_pad( mt_rand(0, 9999999999), 10, '0', STR_PAD_LEFT);
+         return self::idGenerator()->id();
     }
     
    /**
     * return a list of new ids
     */
     public static function newIds( $ct = 1 ){
-         $ids = array();
-         if( $ct < 1 ) $ct = 1;
-         while( $ct-- > 0 ) $ids[] = self::newId();
-         return $ids;
+        return self::idGenerator()->ids( $ct );
+    }
+    
+    public static function attachIdGenerator( \Gaia\NewId\Iface $generator ){
+        return self::$id_generator = $generator;
+    }
+    
+    public static function idGenerator(){
+        if( isset( self::$id_generator ) ) return self::$id_generator;
+        return self::$id_generator = new \Gaia\NewID\TimeRand;
     }
     
    /**

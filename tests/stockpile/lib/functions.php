@@ -31,4 +31,5 @@ function uniqueUserId(){
 
 function advanceCurrentTime($secs = 1 ){
     Base::$time_offset+= $secs;
+    \Gaia\NewID\TimeRand::$time_offset += $secs;
 }

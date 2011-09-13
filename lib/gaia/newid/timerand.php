@@ -31,7 +31,7 @@ class TimeRand implements Iface {
     public function ids( $ct = 1 ){
          $ids = array();
          if( $ct < 1 ) $ct = 1;
-         while( $ct-- > 0 ) $ids[] = self::id();
+         while( $ct-- > 0 ) $ids[] = $this->id();
          return $ids;
     }
     
