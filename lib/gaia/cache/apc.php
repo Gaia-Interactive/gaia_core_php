@@ -1,5 +1,6 @@
 <?php
 namespace Gaia\Cache;
+if( ! function_exists('apc_fetch') ) require __DIR__ . '/apc.stub.php';
 
 /**
 * make APC conform to our cache interface. Works pretty well except for the replace call, since apc
