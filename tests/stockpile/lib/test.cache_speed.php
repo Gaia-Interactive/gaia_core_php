@@ -2,6 +2,10 @@
 namespace Gaia\Stockpile;
 use Gaia\Test\Tap;
 
+if( ! @fsockopen('127.0.0.1', '11211')) {
+    Tap::plan('skip_all', 'memcached not running on localhost');
+}
+
 // how many tests are we gonna run?
 Tap::plan(5);
 
