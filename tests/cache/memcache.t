@@ -4,6 +4,10 @@ include __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\Cache;
 
+if( ! @fsockopen('127.0.0.1', '11211')) {
+    Tap::plan('skip_all', 'Memcached not running on localhost');
+}
+
 Tap::plan(8);
 
 $cache = new Cache\Memcache();

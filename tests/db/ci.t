@@ -9,6 +9,9 @@ require BASEPATH . 'core/Common.php';
 use Gaia\Test\Tap;
 use Gaia\DB;
 
+if( ! @fsockopen('127.0.0.1', '3306')) {
+    Tap::plan('skip_all', 'mysql-server not running on localhost');
+}
 
 
 try {

@@ -4,6 +4,11 @@ include_once __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\NewID;
 use Gaia\Cache;
+
+if( ! @fsockopen('127.0.0.1', '3306')) {
+    Tap::plan('skip_all', 'mysql-server not running on localhost');
+}
+
 Tap::plan(4);
 
 $db = new Gaia\DB\Driver\PDO('mysql://host=127.0.0.1;dbname=test');

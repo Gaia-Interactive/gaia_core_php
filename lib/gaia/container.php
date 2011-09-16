@@ -6,7 +6,7 @@ class Container implements Iterator {
  /**
     * internal data storage
     */
-    private $__d = array();
+    protected $__d = array();
     
     public function __construct( $input = NULL ){
         $this->load( $input );
@@ -33,7 +33,9 @@ class Container implements Iterator {
     }
     
     public function isEmpty( $name ){
-        return ! isset( $this->__d[$name] ) && ! empty( $this->__d[$name] ) ? TRUE : FALSE;
+        if( ! isset( $this->__d[$name] ) ) return TRUE;
+        if( empty( $this->__d[$name] ) ) return TRUE;
+        return FALSE;
     }
     
     public function all(){

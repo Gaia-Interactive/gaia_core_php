@@ -4,7 +4,9 @@ include_once __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\DB;
 
-
+if( ! @fsockopen('127.0.0.1', '3306')) {
+    Tap::plan('skip_all', 'mysql-server not running on localhost');
+}
 
 try {
     DB\Connection::load( array(

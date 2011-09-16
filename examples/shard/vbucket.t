@@ -9,6 +9,10 @@ use Gaia\Cache;
 use Gaia\DB\Connection;
 use Gaia\Exception;
 
+if( ! @fsockopen('127.0.0.1', '3306')) {
+    Tap::plan('skip_all', 'mysql-server not running on localhost');
+}
+
 Connection::load( array(
     'main'=>function(){
             return new \Gaia\DB\Driver\MySQLi($host = '127.0.0.1', $user = NULL, $pass = NULL, $db = 'test', '3306');
