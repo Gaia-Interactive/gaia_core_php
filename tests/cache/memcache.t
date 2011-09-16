@@ -8,6 +8,10 @@ if( ! @fsockopen('127.0.0.1', '11211')) {
     Tap::plan('skip_all', 'Memcached not running on localhost');
 }
 
+if( ! class_exists('\Memcache') && ! class_exists('\Memcached') ){
+    Tap::plan('skip_all', 'no pecl-memcache or pecl-memcached extension installed');
+}
+
 Tap::plan(8);
 
 $cache = new Cache\Memcache();
