@@ -3,6 +3,11 @@ require __DIR__ . '/../lib/setup.php';
 use Gaia\DB;
 use Gaia\Test\Tap;
 
+if( ! class_exists('\MySQLi') ){
+    Tap::plan('skip_all', 'php-pdo not installed');
+}
+
+
 if( ! @fsockopen('127.0.0.1', '3306')) {
     Tap::plan('skip_all', 'mysql-server not running on localhost');
 }

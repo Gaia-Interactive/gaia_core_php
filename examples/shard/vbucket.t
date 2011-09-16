@@ -9,6 +9,11 @@ use Gaia\Cache;
 use Gaia\DB\Connection;
 use Gaia\Exception;
 
+if( ! class_exists('\MySQLi') ){
+    Tap::plan('skip_all', 'php-mysqli not installed');
+}
+
+
 if( ! @fsockopen('127.0.0.1', '3306')) {
     Tap::plan('skip_all', 'mysql-server not running on localhost');
 }

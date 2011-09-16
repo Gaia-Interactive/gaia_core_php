@@ -4,6 +4,9 @@ include_once __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\DB;
 
+if( ! class_exists('\PDO') ){
+    Tap::plan('skip_all', 'php-pdo not installed');
+}
 
 
 try {

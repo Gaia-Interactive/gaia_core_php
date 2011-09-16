@@ -4,6 +4,11 @@ include_once __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\DB;
 
+if( ! class_exists('\PDO') ){
+    Tap::plan('skip_all', 'php-pdo not installed');
+}
+
+
 if( ! @fsockopen('127.0.0.1', '3306')) {
     Tap::plan('skip_all', 'mysql-server not running on localhost');
 }
@@ -11,7 +16,7 @@ if( ! @fsockopen('127.0.0.1', '3306')) {
 
 try {
     DB\Connection::load( array('test'=>function () {
-        $db = new DB\Driver\PDO('mysql://host=127.0.0.1;dbname=test');
+        $db = new DB\Driver\PDO('mysql:host=127.0.0.1;dbname=test;port=3306');
         $db->setAttribute(\PDO::ATTR_STATEMENT_CLASS, array('Gaia\DB\Driver\PDOStatement', array($db)));
         $db->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_SILENT );
         return $db;

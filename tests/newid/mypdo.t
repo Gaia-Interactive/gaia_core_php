@@ -5,13 +5,17 @@ use Gaia\Test\Tap;
 use Gaia\NewID;
 use Gaia\Cache;
 
+if( ! class_exists('\PDO') ){
+    Tap::plan('skip_all', 'php-pdo not installed');
+}
+
 if( ! @fsockopen('127.0.0.1', '3306')) {
     Tap::plan('skip_all', 'mysql-server not running on localhost');
 }
 
 Tap::plan(4);
 
-$db = new Gaia\DB\Driver\PDO('mysql://host=127.0.0.1;dbname=test');
+$db = new Gaia\DB\Driver\PDO('mysql:host=127.0.0.1;dbname=test;port=3306');
 $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT );
 $cache = new Cache\Mock();
 $app = 'test';
