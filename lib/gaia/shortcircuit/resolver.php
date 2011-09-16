@@ -8,7 +8,7 @@ class Resolver {
     public static function search( $name, $type ){
         $dir =  Router::appdir();
         $key = md5( __CLASS__ . '/' . __FUNCTION__ . '/' . $dir . '/' . $type . '/' . $name);
-        $n = apc_fetch( $key );
+        $n = function_exists('apc_fetch') ? apc_fetch( $key ) : FALSE;
         if( $n == self::UNDEF ) return '';
         if( $n ) return $n;
         $args = explode('/', $name );
@@ -20,7 +20,7 @@ class Resolver {
             apc_store( $key, $n, 300);
             return $n;
         } while( array_pop( $args ) );
-        apc_store($key, self::UNDEF, 30);
+        if( function_exists('apc_store') ) apc_store($key, self::UNDEF, 30);
         return '';
     }
     
@@ -30,7 +30,7 @@ class Resolver {
         if( strlen( $name ) < 1 || strpos($name, '.') !== FALSE ) return FALSE;
         $dir =  Router::appdir();
         $key = md5( __CLASS__ . '/' . __FUNCTION__ . '/' . $dir . '/' . $type . '/' . $name);
-        $path = apc_fetch( $key );
+        $path =  function_exists('apc_fetch') ? apc_fetch( $key ) : FALSE;
         if( $path == self::UNDEF ) return '';
         if( $path ) return $path;
         $path = $dir . $name . '.' . $type . '.php';
@@ -38,7 +38,7 @@ class Resolver {
             $path = $dir . $name . '/index.' . $type . '.php';
             if( ! file_exists( $path ) ) $path = '';
         }
-        apc_store( $key, ($path ? $path : self::UNDEF), (! $path ? 300 : 60) );
+        if( function_exists('apc_store') ) apc_store( $key, ($path ? $path : self::UNDEF), (! $path ? 300 : 60) );
         return $path;
     }
 }
