@@ -7,7 +7,7 @@ use Gaia\Test\Tap;
 use Gaia\DB;
 
 class NoAuthFacebook extends BaseFacebook {
-
+  public function __construct(){ parent::__construct( array('appId'=>'', 'secret'=>'')); }
   protected function setPersistentData($key, $value){ return false; }
   protected function getPersistentData($key, $default = false){ return false; }
   protected function clearPersistentData($key){ return false; }
@@ -31,7 +31,7 @@ if( is_array( $config ) ) {
 
 try {
     
-    $fb = new Gaia\Cache\Facebook( new NoAuthFacebook(array()), $cache );
+    $fb = new Gaia\Cache\Facebook( new NoAuthFacebook(), $cache );
 } catch( Exception $e ){
     Tap::plan('skip_all', $e->__toString());
 }

@@ -53,7 +53,7 @@ class MySQLi extends \MySQLi implements \Gaia\DB\Iface {
         return $rs;
     }
     
-    public function prepare(){
+    public function prepare($query){
         trigger_error('unsupported method ' . __CLASS__ . '::' . __FUNCTION__, E_USER_ERROR);
         exit;
     }

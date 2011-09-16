@@ -1,5 +1,6 @@
 <?php
 namespace Gaia\Stockpile;
+use Gaia\DB\Transaction;
 
 /**
  * Basic Wrapper class that allows us to easily punch out parts of the class.
@@ -69,7 +70,7 @@ abstract class Passthru implements IFace {
    /**
     * @see Stockpile_Interface::get();
     */
-    public function get( $item ){
+    public function get( $item,  $with_lock = FALSE ){
         $ids = ( $scalar =  is_scalar( $item ) ) ? array( $item ) : $item;
         $rows = $this->fetch( $ids, $with_lock  );
         if( ! $scalar ) return $rows;
