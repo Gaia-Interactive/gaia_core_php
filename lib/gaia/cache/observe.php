@@ -56,7 +56,7 @@ class Observe extends Wrap {
         return $this->__call( __FUNCTION__, $args );
     }
     
-    function __call($method, $args){ 
+    function __call($method, array $args){ 
         $res = call_user_func_array( array( $this->core, $method), $args);
         $this->_calls[] = array('method'=>$method, 'args'=>$args, 'result'=>$res);
         return $res;

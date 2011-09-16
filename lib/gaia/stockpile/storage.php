@@ -10,7 +10,7 @@ class Storage {
      protected static $autoschema = FALSE;
      
          // hash the user id against vbuckets and determine wich database name to use.
-    public function attach( $callback ){
+    public static function attach( $callback ){
         if( ! is_callable( $callback ) ) throw new Exception('invalid connection resolver', $callback );
         self::$resolver = $callback;
     }

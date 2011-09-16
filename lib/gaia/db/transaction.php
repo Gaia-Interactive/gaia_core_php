@@ -9,7 +9,7 @@ class Transaction
     protected static $commit_callbacks = array();
     protected static $rollback_callbacks = array();
     
-    function add( Iface $obj ){
+    public static function add( Iface $obj ){
         self::claimStart();
         if( ! $obj->begin( function (){ Transaction::block(); }) ) {
             return FALSE;
@@ -52,7 +52,7 @@ class Transaction
         return true;
     }
 
-    function inProgress() {
+    public static function inProgress() {
     	return (empty(self::$tran)) ? FALSE : TRUE;
     }
 
@@ -85,11 +85,11 @@ class Transaction
         self::$tran = array();
     }
 
-    function atStart(){
+    public static function atStart(){
         return self::$at_start;
     }
 
-    function claimStart(){
+    public static function claimStart(){
         if( ! self::$at_start  ) return FALSE;
         self::$at_start = FALSE;
         return TRUE;

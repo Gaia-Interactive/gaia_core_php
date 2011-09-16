@@ -6,24 +6,24 @@ class Namespaced extends Wrap
 {
     private $namespace = '';
     
-    function __construct( Iface $core, $namespace ){ 
+    public function __construct( Iface $core, $namespace ){ 
         parent::__construct( $core );
         $this->namespace = $namespace;
     }
     
-    function decrement($key, $value = 1){ 
+    public function decrement($key, $value = 1){ 
         return $this->core->decrement($this->namespace . $key, $value);
     }
     
-    function flush(){ 
+    public function flush(){ 
         return FALSE; 
     }
     
-    function delete($key) {
+    public function delete($key) {
         return $this->core->delete($this->namespace . $key); 
     }
     
-    function get($request, $options = NULL){
+    public function get($request, $options = NULL){
         
         $options = new Container( $options );
         
@@ -96,23 +96,23 @@ class Namespaced extends Wrap
         return $matches;
     }
     
-    function increment($key, $value = 1){
+    public function increment($key, $value = 1){
         return $this->core->increment($this->namespace . $key, $value); 
     }
     
-    function replace($key, $value, $expire = NULL){ 
+    public function replace($key, $value, $expire = NULL){ 
         return $this->core->replace($this->namespace . $key, $value, $expire); 
     }
     
-    function set($key, $value, $expire = NULL){ 
+    public function set($key, $value, $expire = NULL){ 
         return $this->core->set($this->namespace . $key, $value, $expire); 
     }
     
-    function add($key, $value, $expire = NULL){
+    public function add($key, $value, $expire = NULL){
         return $this->core->add($this->namespace . $key, $value, $expire);
     }
     
-    function __call($method, $args){
+    public function __call($method, array $args){
         return call_user_func_array( array( $this->core, $method), $args ); 
     }
 }

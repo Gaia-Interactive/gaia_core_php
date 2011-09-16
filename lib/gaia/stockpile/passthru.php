@@ -53,14 +53,27 @@ abstract class Passthru implements IFace {
     * @see Stockpile_Interface::set();
     */
     public function set( $item_id, $quantity, array $data = NULL ){
-        return Base::set( $item_id, $quantity, $data );
+        $local_txn = Transaction::claimStart() ? TRUE : FALSE;
+        try {
+            $current = $this->get($item_id);
+            if( Base::quantify( $current ) > 0 ) $this->subtract( $item_id, $current, $data );
+            $result = $this->add( $item_id, $quantity, $data );
+            if( $local_txn ) $result = Transaction::commit();
+            return $result;
+        } catch( \Exception $e ){
+            $this->handle( $e );
+            throw $e;
+        }
     }
     
    /**
     * @see Stockpile_Interface::get();
     */
     public function get( $item ){
-        return Base::get( $item );
+        $ids = ( $scalar =  is_scalar( $item ) ) ? array( $item ) : $item;
+        $rows = $this->fetch( $ids, $with_lock  );
+        if( ! $scalar ) return $rows;
+        return is_array( $rows ) && isset( $rows[ $item ] ) ? $rows[ $item ] : $this->defaultQuantity();
     }
     
    /**
@@ -103,7 +116,8 @@ abstract class Passthru implements IFace {
     }
     
     public function handle( Exception $e ){
-        return Base::handle( $e );
+        if( Transaction::inProgress() ) Transaction::rollback();
+        return $e;
     }
     
    /**

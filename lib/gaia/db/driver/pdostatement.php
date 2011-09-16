@@ -7,7 +7,7 @@ class PDOStatement extends \PDOStatement {
         $this->connection = $connection;
     }
     
-    public function execute($parameters){
+    public function execute(array $parameters = NULL){
         if( $this->connection->locked() ) return FALSE;
         $res = parent::execute( $parameters );
         if( $res ) return $res;
