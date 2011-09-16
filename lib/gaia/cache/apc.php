@@ -8,7 +8,9 @@ namespace Gaia\Cache;
 class Apc Implements Iface {
 
     function get( $request, $options = NULL ){
-        return apc_fetch( $request );
+        $res = apc_fetch( $request );
+        if( is_array( $request ) && ! is_array( $res ) ) $res = array();
+        return $res;
     }
     
     function set($k, $v, $expires = 0 ){

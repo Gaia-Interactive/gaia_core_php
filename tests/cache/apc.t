@@ -8,6 +8,10 @@ if( ! function_exists('apc_fetch') ){
     Tap::plan('skip_all', 'apc not installed');
 }
 
+if( ! ini_get('apc.enable_cli') ){
+    Tap::plan('skip_all', 'apc not configured for cli');
+}
+
 Tap::plan(5);
 
 $cache = new Cache\Apc();
