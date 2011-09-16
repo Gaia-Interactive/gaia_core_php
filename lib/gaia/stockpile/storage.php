@@ -7,6 +7,7 @@ use \Gaia\DB\Connection;
 class Storage {
 
      protected static $resolver;
+     protected static $autoschema = FALSE;
      
          // hash the user id against vbuckets and determine wich database name to use.
     public function attach( $callback ){
@@ -23,7 +24,14 @@ class Storage {
         if( $res instanceof Storage\Iface ) return $res;
         return self::loadDefault( $stockpile, $name, $res );
      }
+     
+     public static function enableAutoSchema( $bool = TRUE ){
+        self::$autoschema = (bool) $bool;
+     }
 
+     public static function isAutoSchemaEnabled(){
+        return self::$autoschema;
+     }
     protected static function loadDefault( Iface $stockpile, $name, $dsn ){
         $db = $stockpile->inTran() ? Transaction::instance( $dsn ) : Connection::instance( $dsn );
         switch( get_class( $db ) ){

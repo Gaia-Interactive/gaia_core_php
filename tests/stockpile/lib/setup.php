@@ -9,6 +9,9 @@ Gaia\Stockpile\Storage::attach(
     } 
 );
 
+Gaia\Stockpile\Storage::enableAutoSchema();
+
+
 if( strpos(php_sapi_name(), 'apache') !== FALSE ) print "\n<pre>\n";
 
 $app = 'test1';

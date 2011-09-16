@@ -14,7 +14,8 @@ class Core implements Iface {
         $this->db = $db;
         $this->app = $app;
         $this->user_id = $user_id;
-        $cache = new Cache\Gate( new Cache\Apc() );
+        if( ! \Gaia\Stockpile\Storage::isAutoSchemaEnabled() ) return;
+        $cache = function_exists('apc_fetch') ? new Cache\Gate( new Cache\Apc() ) : new Cache\Mock;
         $key = 'stockpile/storage/__create/' . md5( $dsn . '/' . $app . '/' . get_class( $this ) );
         if( $cache->get( $key ) ) return;
         if( ! $cache->add( $key, 1, 60 ) ) return;

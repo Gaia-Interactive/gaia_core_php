@@ -4,6 +4,10 @@ include __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\Cache;
 
+if( ! function_exists('apc_fetch') ){
+    Tap::plan('skip_all', 'apc not installed');
+}
+
 Tap::plan(5);
 
 $cache = new Cache\Apc();
