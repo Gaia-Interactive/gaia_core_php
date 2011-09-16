@@ -9,11 +9,6 @@ use Gaia\Cache;
 use Gaia\DB\Connection;
 use Gaia\Exception;
 
-if( ! class_exists('\MySQLi') ){
-    Tap::plan('skip_all', 'php-mysqli not installed');
-}
-
-
 if( ! @fsockopen('127.0.0.1', '3306')) {
     Tap::plan('skip_all', 'mysql-server not running on localhost');
 }
@@ -67,8 +62,7 @@ class UserDSN {
     // here since this is a stand-alone example.
     protected static function cache(){
         if( isset( self::$cache ) ) return self::$cache;
-        $core = new Cache\Memcache();
-        $core->addServer('127.0.0.1', '11211');
+        $core = new Cache\Mock();
         return self::$cache = new Cache\Gate( new Cache\Namespaced($core, __CLASS__ . '/') );
     }
 }
