@@ -41,3 +41,7 @@ function advanceCurrentTime($secs = 1 ){
     Base::$time_offset+= $secs;
     \Gaia\NewID\TimeRand::$time_offset += $secs;
 }
+
+function lastElement( array $arr ){
+    return array_pop( $arr );
+}

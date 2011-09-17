@@ -27,7 +27,8 @@ abstract class MySQL implements Iface {
     }
     
     public function id(){
-        return array_pop( $this->ids( 1 ) );
+        $ids = $this->ids( 1 );
+        return array_pop( $ids );
     }
     
     public function ids( $ct = 1 ){

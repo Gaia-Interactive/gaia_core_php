@@ -8,7 +8,7 @@ if( ! @fsockopen('127.0.0.1', '11300')) {
     Tap::plan('skip_all', 'Beanstalkd not running on localhost');
 }
 
-Tap::plan(5);
+Tap::plan(4);
 
 $tube = '__test__';
 
@@ -16,8 +16,6 @@ $tube = '__test__';
 
 $client = new Pheanstalk('127.0.0.1', '11300');
 $res = $client->useTube($tube);
-Tap::is( $res, 1, 'watching test tube');
-
 $res = $client->put('hello', $pri = 1, $delay = 0, $ttr = 10);
 Tap::ok( $res, 'put a hello message into beanstalkd');
 Tap::like( $res, '/[1-9][0-9]?+/', 'got a valid id back');

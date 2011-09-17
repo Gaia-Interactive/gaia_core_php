@@ -47,7 +47,7 @@ $quantity = stockpile( $app, $user_id )->subtract($item_id, $quantity->grab(3));
 
 Tap::is( $quantity->serials(), array( $first_serial ), 'after deleting 3, back down to my original item');
 
-$quantity->set( $serial = array_pop( $quantity->serials() ), array('event'=>'xmas'));
+$quantity->set( $serial = lastElement( $quantity->serials() ), array('event'=>'xmas'));
 $res = stockpile( $app, $user_id )->add( $item_id, $quantity );
 Tap::is( $quantity->all(), $res->all(), 'after adding properties, returned result matches what we just stored');
 Tap::is( $res->get( $serial ), array('event'=>'xmas'), 'the property was properly stored for the serial');
@@ -64,7 +64,7 @@ $stockpile = stockpile($app, $user_id);
 $item_id = uniqueNumber(1, 10000000);
 $quantity = $stockpile->quantity();
 $quantity->set($stockpile->newId(), array());
-$serial = array_pop( $quantity->serials() );
+$serial = lastElement( $quantity->serials() );
 $quantity->set( $serial, $props = range(1,1200) );
 $res = stockpile($app, $user_id)->add( $item_id, $quantity );
 Tap::is( $res, $quantity, 'after storing a large list of properties, result coming back still matches. db didn\'t truncate');
@@ -76,11 +76,11 @@ $q = $stockpile->quantity();
 $q->set($stockpile->newId(), array() );
 $stockpile->add($item_id, $q);
 $q = $stockpile->get( $item_id );
-Tap::is( array_pop($q->all()), array(), 'empty properties before callback validator is attached');
+Tap::is( lastElement($q->all()), array(), 'empty properties before callback validator is attached');
 
 $stockpile = new QuantityInspector($stockpile , 'Gaia\Stockpile\sanitizeQuantity');
 $q = $stockpile->get( $item_id );
-Tap::is( array_pop($q->all()), array('xp'=>1), 'callback function populated xp into read quantity object');
+Tap::is( lastElement($q->all()), array('xp'=>1), 'callback function populated xp into read quantity object');
 
 $stockpile = new QuantityInspector( stockpile($app, $user_id), 'Gaia\Stockpile\sanitizeQuantity');
 
@@ -88,7 +88,7 @@ $item_id = uniqueNumber(1, 10000000);
 $q = $stockpile->quantity();
 $q->set($stockpile->newId(), array() );
 $res = $stockpile->add($item_id, $q);
-Tap::is( array_pop($res->all()), array('xp'=>1), 'callback function populated xp into the quantity on add');
+Tap::is( lastElement($res->all()), array('xp'=>1), 'callback function populated xp into the quantity on add');
 
 
 
@@ -102,7 +102,7 @@ $q->set($stockpile->newId(), array());
 $q->set($stockpile->newId(), array());
 $total = $stockpile->add( $item_id, $q );
 Tap::is( $stockpile->set( $item_id, $total ), $total, 'When calling set with the same set of serials, no items created or subtracted');
-$new = $total->grab( array( array_pop( $total->serials() )  ) );
+$new = $total->grab( array( lastElement( $total->serials() )  ) );
 Tap::is( $stockpile->set( $item_id, $new ), $new, 'When removing  a serial, everything matches up');
 
 Tap::is( $stockpile->set( $item_id, $total ), $total, 'When adding back a serial, everything matches up');
