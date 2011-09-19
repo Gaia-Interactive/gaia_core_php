@@ -23,7 +23,7 @@ abstract class MySQL implements Iface {
         if( $app ) $this->app = $app;
         if( ! preg_match('/^[a-z0-9_]+$/', $app) ) throw new Exception('invalid-app');
         $this->app = $app; 
-        $this->cache = $cache;
+        $this->cache = new Cache\Namespaced( $cache, __CLASS__ . '/' . $app);
     }
     
     public function id(){
@@ -50,17 +50,26 @@ abstract class MySQL implements Iface {
 
 
     public function init(){
-        $this->query( str_replace('{TABLE}', 'newid_' . $this->app, self::$create_table ) );
+        $key = 'createtable';
+        if( $this->cache->get($key )) return;
+        if( ! $this->cache->add($key, 1, 5)) return;
+        $table = $this->table();
+        $rs = $this->execute('SHOW TABLES LIKE %s', $table);
+        if( ! $this->fetch_assoc( $rs ) ) $this->query( str_replace('{TABLE}', $table, self::$create_table ) );
+        $this->cache->set($key, 1, 60);
     }
     
     public function testInit(){
-        $this->query( str_replace('CREATE TABLE', 'CREATE TEMPORARY TABLE', str_replace('{TABLE}', 'newid_' . $this->app, self::$create_table ) ) );
+        $this->query( str_replace('CREATE TABLE', 'CREATE TEMPORARY TABLE', str_replace('{TABLE}', $this->table(), self::$create_table ) ) );
     }
     
+    protected function table(){
+        return 'newid_' . $this->app;
+    }
     
     protected function _incrementCounter($offset, $ct){
         $sql = 'INSERT INTO `%s` ( `id`, `counter` ) VALUES ( %d, @COUNTER := %s ) ON DUPLICATE KEY UPDATE `counter` = @COUNTER:=( `counter` + %s )';
-        $this->query( sprintf( $sql, 'newid_' . $this->app, $offset, ($ct + $offset), $ct ) );
+        $this->query( sprintf( $sql, $this->table(), $offset, ($ct + $offset), $ct ) );
         $rs = $this->query('SELECT @COUNTER as ct');
         $row = $this->fetch_assoc($rs);
         if ($row == false) throw new Exception("No sequence returned from counter.");      
@@ -86,7 +95,7 @@ abstract class MySQL implements Iface {
     }
     
     protected function _diffCounterFromMax( $row_id ){
-        $rs = $this->query('SELECT * FROM newid_' . $this->app);
+        $rs = $this->query('SELECT * FROM ' . $this->table());
         $max = 0; $mine = 0;
         while( $row = $this->fetch_assoc($rs) ){
             if( $row['id'] == $row_id ) {
@@ -100,7 +109,7 @@ abstract class MySQL implements Iface {
     }
     
     protected function _resetCounterToMax( array $info ){
-        $checksum = __CLASS__ . '/resetmax/locker/' . $this->app;
+        $checksum = '/resetmax/locker/';
         if( ! $this->cache->add( $checksum, 1, 0, 15) && $this->cache->get( $checksum ) ) return;
         $diff = $this->_diffCounterFromMax( $info['offset'] );
         if( $diff > self::WIGGLE ){
