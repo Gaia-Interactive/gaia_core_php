@@ -27,7 +27,7 @@ class Sorter extends Passthru {
         $app = $this->app();
         $user_id = $this->user();
         $core_type = $this->coreType();
-        $cacher = new Cache\Namespaced($cacher,  'stockpile/sort/' . $app . '/' . $user_id . '/');
+        $cacher =  new Cache\Callback( new Cache\Prefix($cacher,  'stockpile/sort/' . $app . '/' . $user_id . '/'));
         $this->cacher = $cacher;
     }
     

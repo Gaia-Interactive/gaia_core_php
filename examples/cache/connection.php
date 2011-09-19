@@ -19,7 +19,7 @@ class Connection {
         if( isset( self::$memcache ) ) return self::$memcache;
         return self::$memcache = new Cache\Mock;
         /*
-        self::$memcache = new Cache\Namespaced( new Cache\Memcache, self::cacheprefix() );
+        self::$memcache = new Cache\Prefix( new Cache\Memcache, self::cacheprefix() );
         foreach( self::cacheservers() as $entry){
             list( $host, $port, $weight ) = $entry;
             self::$memcache->addServer($host, $port, $weight);
@@ -30,7 +30,7 @@ class Connection {
      
      public static function apc(){
         if( isset( self::$apc ) ) return self::$apc;
-        return self::$apc = new Cache\Namespaced( new Cache\Apc, self::cacheprefix() );
+        return self::$apc = new Cache\Prefix( new Cache\Apc, self::cacheprefix() );
     }
      
      // make this function return an appropriate prefix based on whether

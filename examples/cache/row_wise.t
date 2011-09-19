@@ -67,7 +67,7 @@ class UserController {
     * singleton method for cache object.
     */
     protected static function cache(){
-        return new Cache\Namespaced( Connection::memcache(), __CLASS__ . '/');
+        return New Cache\Callback(new Cache\Prefix( Connection::memcache(), __CLASS__ . '/'));
     }
 
 }

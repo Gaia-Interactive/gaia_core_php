@@ -17,7 +17,7 @@ class SiteConfig {
 
     public static function data(){
     
-        // get the cache object, which is a namespaced replica cache object.
+        // get the cache object, which is a prefix replica cache object.
         $cacher = self::cache();
         
         // name the cache key after the function we are using.
@@ -41,7 +41,7 @@ class SiteConfig {
     
     // wrapper method for instantiating a multi-tier caching system, with apc in front of memcache.
     protected static function cache(){
-        return new Cache\Namespaced( 
+        return new Cache\Prefix( 
                 new Cache\Tier( 
                     new Cache\Gate(new Cache\Replica(Connection::memcache()), 3),
                     Connection::apc()

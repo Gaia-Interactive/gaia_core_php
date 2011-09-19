@@ -23,7 +23,7 @@ abstract class MySQL implements Iface {
         if( $app ) $this->app = $app;
         if( ! preg_match('/^[a-z0-9_]+$/', $app) ) throw new Exception('invalid-app');
         $this->app = $app; 
-        $this->cache = new Cache\Namespaced( $cache, __CLASS__ . '/' . $app);
+        $this->cache = new Cache\Prefix( $cache, __CLASS__ . '/' . $app);
     }
     
     public function id(){

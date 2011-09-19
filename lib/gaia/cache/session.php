@@ -68,7 +68,7 @@ class Session
     }
 
     public function cachelist(){
-        return new Stack( new Namespaced( $this->core, $this->prefix() . '-list') );
+        return new Stack( new Prefix( $this->core, $this->prefix() . '-list') );
     }
 
     public static function init( Iface $core ){

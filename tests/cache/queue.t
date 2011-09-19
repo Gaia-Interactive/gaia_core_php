@@ -86,7 +86,7 @@ Tap::is( array_keys( $res ), array( $prefix1 . $ids[0], $prefix1 . $ids[1],  $pr
 Tap::is( array_keys( $t->data() ), array_merge($ids, $ids2), 'data populated into test object');
 
 
-$m = new Cache\Namespaced( $m, 'blah' . time());
+$m = new Cache\Prefix( $m, 'blah' . time());
 $t = new TestData();
 
 $options = array(
@@ -100,13 +100,13 @@ $options = array(
 $m->queue( $ids, $options );
 $res = $m->fetchAll();
 
-Tap::ok(is_array($res), 'Cache\Namespaced fetchall returned an array');
-Tap::is( array_keys( $res ), array( $prefix1 . $ids[0], $prefix1 . $ids[1]), 'Cache\Namespaced fetchall results keyed properly');
+Tap::ok(is_array($res), 'Cache\Prefix fetchall returned an array');
+Tap::is( array_keys( $res ), array( $prefix1 . $ids[0], $prefix1 . $ids[1]), 'Cache\Prefix fetchall results keyed properly');
 Tap::is( array_keys( $t->data() ), $ids, 'data populated into test object');
 
 
 
-$m = new Cache\Namespaced( $m, 'blah' . time());
+$m = new Cache\Prefix( $m, 'blah' . time());
 $t = new TestData();
 
 $options = array(
@@ -122,13 +122,13 @@ $options = array(
 $m->queue( $ids, $options );
 $res = $m->fetchAll();
 
-Tap::ok(is_array($res), 'Cache\Namespaced fetchall with defaults returned an array');
-Tap::is( array_keys( $res ), array( $prefix1 . $ids[0], $prefix1 . $ids[1]), 'Cache\Namespaced fetchall results keyed with test values');
+Tap::ok(is_array($res), 'Cache\Prefix fetchall with defaults returned an array');
+Tap::is( array_keys( $res ), array( $prefix1 . $ids[0], $prefix1 . $ids[1]), 'Cache\Prefix fetchall results keyed with test values');
 Tap::is( array_keys( $t->data() ), $ids, 'default data populated into test object');
 
 
 
-$m = new Cache\Namespaced( $m, 'testdefaults' . time());
+$m = new Cache\Callback( new Cache\Prefix( $m, 'testdefaults' . time()));
 $t = new TestData();
 
 $options = array(
@@ -141,7 +141,7 @@ $options = array(
 );
 
 $res = $m->get( $ids, $options );
-Tap::ok(is_array($res), 'Cache\Namespaced get returned an array');
+Tap::ok(is_array($res), 'Cache\Callback get returned an array');
 Tap::is(array_keys($res), $ids, 'all the keys populated');
 Tap::is(array_values($res), array('test', 'test'), 'values came back with defaults');
 

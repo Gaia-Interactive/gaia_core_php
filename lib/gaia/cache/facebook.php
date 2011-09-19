@@ -22,7 +22,7 @@ class Facebook {
     
     public function __construct( \BaseFacebook $facebook, Iface $cache ){
         $this->facebook = $facebook;
-        $this->cache = $cache;
+        $this->cache = new Prefix( $cache, __CLASS__);
     }
     
     public function __call( $method, $args ){
@@ -56,7 +56,7 @@ class Facebook {
         
         if( $method == 'POST' ) return $this->facebook->api( $url, $method, $params );
 
-        // use namespaced cache object
+        // use prefix cache object
         $cache = $this->cache;
         $is_cached = FALSE;
 

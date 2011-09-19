@@ -42,7 +42,7 @@ class Cacher extends Passthru {
         $app = $this->app();
         $user_id = $this->user();
         $core_type = $this->coreType();
-        $cacher = new Cache\Namespaced($cacher,  'stockpile/' . $app . '/' . $user_id . '/' . $core_type . '/');
+        $cacher =  new Cache\Callback( new Cache\Prefix($cacher,  'stockpile/' . $app . '/' . $user_id . '/' . $core_type . '/'));
         $this->cacher = $cacher;
         if( $this->inTran() ){
             Transaction::onRollback( array( $this->cacher, 'delete'), array(self::INDEX_CACHEKEY) );
@@ -188,7 +188,7 @@ class Cacher extends Passthru {
     protected function writeToCache($item_id, $total ){
         $cache = $this->cacher;
         $timeout = $this->cacheTimeout();
-        $cache->set( $item_id, Base::quantify( $total ) > 0 ? $total : Cache\Namespaced::UNDEF, $timeout );
+        $cache->set( $item_id, Base::quantify( $total ) > 0 ? $total : Cache\Callback::UNDEF, $timeout );
         if( $this->inTran() ){
             Transaction::onRollback( array( $cache, 'delete'), array($item_id) );
             Transaction::onRollback( array( $this, 'lastTouch'), array(TRUE) );

@@ -26,7 +26,7 @@ class Chatter {
     protected static function stack(){
         static $app;
         if( ! isset( $app ) ) $app = __CLASS__ . '/' . microtime(TRUE) . '/';
-        return new Cache\Stack( new Cache\Namespaced( Connection::memcache(), $app ) );
+        return new Cache\Stack( new Cache\Prefix( Connection::memcache(), $app ) );
     }
 }
 

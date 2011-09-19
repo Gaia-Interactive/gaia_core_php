@@ -69,7 +69,7 @@ class User {
     * singleton method for cache object.
     */
     protected static function cache(){
-        return new Cache\Namespaced( Connection::memcache(), __CLASS__ . '/');
+        return  new Cache\Callback( new Cache\Prefix( Connection::memcache(), __CLASS__ . '/'));
     }
 }
 

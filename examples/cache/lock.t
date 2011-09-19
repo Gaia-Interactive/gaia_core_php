@@ -41,7 +41,7 @@ class Mutex {
     
     // singleton cache instantiation factory method.
     protected static function cache(){
-        return new Cache\Namespaced( Connection::memcache(), __CLASS__ . '/');
+        return new Cache\Prefix( Connection::memcache(), __CLASS__ . '/');
     }
 }
 

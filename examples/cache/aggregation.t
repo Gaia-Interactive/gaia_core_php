@@ -60,7 +60,7 @@ class AnimalFarm {
     }
     
     protected static function cache(){
-        return new Cache\Namespaced( Connection::memcache(), __CLASS__ . '/');
+        return new Cache\Callback( new Cache\Prefix( Connection::memcache(), __CLASS__ . '/' ) );
     }
 }
 
@@ -95,7 +95,7 @@ class AnimalFoodTracker {
     }
     
     protected static function cache(){
-        return new Cache\Namespaced( Connection::memcache(), __CLASS__ . '/');
+        return  new Cache\Callback( new Cache\Prefix( Connection::memcache(), __CLASS__ . '/'));
     }
 }
 
@@ -134,7 +134,7 @@ class AnimalFood {
     }
     
     protected static function cache(){
-        return new Cache\Namespaced( Connection::memcache(), __CLASS__ . '/');
+        return  new Cache\Callback(new Cache\Prefix( Connection::memcache(), __CLASS__ . '/'));
     }
     
     

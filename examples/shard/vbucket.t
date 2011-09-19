@@ -63,7 +63,7 @@ class UserDSN {
     protected static function cache(){
         if( isset( self::$cache ) ) return self::$cache;
         $core = new Cache\Mock();
-        return self::$cache = new Cache\Gate( new Cache\Namespaced($core, __CLASS__ . '/') );
+        return self::$cache = new Cache\Gate( new Cache\Prefix($core, __CLASS__ . '/') );
     }
 }
 
