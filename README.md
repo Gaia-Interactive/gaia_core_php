@@ -9,7 +9,7 @@ REQUIREMENTS
 ==============================
 This library was designed to run on top of a LAMP (Linux, Apache 2.x+, some modern popular open-source RDBMS such as MySQL 5+, and PHP 5.3+) stack.
 You are expected to have installed Apache2 with mod_rewrite, PHP 5.3+ with the database and cache drivers that you expect to run (such as MySQLi, Memcache / Memcached, APC, etc).
-
+Make sure php has bcmath and mbstring enabled.
 
 GETTING STARTED
 ==============================

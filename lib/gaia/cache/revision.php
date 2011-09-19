@@ -11,7 +11,8 @@ class Revision {
 
     public function get( $key, $refresh = FALSE ){
         if( is_array( $key ) ) return $this->getMulti( $key, $refresh );
-        return array_pop( $this->getMulti( array( $key ), $refresh ));
+        $res = $this->getMulti( array( $key ), $refresh );
+        return array_pop( $res );
     }
     
     protected function getMulti( array $keys, $refresh = FALSE ){
