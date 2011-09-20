@@ -30,7 +30,7 @@ class Memcache extends Wrap implements Iface {
     // fixing a problem introduced by the upgrade of the Pecl Memcache Extension from 2.2.4 -> 3.0.3
     // the newer pecl extension returns false on no results, whereas the older version returned an
     // empty array. we want the older behavior.
-    public function get( $k, $options = NULL ){
+    public function get( $k ){
         if( is_scalar( $k ) ) return $this->core->get( $k );
         if( ! is_array( $k ) ) return FALSE;
         if( count( $k ) < 1 ) return array();

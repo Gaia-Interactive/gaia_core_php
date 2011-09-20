@@ -58,7 +58,7 @@ class Mock Implements Iface {
         return TRUE;
     }
     
-    public function get( $key, $options = NULL ){
+    public function get( $key ){
         if( is_array( $key ) ) return $this->getMulti( $key );
         if( ! isset( self::$data[ $key ] ) ) return FALSE;
         $expires = self::$data[ $key ][1];

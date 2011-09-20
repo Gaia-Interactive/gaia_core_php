@@ -116,7 +116,6 @@ $options = array(
             'default'=>'test',
             'cache_missing'=>true,
             'timeout'=>5000,
-            'compression'=>0
 );
 
 $m->queue( $ids, $options );
@@ -128,7 +127,7 @@ Tap::is( array_keys( $t->data() ), $ids, 'default data populated into test objec
 
 
 
-$m = new Cache\Callback( new Cache\Prefix( new Cache\Mock, 'testdefaults-2-' . time()));
+
 $t = new TestData();
 
 $options = array(
@@ -142,30 +141,17 @@ $options = array(
             'default'=>'test',
             'cache_missing'=>true,
             'timeout'=>50,
-            'compression'=>0
 );
 
-$res = $m->get(array(1,2), $options );
+$m = new Cache\Callback( new Cache\Prefix( new Cache\Mock, 'testdefaults-2-' . time()), $options);
+
+$res = $m->get(array(1,2) );
 Tap::is($res, array(1=>1, 2=>2), 'Cache\Callback returned expected results');
 
 
-$m = new Cache\Callback( new Cache\Gate(new Cache\Prefix( new Cache\Mock, 'testdefaults-2-' . time())));
+$m = new Cache\Callback( new Cache\Gate(new Cache\Prefix( new Cache\Mock, 'testdefaults-2-' . time())), $options);
 $t = new TestData();
 
-$options = array(
-            'callback'=> function ( array $ids ){
-                $list = array();
-                foreach( $ids as $id ){
-                    $list[ $id ] = $id;
-                }
-                return $list;
-            },
-            'default'=>'test',
-            'cache_missing'=>true,
-            'timeout'=>50,
-            'compression'=>0
-);
-
-$res = $m->get(array(1,2), $options );
+$res = $m->get(array(1,2) );
 Tap::is($res, array(1=>1, 2=>2), 'Callback works when wrapping cache\gate');
 

@@ -5,19 +5,21 @@ use Gaia\Container;
 class Callback extends Wrap
 {
 
-    public function get( $request, $options = NULL ){
-        if( is_array( $request ) ) return $this->getMulti( $request, $options );
+    public function __construct( Iface $core, $options ){
+        parent::__construct( $core );
+        if( ! $options instanceof Container ) $options = new Container( $options );
+        $this->options = $options;
+    }
+
+    public function get( $request ){
+        if( is_array( $request ) ) return $this->getMulti( $request );
         if( ! is_scalar( $request ) ) return FALSE;
-        $res = $this->getMulti( array( $request ), $options );
+        $res = $this->getMulti( array( $request ) );
         if( ! isset( $res[ $request ] ) ) return FALSE;
         return $res[ $request ];
     }
     
-    protected function getMulti( array $keys, $options = NULL){
-    
-        if( $options === NULL ) return $this->core->get( $keys );
-        
-        $options = new Container( $options );
+    protected function getMulti( array $keys ){
         
         // initialize the array for keeping track of all the results.
         $matches = array();
@@ -48,12 +50,12 @@ class Callback extends Wrap
         
         // here is where we call a callback function to get any additional rows missing.
         
-        if( count($missing) > 0 && isset( $options->callback) && is_callable($options->callback) ){
-            $result = call_user_func( $options->callback,$missing);
+        if( count($missing) > 0 && isset( $this->options->callback) && is_callable($this->options->callback) ){
+            $result = call_user_func( $this->options->callback,$missing);
             if( ! is_array( $result ) ) return $matches;
-            if( ! isset( $options->timeout ) ) $options->timeout = 0;
-            if( ! isset( $options->method) ) $options->method = 'set';
-            if( $options->cache_missing ){
+            if( ! isset( $this->options->timeout ) ) $this->options->timeout = 0;
+            if( ! isset( $this->options->method) ) $this->options->method = 'set';
+            if( $this->options->cache_missing ){
                 foreach( $missing as $k ){
                     if( ! isset( $result[ $k ] ) ) $result[$k] = self::UNDEF;
                 }
@@ -61,19 +63,18 @@ class Callback extends Wrap
                         
             foreach( $result as $k=>$v ) {
                 $matches[ $k ] = $v;
-                $this->core->{$options->method}($k, $v, $options->timeout);
+                $this->core->{$this->options->method}($k, $v, $this->options->timeout);
             }
         }
         
         foreach( $matches as $k => $v ){
             if( $v === self::UNDEF ) unset( $matches[ $k ] );
         }
-        if( isset( $options->default ) ) {
+        if( isset( $this->options->default ) ) {
             foreach( $missing as $k ){
-                if( ! isset( $matches[ $k ] ) ) $matches[$k] = $options->default;
+                if( ! isset( $matches[ $k ] ) ) $matches[$k] = $this->options->default;
             }
         }
-        
         return $matches;
     }
 }

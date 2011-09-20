@@ -7,5 +7,5 @@ interface Iface {
     public function replace( $key, $value, $expires = 0);
     public function increment( $key, $value = 1 );
     public function decrement( $key, $value = 1 );
-    public function get( $input, $options = NULL );
+    public function get( $input );
 }

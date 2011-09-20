@@ -27,7 +27,7 @@ class Sorter extends Passthru {
         $app = $this->app();
         $user_id = $this->user();
         $core_type = $this->coreType();
-        $cacher =  new Cache\Callback( new Cache\Prefix($cacher,  'stockpile/sort/' . $app . '/' . $user_id . '/'));
+        $cacher =  new Cache\Prefix($cacher,  'stockpile/sort/' . $app . '/' . $user_id . '/');
         $this->cacher = $cacher;
     }
     
@@ -95,7 +95,8 @@ class Sorter extends Passthru {
                 'timeout' => $timeout, // how long do we want the data cached?
                 'cache_missing'=> TRUE, // missing keys are stored in the cache, so we don't keep hitting the db.
             );
-            $result = $this->cache()->get( $ids, $options );
+            $cacher = new Cache\Callback( $this->cacher, $options );
+            $result = $cacher->get( $ids );
         } else {
             $result = $this->fetchPos( $ids );
         }

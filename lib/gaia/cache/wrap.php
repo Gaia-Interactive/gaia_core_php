@@ -36,8 +36,8 @@ class Wrap implements Iface {
         return $this->core->decrement( $key, $value );
     }
     
-    public function get( $input, $options = NULL ){
-        return $this->core->get( $input, $options );
+    public function get( $input ){
+        return $this->core->get( $input );
     }
     
     public function __call($method, array $args ){

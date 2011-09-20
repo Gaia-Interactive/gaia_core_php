@@ -50,15 +50,15 @@ class Tier extends Wrap {
         return $res;
     }
     
-    public function get( $request, $options = NULL ){
-        if( is_array( $request ) ) return $this->getMulti( $request, $options );
+    public function get( $request ){
+        if( is_array( $request ) ) return $this->getMulti( $request );
         if( ! is_scalar( $request ) ) return FALSE;
-        $res = $this->getMulti( array( $request ), $options );
+        $res = $this->getMulti( array( $request ) );
         if( ! isset( $res[ $request ] ) ) return FALSE;
         return $res[ $request ];
     }
     
-    protected function getMulti( array $keys, $options = NULL ){
+    protected function getMulti( array $keys ){
          // initialize the array for keeping track of all the results.
         $matches = array();
         
@@ -75,12 +75,8 @@ class Tier extends Wrap {
             if( $single ) return isset( $matches[ $request ] ) ? $matches[ $request ] : FALSE;
             return $matches;
         }
-        $expires = (    isset( $options ) && 
-                        is_array( $options ) && 
-                        isset( $options['timeout'] ) 
-                    ) ? $options['timeout'] : 0;
-        $expires = $this->tier1_expires($expires);
-        foreach( $this->core->get( $missing, $options ) as $k => $v ){
+        $expires = $this->tier1_expires();
+        foreach( $this->core->get( $missing ) as $k => $v ){
             $this->tier1->set( $k, $v, $expires);
             $matches[ $k ] = $v;
         }

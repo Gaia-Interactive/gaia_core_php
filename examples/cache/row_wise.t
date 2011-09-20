@@ -18,14 +18,7 @@ class UserController {
     * 
     */
     public static function get( array $ids ){
-        $options = array(
-            'callback'=>array(__CLASS__, 'fromDB'),
-            'timeout'=> self::CACHE_TIMEOUT,
-            'cache_missing' => TRUE,
-            'method' => 'set',
-        );
-        
-        return self::cache()->get( $ids, $options );
+        return self::cache()->get( $ids );
     }
     
     /*
@@ -67,7 +60,13 @@ class UserController {
     * singleton method for cache object.
     */
     protected static function cache(){
-        return New Cache\Callback(new Cache\Prefix( Connection::memcache(), __CLASS__ . '/'));
+        $options = array(
+            'callback'=>array(__CLASS__, 'fromDB'),
+            'timeout'=> self::CACHE_TIMEOUT,
+            'cache_missing' => TRUE,
+            'method' => 'set',
+        );
+        return new Cache\Callback( new Cache\Prefix( Connection::memcache(), __CLASS__ . '/'), $options);
     }
 
 }

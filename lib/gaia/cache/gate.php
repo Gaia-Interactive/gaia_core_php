@@ -5,15 +5,15 @@ class Gate extends Wrap {
 
     const DEFAULT_TTL = 259200;
     
-    public function get( $request, $options = NULL ){
-        if( is_array( $request ) ) return $this->getMulti( $request, $options );
+    public function get( $request ){
+        if( is_array( $request ) ) return $this->getMulti( $request );
         if( ! is_scalar( $request ) ) return FALSE;
-        $res = $this->getMulti( array( $request ), $options );
+        $res = $this->getMulti( array( $request ) );
         if( ! isset( $res[ $request ] ) ) return FALSE;
         return $res[ $request ];
     }
     
-    protected function getMulti( $keys, $options = NULL ){
+    protected function getMulti( $keys ){
         if( ! is_array($keys ) ) return FALSE;
         foreach( $keys as $k ) {
             $matches[ $k ] = NULL;

@@ -8,7 +8,7 @@ if( ! function_exists('apc_fetch') ) require __DIR__ . '/apc.stub.php';
 */
 class Apc Implements Iface {
 
-    function get( $request, $options = NULL ){
+    function get( $request){
         $res = apc_fetch( $request );
         if( is_array( $request ) && ! is_array( $res ) ) $res = array();
         return $res;

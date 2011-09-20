@@ -26,7 +26,7 @@ class Observe extends Wrap {
         return $this->__call( __FUNCTION__, $args );
     }
     
-    function get($input, $options = NULL){
+    function get($input){
         $args = func_get_args(); 
         return $this->__call( __FUNCTION__, $args );
     }

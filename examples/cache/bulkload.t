@@ -48,7 +48,8 @@ class User {
             'cache_missing' => TRUE,
             'method' => 'set',
         );
-        return self::cache()->get( $ids, $options );
+        $cache = new Cache\Callback( self::cache(), $options );
+        return $cache->get( $ids );
     }
     
     /**
@@ -69,7 +70,7 @@ class User {
     * singleton method for cache object.
     */
     protected static function cache(){
-        return  new Cache\Callback( new Cache\Prefix( Connection::memcache(), __CLASS__ . '/'));
+        return new Cache\Prefix( Connection::memcache(), __CLASS__ . '/');
     }
 }
 

@@ -42,7 +42,7 @@ class Cacher extends Passthru {
         $app = $this->app();
         $user_id = $this->user();
         $core_type = $this->coreType();
-        $cacher =  new Cache\Callback( new Cache\Prefix($cacher,  'stockpile/' . $app . '/' . $user_id . '/' . $core_type . '/'));
+        $cacher = new Cache\Prefix($cacher,  'stockpile/' . $app . '/' . $user_id . '/' . $core_type . '/');
         $this->cacher = $cacher;
         if( $this->inTran() ){
             Transaction::onRollback( array( $this->cacher, 'delete'), array(self::INDEX_CACHEKEY) );
@@ -117,7 +117,8 @@ class Cacher extends Passthru {
             'timeout' => $timeout, // how long do we want the data cached?
             'cache_missing'=> TRUE, // missing keys are stored in the cache, so we don't keep hitting the db.
         );
-        $result = $cache->get( $ids, $options );
+        $cb = new Cache\Callback( $cache, $options );
+        $result = $cb->get( $ids );
         if( ! is_array( $result ) ) $result = array();
         foreach( $result as $item=>$quantity ) {
             $result[ $item ] = $this->defaultQuantity( $quantity );

@@ -8,7 +8,7 @@ use Gaia\Instrumentation;
 */
 class Instrumented extends Wrap  {
 
-    public function get( $k, $options = NULL ){
+    public function get( $k ){
         $multi = FALSE;
         if( is_scalar( $k ) ){
             self::stat('mc_getkey_count');
@@ -21,7 +21,7 @@ class Instrumented extends Wrap  {
         }
         self::stat('mc_get_count');
         $_ts = microtime(TRUE);
-        $res = $this->core->get( $k, $options );
+        $res = $this->core->get( $k );
         self::stat('mc_get_time', microtime(TRUE) - $_ts );
 
         if( $multi ){

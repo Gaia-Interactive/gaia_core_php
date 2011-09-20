@@ -3,7 +3,7 @@ namespace Gaia\Cache;
 
 class Disabled Implements Iface {
 
-    function get( $request, $options = NULL ){
+    function get( $request ){
         if( is_array( $request ) ) return array();
         return FALSE;
     }

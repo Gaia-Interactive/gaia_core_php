@@ -32,8 +32,8 @@ class AnimalFarm {
             'cache_missing' => TRUE,
             'method' => 'set',
         );
-        
-        return self::cache()->get( $ids, $options );
+        $cache = new Cache\Callback( self::cache(), $options );
+        return $cache->get( $ids );
     }
     
     /*
@@ -60,7 +60,7 @@ class AnimalFarm {
     }
     
     protected static function cache(){
-        return new Cache\Callback( new Cache\Prefix( Connection::memcache(), __CLASS__ . '/' ) );
+        return new Cache\Prefix( Connection::memcache(), __CLASS__ . '/' );
     }
 }
 
@@ -75,8 +75,8 @@ class AnimalFoodTracker {
             'cache_missing' => TRUE,
             'method' => 'set',
         );
-        
-        return self::cache()->get( $ids, $options );
+        $cache = new Cache\Callback( self::cache(), $options );
+        return $cache->get( $ids );
     }
     
     /*
@@ -95,7 +95,7 @@ class AnimalFoodTracker {
     }
     
     protected static function cache(){
-        return  new Cache\Callback( new Cache\Prefix( Connection::memcache(), __CLASS__ . '/'));
+        return  new Cache\Prefix( Connection::memcache(), __CLASS__ . '/');
     }
 }
 
@@ -112,8 +112,8 @@ class AnimalFood {
             'cache_missing' => TRUE,
             'method' => 'set',
         );
-        
-        return self::cache()->get( $ids, $options );
+        $cache = new Cache\Callback( self::cache(), $options );
+        return $cache->get( $ids );
     }
     
     /*
@@ -134,7 +134,7 @@ class AnimalFood {
     }
     
     protected static function cache(){
-        return  new Cache\Callback(new Cache\Prefix( Connection::memcache(), __CLASS__ . '/'));
+        return new Cache\Prefix( Connection::memcache(), __CLASS__ . '/');
     }
     
     
