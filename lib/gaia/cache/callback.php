@@ -22,15 +22,10 @@ class Callback extends Wrap
     protected function getMulti( array $keys ){
         
         // initialize the array for keeping track of all the results.
-        $matches = array();
+        // write all the keynames as null values into our result set
+        $matches = array_fill_keys($keys, NULL);
         
-        // write all the keynames with the namespace prefix as null values into our result set
-        foreach( $keys as $k ){
-            $matches[ $k ] = NULL;
-        }
-        
-        // ask for the keys from mecache object ... should we pass along the options down internally?
-        // think not, but just asking.
+        // ask for the keys from mecache object
         $result = $this->core->get( $keys );
         
         // did we find it?
@@ -38,7 +33,6 @@ class Callback extends Wrap
         // this should never happen, but anyway, here it is.
         if( ! is_array( $result ) ) return $result;
         
-        // convert the result from the cache back into key/value pairs without a prefix.
         // overwrite the empty values we populated earlier.
         foreach( $result as $k=>$v) $matches[$k] = $v;
         
