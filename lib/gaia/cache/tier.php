@@ -51,13 +51,14 @@ class Tier extends Wrap {
     }
     
     public function get( $request, $options = NULL ){
+        if( is_array( $request ) ) return $this->getMulti( $request, $options );
+        if( ! is_scalar( $request ) ) return FALSE;
+        $res = $this->getMulti( array( $request ), $options );
+        if( ! isset( $res[ $request ] ) ) return FALSE;
+        return $res[ $request ];
+    }
     
-        // we want to work with a list of keys
-        $keys =  ( $single = is_scalar( $request ) ) ? array( $request ) : $request;
-        
-        // if we couldn't convert the value to an array, skip out
-        if( ! is_array($keys ) ) return FALSE;
-        
+    protected function getMulti( array $keys, $options = NULL ){
          // initialize the array for keeping track of all the results.
         $matches = array();
         
@@ -83,7 +84,6 @@ class Tier extends Wrap {
             $this->tier1->set( $k, $v, $expires);
             $matches[ $k ] = $v;
         }
-        if( $single ) return isset( $matches[ $request ] ) ? $matches[ $request ] : FALSE;
         return $matches;
     }
     

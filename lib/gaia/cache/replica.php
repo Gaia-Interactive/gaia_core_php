@@ -10,9 +10,15 @@ class Replica extends Wrap {
         parent::__construct( $core );
     }
     
-    function get( $__key, $options = NULL ){
-        $keys = is_scalar( $__key ) ? array($__key) : $__key;
-        if( ! is_array($keys ) ) return FALSE;
+    public function get( $request, $options = NULL ){
+        if( is_array( $request ) ) return $this->getMulti( $request, $options );
+        if( ! is_scalar( $request ) ) return FALSE;
+        $res = $this->getMulti( array( $request ), $options );
+        if( ! isset( $res[ $request ] ) ) return FALSE;
+        return $res[ $request ];
+    }
+    
+    protected function getMulti( array $keys, $options = NULL ){
         foreach( $keys as $k ) {
             $matches[ $k ] = NULL;
         }
@@ -38,9 +44,7 @@ class Replica extends Wrap {
         foreach( $keys as $k ){
             if( ! isset( $matches[ $k ] ) ) continue;
             $res[ $k ] = $matches[ $k ];
-        }
-        if( is_scalar( $__key ) ) return isset( $res[ $__key ] ) ? $res[ $__key ] : FALSE;
-        
+        }        
         return $res;
     }
     

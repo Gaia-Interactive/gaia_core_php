@@ -4,7 +4,7 @@ include __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\Cache;
 
-Tap::plan(18);
+Tap::plan(17);
 
 class TestData {
 
@@ -128,20 +128,44 @@ Tap::is( array_keys( $t->data() ), $ids, 'default data populated into test objec
 
 
 
-$m = new Cache\Callback( new Cache\Prefix( $m, 'testdefaults' . time()));
+$m = new Cache\Callback( new Cache\Prefix( new Cache\Mock, 'testdefaults-2-' . time()));
 $t = new TestData();
 
 $options = array(
-            'response_callback'=>array($t, 'set'),
-            'missing_callback'=>array($t, 'fetchEmpty'),
+            'callback'=> function ( array $ids ){
+                $list = array();
+                foreach( $ids as $id ){
+                    $list[ $id ] = $id;
+                }
+                return $list;
+            },
             'default'=>'test',
             'cache_missing'=>true,
             'timeout'=>50,
             'compression'=>0
 );
 
-$res = $m->get( $ids, $options );
-Tap::ok(is_array($res), 'Cache\Callback get returned an array');
-Tap::is(array_keys($res), $ids, 'all the keys populated');
-Tap::is(array_values($res), array('test', 'test'), 'values came back with defaults');
+$res = $m->get(array(1,2), $options );
+Tap::is($res, array(1=>1, 2=>2), 'Cache\Callback returned expected results');
+
+
+$m = new Cache\Callback( new Cache\Gate(new Cache\Prefix( new Cache\Mock, 'testdefaults-2-' . time())));
+$t = new TestData();
+
+$options = array(
+            'callback'=> function ( array $ids ){
+                $list = array();
+                foreach( $ids as $id ){
+                    $list[ $id ] = $id;
+                }
+                return $list;
+            },
+            'default'=>'test',
+            'cache_missing'=>true,
+            'timeout'=>50,
+            'compression'=>0
+);
+
+$res = $m->get(array(1,2), $options );
+Tap::is($res, array(1=>1, 2=>2), 'Callback works when wrapping cache\gate');
 

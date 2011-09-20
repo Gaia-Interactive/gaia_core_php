@@ -1,6 +1,5 @@
 <?php
 namespace Gaia\Cache;
-use Gaia\Container;
 
 class Prefix extends Wrap
 {
