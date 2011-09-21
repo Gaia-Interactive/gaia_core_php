@@ -5,7 +5,7 @@ namespace Gaia\DB;
 class Transaction
 {
     protected static $tran = array();
-    protected static $at_start = TRUE;
+    protected static $depth = 0;
     protected static $commit_callbacks = array();
     protected static $rollback_callbacks = array();
     
@@ -53,11 +53,16 @@ class Transaction
     }
 
     public static function inProgress() {
-    	return (empty(self::$tran)) ? FALSE : TRUE;
+    	return (empty(self::$tran) || self::$depth == 0 ) ? FALSE : TRUE;
     }
 
     public static function commit(){
         if (!self::inProgress()) return FALSE;
+        if( self::$depth < 1 ) return FALSE;
+        if( self::$depth > 1 ){
+            self::$depth--;
+            return TRUE;
+        }
         $status = false;
         foreach( self::$tran  as $k => $obj )
         {
@@ -78,20 +83,25 @@ class Transaction
         return $status;
     }
     public static function reset(){
-        self::$at_start = TRUE;
+        self::$depth = 0;
         self::$commit_callbacks = array();
         self::$rollback_callbacks = array();
         foreach( self::$tran as $t ) Connection::remove( $t );
         self::$tran = array();
     }
+    
+    public static function start(){
+        self::$depth++;
+        return self::$depth;
+    }
 
     public static function atStart(){
-        return self::$at_start;
+        return self::$depth == 0;
     }
 
     public static function claimStart(){
-        if( ! self::$at_start  ) return FALSE;
-        self::$at_start = FALSE;
+        if( self::$depth > 0 ) return FALSE;
+        self::$depth++;
         return TRUE;
     }
     

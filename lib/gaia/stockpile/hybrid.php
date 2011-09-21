@@ -1,6 +1,7 @@
 <?php
 namespace Gaia\Stockpile;
 use Gaia\DB\Transaction;
+use Gaia\Exception;
 
 /**
  * Basic Wrapper class that allows us to easily punch out parts of the class.
@@ -28,7 +29,7 @@ class Hybrid extends Passthru {
     * @see Stockpile_Interface::add();
     */
     public function add( $item_id, $quantity = 1, array $data = NULL ){
-        $local_txn = Transaction::claimStart() ? TRUE : FALSE;
+        Transaction::start();
         try {
             $quantity = $this->quantity( $quantity );
             if( $quantity->value() < 1 ){
@@ -44,15 +45,11 @@ class Hybrid extends Passthru {
             } else { 
                 $serial = $this->serial->get( $item_id );
             }
-            if( $local_txn ) {
-                Transaction::commit();
-            }
+            if( ! Transaction::commit() ) throw new Exception('database error');
             return $this->quantity( array('tally'=>$tally, 'serial'=>$serial ) );        
     
         } catch( \Exception $e ){
-            if( $local_txn) {
-                if( Transaction::inProgress() ) Transaction::rollback();
-            }
+            if( Transaction::inProgress() ) Transaction::rollback();
             $e = new Exception('cannot add: ' . $e->getMessage(), $e->__toString() );
             throw $e;
         } 
@@ -66,7 +63,7 @@ class Hybrid extends Passthru {
     * into tally.
     */
     public function convert( $item_id, $quantity, $data = NULL){
-        $local_txn = Transaction::claimStart() ? TRUE : FALSE;
+        Transaction::start();
         try {
             if( Base::validatePositiveInteger( $quantity ) ){
                 $this->subtract( $item_id, $quantity, $data );
@@ -77,15 +74,11 @@ class Hybrid extends Passthru {
                 $this->subtract($item_id, $quantity, $data );
                 $result = $this->add( $item_id, Base::quantify( $quantity ), $data );
             }
-            if( $local_txn ) {
-                Transaction::commit();
-            }
+            if( ! Transaction::commit() ) throw new Exception('database error');
             return $result;       
     
         } catch( \Exception $e ){
-            if( $local_txn) {
-                if( Transaction::inProgress() ) Transaction::rollback();
-            }
+            if( Transaction::inProgress() ) Transaction::rollback();
             $e = new Exception('cannot convert: ' . $e->getMessage(), $e->__toString() );
             throw $e;
         }  
@@ -95,7 +88,7 @@ class Hybrid extends Passthru {
     * @see Stockpile_Interface::subtract();
     */
     public function subtract( $item_id, $quantity = 1, array $data = NULL ){
-        $local_txn = Transaction::claimStart() ? TRUE : FALSE;
+        Transaction::start();
         try {
             if( ! $quantity instanceof Stockpile_HybridQuantity ) $quantity = $this->get( $item_id )->grab( $quantity );
             if( $quantity->value() < 1 ){
@@ -111,14 +104,10 @@ class Hybrid extends Passthru {
             } else { 
                 $serial = $this->serial->get( $item_id);
             }
-            if( $local_txn ) {
-                Transaction::commit();
-            }
+            if( ! Transaction::commit() ) throw new Exception('database error');
             return $this->quantity( array('tally'=>$tally, 'serial'=>$serial ) );
         } catch( \Exception $e ){
-            if( $local_txn) {
-                if(Transaction::inProgress() ) Transaction::rollback();
-            }
+            if(Transaction::inProgress() ) Transaction::rollback();
             $e = new Exception('cannot subtract: ' . $e->getMessage(), $e->__toString() );
             throw $e;
         }

@@ -28,22 +28,22 @@ Transaction::commit();
     
 // nested trade?
 $e = NULL;
-try { new Transfer( $trade, $other ); } catch( Exception $e ){ }
-Tap::ok( $e instanceof Exception && preg_match('/transfer/i', $e->getMessage() ), 'no nesting of transfers');
+try { new Transfer( $trade, $other ); } catch( \Exception $e ){ }
+Tap::ok( $e instanceof \Exception && preg_match('/transfer/i', $e->getMessage() ), 'no nesting of transfers');
 
 $e = NULL;
 Transaction::claimStart();
-try { new Transfer( $core, $core ); } catch( Exception $e ){ }
-Tap::ok( $e instanceof Exception && preg_match('/need\stwo/i', $e->getMessage() ), 'enforce two different parties to trade');
+try { new Transfer( $core, $core ); } catch( \Exception $e ){ }
+Tap::ok( $e instanceof \Exception && preg_match('/need\stwo/i', $e->getMessage() ), 'enforce two different parties to trade');
 
 $e = NULL;
 Transaction::reset();
-try { new Transfer( stockpile( $app, $other_id), stockpile( $app, $other_id ) ); } catch( Exception $e ){ }
-Tap::ok( $e instanceof Exception && preg_match('/transaction/i', $e->getMessage() ), 'blow up when no transaction');
+try { new Transfer( stockpile( $app, $other_id), stockpile( $app, $other_id ) ); } catch( \Exception $e ){ }
+Tap::ok( $e instanceof \Exception && preg_match('/transaction/i', $e->getMessage() ), 'blow up when no transaction');
 
 $e = NULL;
-try { new Transfer( stockpile( $app, $other_id ), stockpile( $app, $other_id ) ); } catch( Exception $e ){ }
-Tap::ok( $e instanceof Exception && preg_match('/transaction/i', $e->getMessage() ), 'blow up when neither has a transaction');
+try { new Transfer( stockpile( $app, $other_id ), stockpile( $app, $other_id ) ); } catch( \Exception $e ){ }
+Tap::ok( $e instanceof \Exception && preg_match('/transaction/i', $e->getMessage() ), 'blow up when neither has a transaction');
 
 Transaction::reset();
 Transaction::claimStart();

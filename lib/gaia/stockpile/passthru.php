@@ -1,6 +1,7 @@
 <?php
 namespace Gaia\Stockpile;
-use Gaia\DB\Transaction;
+use \Gaia\DB\Transaction;
+//use \Gaia\Exception;
 
 /**
  * Basic Wrapper class that allows us to easily punch out parts of the class.
@@ -54,12 +55,12 @@ abstract class Passthru implements IFace {
     * @see Stockpile_Interface::set();
     */
     public function set( $item_id, $quantity, array $data = NULL ){
-        $local_txn = Transaction::claimStart() ? TRUE : FALSE;
+        Transaction::start();
         try {
             $current = $this->get($item_id);
             if( Base::quantify( $current ) > 0 ) $this->subtract( $item_id, $current, $data );
             $result = $this->add( $item_id, $quantity, $data );
-            if( $local_txn ) $result = Transaction::commit();
+            if( ! Transaction::commit() ) throw new \Gaia\Exception('database error');
             return $result;
         } catch( \Exception $e ){
             $this->handle( $e );

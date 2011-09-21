@@ -14,7 +14,7 @@ function stockpile( $app, $user_id, $tran = NULL ){
 try {
     include __DIR__ . '/speed_tests.php';
     
-} catch( Exception $e ){
+} catch( \Exception $e ){
     Tap::fail( 'unexpected exception thrown' );
     print $e;
 }

@@ -1,7 +1,7 @@
 <?php
 namespace Gaia\Stockpile;
 use \Gaia\DB\Transaction;
-
+use \Gaia\Exception;
 /**
  * Core functionality of the stockpile class.
  * Bare-Bones, no caching, no logging. But everything works!
@@ -76,12 +76,12 @@ class Base implements Iface {
     * wrapped in a transaction so that if it gets interrupted mid-way through, it rolls back.
     */
     public function set( $item_id, $quantity, array $data = NULL ){
-        $local_txn = Transaction::claimStart() ? TRUE : FALSE;
+        Transaction::start();
         try {
             $current = $this->get($item_id);
             if( Base::quantify( $current ) > 0 ) $this->subtract( $item_id, $current, $data );
             $result = $this->add( $item_id, $quantity, $data );
-            if( $local_txn ) $result = Transaction::commit();
+            if( ! Transaction::commit() ) throw new Exception('database error');
             return $result;
         } catch( \Exception $e ){
             $this->handle( $e );

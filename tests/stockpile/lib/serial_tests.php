@@ -51,52 +51,6 @@ Tap::is( stockpile( $app, $user_id)->get( $item_id ), $quantity, 'after adding t
 
 $user_id = uniqueUserID();
 
-/*
-$txn1 = DaoFactory::create('transactionmanager');
-$txn1->setWaitTimeout(1);
-$txn2 = DaoFactory::create('transactionmanager');
-$txn2->setWaitTimeout(1);
-
-$stockpile1 = stockpile( $app, $user_id, $txn1 );
-$stockpile2 = stockpile( $app, $user_id, $txn2 );
-
-$start = microtime(TRUE);
-$quantity = $stockpile1->add( $item_id );
-advanceCurrentTime(1);
-$stockpile2->add( $item_id );
-
-$txn1->commit();
-$txn2->commit();
-$elapsed = microtime(TRUE) - $start;
-
-Tap::cmp_ok( $elapsed, '<', 2, 'added two items in different transactions on the same user/item id and didn\'t hit deadlock');
-$start = microtime(TRUE);
-$q2 = $stockpile2->subtract( $item_id, 1 );
-$q1 = $stockpile1->subtract( $item_id, $quantity );
-
-$txn1->commit();
-$txn2->commit();
-$elapsed = microtime(TRUE) - $start;
-
-Tap::cmp_ok( $elapsed, '<', 2, 'subtracted two items in different transactions on the same user/item id and didn\'t hit deadlock');
-advanceCurrentTime(1);
-$start = microtime(TRUE);
-$quantity = $stockpile1->add( $item_id, $quantity );
-$stockpile2->add( $item_id );
-
-$txn1->commit();
-$txn2->commit();
-
-$q2 = $stockpile2->subtract( $item_id, 1 );
-$q1 = $stockpile1->subtract( $item_id, $quantity );
-
-$txn1->commit();
-$txn2->rollback();
-$elapsed = microtime(TRUE) - $start;
-Tap::cmp_ok( $elapsed, '<', 2, 'added, then subtracted two items and rolled one back. didn\'t hit deadlock');
-
-Tap::is( stockpile($app, $user_id )->get( $item_id )->value(), 1, 'after all of this, item count is 1');
-*/
 $stockpile = stockpile($app, $user_id);
 $item_id = uniqueNumber(1, 10000000);
 $quantity = $stockpile->quantity(1);

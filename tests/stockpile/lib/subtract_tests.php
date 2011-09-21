@@ -13,8 +13,8 @@ stockpile( $app, $user_id )->add( $item_id, 5);
 $e = NULL;
 try {
     stockpile( $app, $user_id )->subtract( $item_id, 0);
-} catch( Exception $e ){ }
-Tap::ok( $e instanceof Exception && preg_match('/cannot subtract/', $e->getMessage()), 'cant subtract zero');
+} catch( \Exception $e ){ }
+Tap::ok( $e instanceof \Exception && preg_match('/cannot subtract/', $e->getMessage()), 'cant subtract zero');
 
 // subtract more than we have.
 $starting_total = stockpile( $app, $user_id )->get( $item_id );
@@ -22,8 +22,8 @@ $e = NULL;
 try {
     $stockpile = stockpile( $app, $user_id );
     $stockpile->subtract( $item_id, quantify( $stockpile->get( $item_id ) ) + 1 );
-} catch( Exception $e ){ }
-Tap::ok( $e instanceof Exception && preg_match('/not enough/', $e->getMessage()), 'wont allow to subtract more than you have');
+} catch( \Exception $e ){ }
+Tap::ok( $e instanceof \Exception && preg_match('/not enough/', $e->getMessage()), 'wont allow to subtract more than you have');
 
 // after failed subtraction, amount is still correct.
 $total = stockpile( $app, $user_id )->get( $item_id );

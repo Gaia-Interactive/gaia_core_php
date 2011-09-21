@@ -18,7 +18,7 @@ try {
     
     include __DIR__ . '/transaction_extended_tests.php';
     
-} catch( Exception $e ){
+} catch( \Exception $e ){
     Tap::fail( 'unexpected exception thrown' );
     print $e;
 }

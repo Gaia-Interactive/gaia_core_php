@@ -22,7 +22,7 @@ class RecentSorter extends Sorter {
         }
         if( $this->cacher) {
             $this->cacher->set($item_id, $now, $this->cacheTimeout() );
-            if( $tran ) Transaction::onRollback( array( $this->cacher, 'delete'), array($item_id) );
+            Transaction::onRollback( array( $this->cacher, 'delete'), array($item_id) );
         }
         return $res;
     }

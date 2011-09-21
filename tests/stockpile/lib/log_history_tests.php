@@ -8,7 +8,7 @@ $rows = $stockpile->history();
 Tap::is( $rows, array(), 'before adding an item, history returned a row-set with no rows');
 
 // subtract on nothing, swallow errors.
-try { $stockpile->subtract( $item_id ); } catch( Exception $e ) { }
+try { $stockpile->subtract( $item_id ); } catch( \Exception $e ) { }
 $rows = $stockpile->history();
 Tap::is( $rows, array(), 'after subtraction error because no items to remove, no logging took place');
 
