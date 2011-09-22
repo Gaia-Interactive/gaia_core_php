@@ -298,6 +298,17 @@ class Job extends Request implements \Iterator {
         if( substr( $this->url, 0, 1) == '/') $this->url = 'http://' . $domain . $this->url;
         if( $this->id ) $headers[] = 'job-id: ' . $this->id;
         $opts[CURLOPT_TIMEOUT] = $this->ttr;
+        if( $this->proxyhost ){
+            $opts[CURLOPT_PROXY] = $this->proxyhost;
+            if( substr($url, 0, 5) == 'https' ) $opts[CURLOPT_HTTPPROXYTUNNEL] = 1;
+        }
+        
+        
+        $headers += array(
+        'Accept-Charset: ISO-8859-1,utf-8',
+        'Accept-language: en-us',
+        'Accept: text/xml,application/xml,application/xhtml+xml,text/html,text/plain,image/png,image/jpeg,image/gif,*/*',
+        );
         $ch = parent::build($opts, $headers);
         return $ch;
     }
@@ -342,6 +353,10 @@ class Job extends Request implements \Iterator {
             case 'queue' :
                 if( ! ctype_alnum( $v ) ) return FALSE;
                 return $this->__d[$k] = strtolower($v);
+                
+           case 'proxyhost':
+                if( ! preg_match("/^[a-z][a-z0-9_\-\.\:]+$/i", $v)) return FALSE;
+                return $this->__d[$k] = $v;
                 
             case 'url' :
             case 'callback': 

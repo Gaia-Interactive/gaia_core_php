@@ -10,17 +10,6 @@ use Gaia\Exception;
 
 
 class Request extends Container implements \Iterator {
-
-   /**
-    * Internal variables.
-    *
-    */
-    protected $__d = array(
-                    'url'=>'',
-                    'post'=>'',
-                    'response'=>NULL,
-                    'proxyhost'=>FALSE,
-    );
     
    /**
     * try to run the request right away.
@@ -54,29 +43,24 @@ class Request extends Container implements \Iterator {
     */
     public function build( array $opts = array(), array $headers = array() ){
         $url = substr( $this->url, 0, 1) == '/'  ? 'http://127.0.0.1' . $this->url : $this->url;
-        
         $parts = @parse_url( $url );
         if( ! is_array( $parts ) ) $parts = array();
         $uri = isset( $parts['path'] ) ? $parts['path'] : '/';
         if( isset( $parts['query'] ) ) $uri .= '?' . $parts['query'];
         if( ! isset( $parts['host'] ) ) throw new Exception('invalid-uri');
-        $ch = curl_init($url);
-        if( ! empty( $opts ) ) curl_setopt_array( $ch, $opts );
-        $headers += array(
-                    'Connection: Keep-Alive',
-                    'Keep-Alive: 300',
-                    'Accept-Charset: ISO-8859-1,utf-8',
-                    'Accept-language: en-us',
-                    'Accept: text/xml,application/xml,application/xhtml+xml,text/html,text/plain,image/png,image/jpeg,image/gif,*/*',
-        );
-        
+        if( $this->handle && get_resource_type($this->handle) == 'curl' ){
+            $ch = $this->handle;
+        } else {
+            $ch = $this->handle = curl_init();
+        }
+        $opts[ CURLOPT_URL ] = $url;
         if( isset( $parts['user'] ) && isset( $parts['pass'] ) ){
-            curl_setopt($ch , CURLOPT_USERPWD,$parts['user'].':'.$parts['pass']);
+            $opts[CURLOPT_USERPWD] = $parts['user'].':'.$parts['pass'];
         }
 
         if( $this->post ) {
-            curl_setopt( $ch, CURLOPT_POST, 1);
-            curl_setopt( $ch, CURLOPT_POSTFIELDS, $this->post);
+            $opts[CURLOPT_POST] = 1;
+            $opts[CURLOPT_POSTFIELDS] = is_array( $this->post ) ? http_build_query( $this->post  ) : $this->post;
         }
         
         if( substr( $this->post, 0, 5 ) == '<?xml'){
@@ -84,20 +68,20 @@ class Request extends Container implements \Iterator {
         } else {
             $headers[] = 'application/x-www-form-urlencoded';
         }
-        curl_setopt( $ch, CURLOPT_HTTPHEADER, $headers);
-        if( $this->proxyhost ){
-            curl_setopt( $ch, CURLOPT_PROXY, $this->proxyhost);
+        if( ! isset($opts[CURLOPT_HTTPHEADER]) ){
+            $opts[CURLOPT_HTTPHEADER] = array();
         }
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+        $opts[CURLOPT_HTTPHEADER] += $headers;
+        $opts[CURLOPT_FOLLOWLOCATION] = 1;
         if( substr($url, 0, 5) == 'https' ){
-            curl_setopt( $ch , CURLOPT_SSL_VERIFYPEER, 0);
-            curl_setopt( $ch , CURLOPT_SSL_VERIFYHOST, 0);
-            if( $this->proxyhost ) curl_setopt( $ch, CURLOPT_HTTPPROXYTUNNEL, 1);
+            $opts[CURLOPT_SSL_VERIFYPEER] = 0;
+            $opts[CURLOPT_SSL_VERIFYHOST] = 0;
         }
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-        curl_setopt($ch, CURLINFO_HEADER_OUT, TRUE);
-        curl_setopt($ch, CURLOPT_HEADER, TRUE);
-        return $this->handle = $ch;
+        $opts[CURLOPT_RETURNTRANSFER] = 1;
+        $opts[CURLINFO_HEADER_OUT] = 1;
+        $opts[CURLOPT_HEADER] = 1;
+        curl_setopt_array( $ch, $opts );
+        return $ch;
     }
     
     public function handle( $curl_data, $curl_info ){  
@@ -120,25 +104,6 @@ class Request extends Container implements \Iterator {
         $curl_info['body'] = $body;
         $this->response = new \Gaia\Container( $curl_info );
         return $this->response;
-    }
-    
-        
-   /**
-    * magic method.
-    * @param string
-    * @param mixed
-    * return mixed
-    */
-    public function __set( $k, $v ){
-        switch( $k ){
-           case 'proxyhost':
-                if( ! preg_match("/^[a-z][a-z0-9_\-\.\:]+$/i", $v)) return FALSE;
-                return $this->__d[$k] = $v;
-                
-            case 'post' : 
-                return $this->__d[$k] = is_array( $v ) ? http_build_query( $v ) : $v;    
-            }
-        return $this->__d[$k] = $v;
     }
 }
 // EOC
