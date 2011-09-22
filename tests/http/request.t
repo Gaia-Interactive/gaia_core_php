@@ -21,5 +21,6 @@ Tap::cmp_ok( $diff = number_format(abs( $elapsed - $response->total_time), 4), '
 Tap::like( $response->request_header, '#GET /gaiaops/gaia_core_php HTTP/1.1#i', 'request header sent to the correct url');
 Tap::like( $response->body, '/gaia_core_php hosted on GitHub/i', 'got back the correct content');
 Tap::is( $response->headers->Connection, 'keep-alive', 'sent a keep-alive header and got back a keep-alive response');
+Tap::is( strlen( $response->body ), $response->headers->{'Content-Length'}, 'got back expected amount of content');
 unset( $response->body );
 //print_r( $response );
