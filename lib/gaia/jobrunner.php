@@ -1,6 +1,7 @@
 <?php
 namespace Gaia;
 use Gaia\Job;
+use Gaia\Http;
 
 // +---------------------------------------------------------------------------+
 // | This file is part of the Job Framework.                                   |
@@ -30,13 +31,6 @@ class JobRunner {
     protected $start = 0;
     
     protected $registering = FALSE;
-    
-    protected $callbacks = array();
-    
-   /**
-    * @type array   list of running jobs
-    */
-    protected $jobs = array();
     
    /**
     * @type array   list of job objects waiting
@@ -69,34 +63,38 @@ class JobRunner {
     protected $lastrun = 0;
     
    /**
+    * Make sure we should be dequeueing.
+    */
+    protected $dequeue = TRUE;
+    
+    
+   /**
     * @type int     debug stream
     */
     protected $debug = NULL;
     
    /**
     * keep track of the debug level.
-    *
     */
     protected $debug_level = 1;
     
-   /**
-    * Make sure we should be dequeueing.
-    */
-    protected $dequeue = TRUE;
+    protected $pool;
+    
+    public function __construct(){
+        $this->pool = new Http\Pool;
+        $this->pool->attach( array( $this, 'handle' ) );
+    }
+    
     
     
     public function send(){
         $this->start = time();
         $this->populate();
         while( $this->alive ){
-            if( $this->debug && $this->debug_level > 1 ) $this->debug('starting socket select');
-            if(! $this->select(1)) sleep(1);
+            $this->runTasks();
+            if(! $this->pool->select(1)) sleep(1);
             if( $this->debug && $this->debug_level > 1 ) $this->debug('ending socket select');
         }
-    }
-    
-    public function attach( $callback ){
-        if( is_callable( $callback ) ) $this->callbacks[] = $callback;
     }
 
     
@@ -109,7 +107,7 @@ class JobRunner {
         $time = time();
         if( ( $time - 2 ) < $this->lastrun ) return;
         if( $this->debug && $this->debug_level > 1 ) $this->debug('maintenance tasks');
-        if( $this->debug ) $this->debug('jobs running: ' . count( $this->jobs ) );
+        if( $this->debug ) $this->debug('jobs running: ' . count( $this->pool->requests() ) );
 
         $this->checkIfDisabled();
         $this->register();
@@ -129,7 +127,7 @@ class JobRunner {
             
             for( $i = 0; $i < 10; $i++){
                 $this->populate();
-                if( count( $this->jobs ) > 0 || !$this->dequeue ) break;
+                if( count( $this->pool->requests() ) > 0 || !$this->dequeue ) break;
             }
             $this->register();
             if( ($time - 60)  > $dbtime ) {
@@ -166,9 +164,8 @@ class JobRunner {
             'failed'=>$this->failed,
             'noreplies'=>$this->noreplies,
         ) + self::hostInfo();
-        $handle = $job->buildRequest();
-        $this->jobs[(int)$handle] = $job;
-        curl_multi_add_handle($this->_handle, $handle);
+        $handle = $job->build(array(CURLOPT_CONNECTTIMEOUT=>1));
+        $this->pool->add( $job );
     }
     
     protected static function hostinfo(){
@@ -217,7 +214,7 @@ class JobRunner {
     */
     public function populate(){
         try {
-            if( ! $this->alive && count( $this->jobs ) == 0 ){
+            if( ! $this->alive && count( $this->pool->requests() ) == 0 ){
                 return TRUE;
             }
             
@@ -231,17 +228,14 @@ class JobRunner {
                 if( count( $this->queue ) < $this->max ) $this->dequeue = FALSE;
             }
             
-            while( count( $this->jobs ) <  $this->max ){
+            while( count( $this->pool->requests() ) <  $this->max ){
                 if( ! ( $job = array_shift( $this->queue ) ) ) break;
                 if( ! $job instanceof Job ) {
                     if( $this->debug ) $this->debug( $job );
                     continue;
                 }
                 try { 
-                    $handle = $job->buildRequest();
-		            $this->jobs[(int)$handle] = $job;
-		            curl_multi_add_handle($this->_handle, $handle);
-
+                    $this->pool->add( $job );
                 } catch( Exception $e ){
                     $this->debug( $e );
                 }
@@ -253,16 +247,44 @@ class JobRunner {
             return FALSE;
          }
     }
-    
+
+	/**
+	 * Cleans up the curl multi request
+	 *
+	 * If individual curl requests were not completed, they will be closed through curl_close()
+	 */
+	public function shutdown()
+	{
+		if( ! $this->alive ) return;
+		$this->alive = FALSE;
+		$this->registering = FALSE;
+		$this->register();
+		$this->pool->finish();
+	}
+	
+	public function handle( Http\Request $job ){
+	    $this->populate();
+	    $this->displayOutcome( $job );
+        if( ! $job instanceof Job ) return;
+        if( $job->id ) $this->processed++;
+        if( $job->task == 'register' ) $this->registering = FALSE;
+        if( $job->response->http_code != 200 ) {
+            if( $job->task == 'refreshconfig'){
+                $this->shutdown();
+            }
+            if( $job->id ) ($job->response->http_code == 0 && $job->response->size_download == 0 ) ? $this->noreplies++ : $this->failed++;
+        }
+	}
+	
    /**
-    * display the outcome of a job
+    * display the outcome of a http
     * @return bool
     */
-    public function displayJobOutcome( Job $job ){
+    public function displayOutcome( Http\Request $request ){
         if( ! $this->debug ) return;
-        $out = "\nJOB";
-        if( $job->id ) $out .=" - " . $job->id;
-        $info = $job->curl_info;
+        $out = "\nHTTP";
+        if( $request->id ) $out .=" - " . $request->id;
+        $info = $request->response;
         if( $info->http_code != 200 ) $out .= '-ERR';
         $out .= ": " . $info->url;
         if( $this->debug_level < 2 && $info->http_code  == 200  ) return $this->debug( $out );
@@ -276,13 +298,6 @@ class JobRunner {
         }
         $this->debug( $out );
         
-    }
-    
-   /**
-    * instantiate a new job
-    */
-    protected function job( $url ){
-        return new Job( $url );
     }
     
    /**
@@ -327,124 +342,8 @@ class JobRunner {
         $dt =  "\n[" . date('H:i:s') . '] ';
         return $dt . str_replace("\n", $dt, trim( $v ));
     }
-
-	/**
-	 * The curl multi handle.
-	 * @var handle $_handle
-	 */
-	protected $_handle = NULL;
-
-	/**
-	 * Initializes the curl multi request.
-	 */
-	public function __construct()
-	{
-		$this->_handle = curl_multi_init();
-	}
-	
-	public function __destruct(){
-        curl_multi_close($this->_handle);
-	}
-
-	/**
-	 * Cleans up the curl multi request
-	 *
-	 * If individual curl requests were not completed, they will be closed through curl_close()
-	 */
-	public function shutdown()
-	{
-		if( ! $this->alive ) return;
-        if( $this->debug ) $this->debug('shutting down');
-		$this->alive = FALSE;
-		$this->registering = FALSE;
-		$this->register();
-		$this->finish();
-		foreach ($this->jobs as $job){
-		    if( ! $job->handle ) continue;
-			curl_multi_remove_handle($this->_handle, $job->handle);
-			curl_close($job->handle);
-		}
-	}
-
-	/**
-	 * Polls (non-blocking) the curl requests for additional data.
-	 *
-	 * This function must be called periodically while processing other data.  This function is non-blocking
-	 * and will return if there is no data ready for processing on any of the internal curl handles.
-	 *
-	 * @return boolean TRUE if there are transfers still running or FALSE if there is nothing left to do.
-	 */
-	protected function poll()
-	{
-		$still_running = 0; // number of requests still running.
-
-		do
-		{
-			$result = curl_multi_exec($this->_handle, $still_running);
-
-			if ($result == CURLM_OK)
-			{
-				do
-				{
-					$messages_in_queue = 0;
-					$info = curl_multi_info_read($this->_handle, $messages_in_queue);
-					if ($info && isset($info['handle']) && isset($this->jobs[(int)$info['handle']]))
-					{
-						$curl_data = curl_multi_getcontent($info['handle']);
-						$curl_info = curl_getinfo($info['handle']);
-                        curl_multi_remove_handle($this->_handle, $info['handle']);
-						curl_close($info['handle']);
-                        $job = $this->jobs[ (int) $info['handle'] ];
-                        unset( $this->jobs[ (int) $info['handle'] ] );
-                        $this->populate();
-                        if( ! $job instanceof Job ) continue;
-                        if( $job->id ) $this->processed++;
-                        $job->handleResponse( $curl_data, $curl_info );
-                        if( $job->task == 'register' ) $this->registering = FALSE;
-                        $this->displayJobOutcome( $job );
-                        if( $job->curl_info->http_code == 200 ) {
-                            if($job->curl_info->headers->{'gaia-job-id'}==$job->id) $job->flag = 1;
-                            $job->complete();
-                            
-                        } else {
-                            if( $job->task == 'refreshconfig'){
-                                $this->shutdown();
-                            }
-                            
-                            $job->fail();
-                            if( $job->id ) ($job->curl_info->http_code == 0 && $job->curl_info->size_download == 0 ) ? $this->noreplies++ : $this->failed++;
-                        }
-                        return TRUE;
-					}
-				}
-				while($messages_in_queue > 0);
-			}
-		}
-		while ($result == CURLM_CALL_MULTI_PERFORM && $still_running > 0);
-
-		// don't trust $still_running, as user may have added more urls
-		// in callbacks
-		return (boolean)$this->jobs;
-	}
     
-	protected function select($timeout = 1.0){
-	    $this->runTasks();
-		$result = $this->poll();
-
-		if ($result)
-		{
-			curl_multi_select($this->_handle, $timeout);
-			$result = $this->poll();
-		}
-
-		return $result;
-	}
-	
-	protected function finish(){
-		while ($this->select() === TRUE) { /* no op */ }
-
-		return TRUE;
-	}
+    
     
 }
 // EOC

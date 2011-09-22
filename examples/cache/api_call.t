@@ -39,44 +39,13 @@ class GoogleMaps {
     }
     
     protected static function query( $qs, array $opts = array()){
-        $ch = curl_init( 'http://maps.googleapis.com/maps/api/directions/json?' . $qs );
-        if( ! empty( $opts ) ) curl_setopt_array($ch, $opts );
-        $headers = array(
-                    'Connection: Keep-Alive',
-                    'Keep-Alive: 300',
-                    'Accept-Charset: ISO-8859-1,utf-8',
-                    'Accept-language: en-us',
-                    'Accept: text/xml,application/xml,application/xhtml+xml,text/html,text/plain,image/png,image/jpeg,image/gif,*/*',
-                    'application/x-www-form-urlencoded',
-        );
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-        curl_setopt($ch, CURLINFO_HEADER_OUT, TRUE);
-        curl_setopt($ch, CURLOPT_HEADER, TRUE);
-        $curl_data = curl_exec($ch);
-        $curl_info = curl_getinfo($ch);
-        if( ! is_array( $curl_info ) ) $curl_info = array();
-        if( ! isset( $curl_info['http_code'] ) ) $curl_info['http_code'] = 0;
-        if( ! isset( $curl_info['header_size'] ) ) $curl_info['header_size'] = 0;
-        $response_header =  substr( $curl_data, 0, $curl_info['header_size'] );
-        $header_lines = explode("\r\n", $response_header);
-        $headers = array();
-        foreach( $header_lines as $line ){
-            if( ! strpos( $line, ':') ) continue;
-            list( $k, $v ) = explode(':', $line );
-            trim( $k );
-            trim( $v );
-            $headers[ $k ] = $v;
-        }
-        $body = substr( $curl_data, $curl_info['header_size']);
-        $curl_info['headers'] = new \Gaia\Container($headers);
-        $curl_info['response_header'] = $response_header;
-        $curl_info['body'] = $body;
-        if( $curl_info['http_code'] != 200 ) throw new Exception('curl error', $curl_info );
-        $response = json_decode( $body, TRUE);
-        if( ! is_array( $response ) ) throw new Exception('curl error', $curl_info );
-        return $response;
+        $http = new \Gaia\HTTP\Request( 'http://maps.googleapis.com/maps/api/directions/json?' . $qs );
+        $response = $http->exec( $opts );
+        if( $response->http_code !== 200 ) throw new Exception('curl error', $response );
+        if( ! $response->body ) throw new Exception('curl error', $response );
+        $data = json_decode($response->body, TRUE);
+        if( ! is_array( $data ) ) throw new Exception('curl error', $response );
+        return $data;
     }
 
     protected static function cache(){

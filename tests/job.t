@@ -39,8 +39,8 @@ Tap::cmp_ok($elapsed, '<', 1, "took less than 1 sec to store ( $elapsed )");
 $res = $job->run();
 
 Tap::ok($res, 'ran the job successfully');
-Tap::is( $job->curl_info->http_code, 200, 'returned code 200');
-Tap::like( $job->curl_info->body, '/coca-cola/i', 'got back the cocacola page');
+Tap::is( $job->response->http_code, 200, 'returned code 200');
+Tap::like( $job->response->body, '/coca-cola/i', 'got back the cocacola page');
 
 $res = $job->complete();
 

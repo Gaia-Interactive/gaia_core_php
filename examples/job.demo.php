@@ -5,7 +5,7 @@ use Gaia\Test\Tap;
 use Gaia\Job;
 use Gaia\JobRunner;
 use Gaia\Pheanstalk;
-
+set_time_limit(0);
 if( ! @fsockopen('127.0.0.1', '11300')) {
     Tap::plan('skip_all', 'Beanstalkd not running on localhost');
 }
@@ -19,7 +19,6 @@ Job::attach(
         return array( new Pheanstalk('127.0.0.1', '11300' ) );
     }
 );
-
 
 for( $i = 0; $i < 2; $i++){
     $start = microtime(TRUE);
@@ -44,24 +43,17 @@ $start = microtime(TRUE);
 
 Job::watch('test');
 Job::config()->set('register_url', 'http://jloehrer.d.gaiaonline.com/test/dummy.php?register');
+
+print "\nHELLO\n";
 $runner = new JobRunner();
+
+
 //$runner->setLimit(8);
-$runner->setTimelimit(120);
+$runner->setTimelimit(20);
 $runner->enableDebug();
 $runner->setDebugLevel(1);
 $runner->setMax(10);
-
-$runner->attach( function(){
-    print "\nCALLBACK TRIGGERED\n";
-    Job::attach( array( new Beanstalk('127.0.0.1', '11300' ) ) );
-    Job::watch('test');
-
-}, $timeout = 10 );
-
-
 $runner->send();
-
-print_r( $runner );
 
 $elapsed = number_format( microtime(TRUE) - $start, 3);
 

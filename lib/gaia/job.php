@@ -2,6 +2,7 @@
 namespace Gaia;
 use Gaia\Exception;
 use Gaia\Pheanstalk;
+use Gaia\HTTP\Request;
 
 /**
  * @package Unknown
@@ -65,7 +66,7 @@ use Gaia\Pheanstalk;
  *   $job->post = '<body><test>1</test></body>';
  *   $job->store();
  */
-class Job extends Container implements \Iterator {
+class Job extends Request implements \Iterator {
 
    /**
     * Internal variables.
@@ -227,16 +228,21 @@ class Job extends Container implements \Iterator {
     * @param int    how many seconds to wait on i/o before giving up
     * @return boolean
     */
-    public function run(){
-        $ch = $this->buildRequest( array('connecttimeout'=>1) );
-        $this->handleResponse( $data = curl_exec($ch), curl_getinfo($ch));
-        return (bool) $data;
+    public function exec(array $opts = array(), array $headers = array()){
+        if( ! isset( $opts[CURLOPT_CONNECTTIMEOUT] ) ) $opts[CURLOPT_CONNECTTIMEOUT] = 1;
+        return parent::exec($opts, $headers);
+    }
+    
+    public function run(array $opts = array(), array $headers = array()){
+        $this->exec($opts, $headers);
+        return (bool) $this->response->body;
     }
     
    /**
     * mark the job as complete
     */
     public function complete(){
+        if( $this->flag ) return TRUE;
         if( ! $this->remove() ) return FALSE;
         $this->flag = 1;
         return TRUE;
@@ -253,7 +259,7 @@ class Job extends Container implements \Iterator {
         $conns = self::connections();
         if( ! isset( $conns[ $server ] ) ) return false;
         $conn = $conns[ $server ];
-        $res = $conn->release( new \Pheanstalk_Job($id, ''), $job->priority, $job->ttr  + 300  );
+        $res = $conn->release( new \Pheanstalk_Job($id, ''), $this->priority, $this->ttr  + 300  );
         if( ! $res ) throw new Exception('conn error', $conn );
         return $res;
     }
@@ -272,23 +278,7 @@ class Job extends Container implements \Iterator {
         if( ! $res ) throw new Exception('conn error', $conn );
         return $res;
     }
-    
-   /**
-    * import job data from a different job class into this one.
-    * @param mixed      either an array or Job object
-    * @return void
-    */
-    public function load( $job ){
-        if( is_string( $job ) && function_exists('json_decode') && ( $v = @json_decode( $job, TRUE ) ) ) $job = $v;
-        if( is_object( $job ) ){
-            foreach( array_keys($this->__d ) as $k ) $this->$k = ( isset( $job->$k ) ) ? $job->$k : NULL;
-        }elseif( is_array( $job ) ){
-            foreach(  array_keys($this->__d ) as $k ) $this->$k = ( isset( $job[$k] ) ) ? $job[$k] : NULL;
-        } elseif( is_string( $job ) ){
-            $this->url = $job;
-        }
-    }
-    
+
     public static function config(){
         if( isset( self::$config ) ) return self::$config;
         return self::$config = new \Gaia\Container;
@@ -302,77 +292,25 @@ class Job extends Container implements \Iterator {
     * utility method. send the Http request out through a stream and return the stream object
     * @param int    how many seconds to wait on networking I/O
     */
-    public function buildRequest(){
+    public function build( array $opts = array(), array $headers = array() ){
         $domain = self::config()->get('domain');
         if( ! $domain ) $domain = '127.0.0.1';
-        $url = substr( $this->url, 0, 1) == '/'  ? 'http://' . $domain . $this->url : $this->url;
-        
-        $parts = @parse_url( $url );
-        if( ! is_array( $parts ) ) $parts = array();
-        $uri = isset( $parts['path'] ) ? $parts['path'] : '/';
-        if( isset( $parts['query'] ) ) $uri .= '?' . $parts['query'];
-        if( ! isset( $parts['host'] ) ) throw new Exception('invalid-uri');
-        $ch = curl_init($url);
-        $headers = array(
-                    'Connection: Keep-Alive',
-                    'Keep-Alive: 300',
-                    'Accept-Charset: ISO-8859-1,utf-8',
-                    'Accept-language: en-us',
-                    'Accept: text/xml,application/xml,application/xhtml+xml,text/html,text/plain,image/png,image/jpeg,image/gif,*/*',
-        );
-        
-        if( isset( $parts['user'] ) && isset( $parts['pass'] ) ){
-            curl_setopt($ch , CURLOPT_USERPWD,$parts['user'].':'.$parts['pass']);
-        }
-
+        if( substr( $this->url, 0, 1) == '/') $this->url = 'http://' . $domain . $this->url;
         if( $this->id ) $headers[] = 'job-id: ' . $this->id;
-        //$request->addHeaders(array('job-nonce'=>self::createNonce($uri) ) );
-        if( $this->post ) {
-            curl_setopt( $ch, CURLOPT_POST, 1);
-            curl_setopt( $ch, CURLOPT_POSTFIELDS, $this->post);
-        }
-        
-        if( substr( $this->post, 0, 5 ) == '<?xml'){
-           $headers[] = 'Content-Type: text/xml';
-        } else {
-            $headers[] = 'application/x-www-form-urlencoded';
-        }
-        curl_setopt( $ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_TIMEOUT, $this->ttr);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 2);
-        if( $this->proxyhost ){
-            curl_setopt( $ch, CURLOPT_PROXY, $this->proxyhost);
-        }
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
-        if( substr($url, 0, 5) == 'https' ){
-            curl_setopt( $ch , CURLOPT_SSL_VERIFYPEER, 0);
-            curl_setopt( $ch , CURLOPT_SSL_VERIFYHOST, 0);
-            if( $this->proxyhost ) curl_setopt( $ch, CURLOPT_HTTPPROXYTUNNEL, 1);
-        }
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-        curl_setopt($ch, CURLINFO_HEADER_OUT, TRUE);
-        curl_setopt($ch, CURLOPT_HEADER, TRUE);
-        return $this->handle = $ch;
+        $opts[CURLOPT_TIMEOUT] = $this->ttr;
+        $ch = parent::build($opts, $headers);
+        return $ch;
     }
     
-   /**
-    * utility method.
-    * Url encode the data to be stored.
-    * @param mixed
-    * @return string.
-    */
-    protected function urlencode($data) {
-        if ( is_scalar($data) ) return $data;
-        if( ! is_array( $data ) || count( $data ) < 1 ) return '';
-        $querystring = '';
-        foreach ($data as $key => $val) {
-            if (is_array($val)) {
-                foreach ($val as $i=>$val2) $querystring .= urlencode($key).'[' . urlencode( $i ) . ']='.urlencode($val2).'&';
-            } else {
-                $querystring .= urlencode($key).'='.urlencode($val).'&';
-            }
+    public function handle( $curl_data, $curl_info ){
+        $response = parent::handle( $curl_data, $curl_info );
+        if( $response->http_code == 200 ) {
+            if($response->headers->{'gaia-job-id'}==$this->id) $this->flag = 1;
+            $this->complete();
+        } else {
+            $this->fail();
         }
-        return substr($querystring, 0, -1);
+        return $response;
     }
     
    /**
@@ -392,13 +330,6 @@ class Job extends Container implements \Iterator {
                 
             case 'flag':
                 return $this->__d[$k] = ( $v ) ? TRUE : FALSE;
-                
-           case 'proxyhost':
-                if( ! preg_match("/^[a-z][a-z0-9_\-\.\:]+$/i", $v)) return FALSE;
-                return $this->__d[$k] = $v;
-                
-            case 'post' : 
-                return $this->__d[$k] = $this->urlencode( $v );
             
             case 'delay':
             case 'expires':
@@ -424,28 +355,7 @@ class Job extends Container implements \Iterator {
                 break;
                 
             }
-        return $this->__d[$k] = $v;
-    }
-    
-    public function handleResponse( $curl_data, $curl_info ){  
-        if( ! is_array( $curl_info ) ) $curl_info = array();
-        if( ! isset( $curl_info['http_code'] ) ) $curl_info['http_code'] = 0;
-        if( ! isset( $curl_info['header_size'] ) ) $curl_info['header_size'] = 0;
-        $response_header =  substr( $curl_data, 0, $curl_info['header_size'] );
-        $header_lines = explode("\r\n", $response_header);
-        $headers = array();
-        foreach( $header_lines as $line ){
-            if( ! strpos( $line, ':') ) continue;
-            list( $k, $v ) = explode(':', $line );
-            trim( $k );
-            trim( $v );
-            $headers[ $k ] = $v;
-        }
-        $body = substr( $curl_data, $curl_info['header_size']);
-        $curl_info['headers'] = new \Gaia\Container($headers);
-        $curl_info['response_header'] = $response_header;
-        $curl_info['body'] = $body;
-        $this->curl_info = new \Gaia\Container( $curl_info );
+        return parent::__set( $k, $v );
     }
 }
 // EOC
