@@ -23,9 +23,8 @@ class Request extends Container implements \Iterator {
     );
     
    /**
-    * try to run the job right away.
-    * @param int    how many seconds to wait on i/o before giving up
-    * @return boolean
+    * try to run the request right away.
+    * @return Container of the response.
     */
     public function exec( array $opts = array(), array $headers = array() ){
         $ch = $this->build( $opts, $headers );
@@ -111,8 +110,8 @@ class Request extends Container implements \Iterator {
         foreach( $header_lines as $line ){
             if( ! strpos( $line, ':') ) continue;
             list( $k, $v ) = explode(':', $line );
-            trim( $k );
-            trim( $v );
+            $k = trim( $k );
+            $v = trim( $v );
             $headers[ $k ] = $v;
         }
         $body = substr( $curl_data, $curl_info['header_size']);
