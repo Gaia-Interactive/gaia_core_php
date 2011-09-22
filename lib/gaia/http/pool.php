@@ -59,8 +59,8 @@ class Pool {
     /**
     * add a new request to the pool.
     */
-    public function add( Request $request ){
-        if( ! $request->handle ) $request->handle = $request->build();
+    public function add( Request $request, array $opts = array() ){
+        $request->build($opts);
         $this->requests[(int)$request->handle] = $request;
         curl_multi_add_handle($this->handle, $request->handle);
     }

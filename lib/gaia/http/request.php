@@ -15,8 +15,8 @@ class Request extends Container implements \Iterator {
     * try to run the request right away.
     * @return Container of the response.
     */
-    public function exec( array $opts = array(), array $headers = array() ){
-        $ch = $this->build( $opts, $headers );
+    public function exec( array $opts = array() ){
+        $ch = $this->build( $opts );
         return $this->handle( curl_exec($ch), curl_getinfo($ch));
     }
 
@@ -41,7 +41,7 @@ class Request extends Container implements \Iterator {
     * utility method. send the Http request out through a stream and return the stream object
     * @param array    curl opts.
     */
-    public function build( array $opts = array(), array $headers = array() ){
+    public function build( array $opts = array() ){
         $url = substr( $this->url, 0, 1) == '/'  ? 'http://127.0.0.1' . $this->url : $this->url;
         $parts = @parse_url( $url );
         if( ! is_array( $parts ) ) $parts = array();
@@ -62,16 +62,14 @@ class Request extends Container implements \Iterator {
             $opts[CURLOPT_POST] = 1;
             $opts[CURLOPT_POSTFIELDS] = is_array( $this->post ) ? http_build_query( $this->post  ) : $this->post;
         }
-        
-        if( substr( $this->post, 0, 5 ) == '<?xml'){
-           $headers[] = 'Content-Type: text/xml';
+
+        if( ! isset($opts[CURLOPT_HTTPHEADER]) )$opts[CURLOPT_HTTPHEADER] = array();
+                
+        if( isset( $opts[CURLOPT_POSTFIELDS] ) && substr( $opts[CURLOPT_POSTFIELDS], 0, 5 ) == '<?xml'){
+           $opts[CURLOPT_HTTPHEADER][] = 'Content-Type: text/xml';
         } else {
-            $headers[] = 'application/x-www-form-urlencoded';
+            $opts[CURLOPT_HTTPHEADER][] = 'application/x-www-form-urlencoded';
         }
-        if( ! isset($opts[CURLOPT_HTTPHEADER]) ){
-            $opts[CURLOPT_HTTPHEADER] = array();
-        }
-        $opts[CURLOPT_HTTPHEADER] += $headers;
         $opts[CURLOPT_FOLLOWLOCATION] = 1;
         if( substr($url, 0, 5) == 'https' ){
             $opts[CURLOPT_SSL_VERIFYPEER] = 0;

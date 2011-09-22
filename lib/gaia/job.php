@@ -228,13 +228,13 @@ class Job extends Request implements \Iterator {
     * @param int    how many seconds to wait on i/o before giving up
     * @return boolean
     */
-    public function exec(array $opts = array(), array $headers = array()){
+    public function exec(array $opts = array()){
         if( ! isset( $opts[CURLOPT_CONNECTTIMEOUT] ) ) $opts[CURLOPT_CONNECTTIMEOUT] = 1;
-        return parent::exec($opts, $headers);
+        return parent::exec($opts);
     }
     
-    public function run(array $opts = array(), array $headers = array()){
-        $this->exec($opts, $headers);
+    public function run(array $opts = array()){
+        $this->exec($opts);
         return (bool) $this->response->body;
     }
     
@@ -292,24 +292,26 @@ class Job extends Request implements \Iterator {
     * utility method. send the Http request out through a stream and return the stream object
     * @param int    how many seconds to wait on networking I/O
     */
-    public function build( array $opts = array(), array $headers = array() ){
+    public function build( array $opts = array() ){
         $domain = self::config()->get('domain');
         if( ! $domain ) $domain = '127.0.0.1';
         if( substr( $this->url, 0, 1) == '/') $this->url = 'http://' . $domain . $this->url;
-        if( $this->id ) $headers[] = 'job-id: ' . $this->id;
         $opts[CURLOPT_TIMEOUT] = $this->ttr;
         if( $this->proxyhost ){
             $opts[CURLOPT_PROXY] = $this->proxyhost;
             if( substr($url, 0, 5) == 'https' ) $opts[CURLOPT_HTTPPROXYTUNNEL] = 1;
         }
         
+        if( ! isset($opts[CURLOPT_HTTPHEADER]) )$opts[CURLOPT_HTTPHEADER] = array();
         
-        $headers += array(
+        $opts[CURLOPT_HTTPHEADER] += array(
         'Accept-Charset: ISO-8859-1,utf-8',
         'Accept-language: en-us',
         'Accept: text/xml,application/xml,application/xhtml+xml,text/html,text/plain,image/png,image/jpeg,image/gif,*/*',
         );
-        $ch = parent::build($opts, $headers);
+        if( $this->id ) $opts[CURLOPT_HTTPHEADER][] = 'job-id: ' . $this->id;
+
+        $ch = parent::build($opts);
         return $ch;
     }
     

@@ -164,8 +164,7 @@ class JobRunner {
             'failed'=>$this->failed,
             'noreplies'=>$this->noreplies,
         ) + self::hostInfo();
-        $handle = $job->build(array(CURLOPT_CONNECTTIMEOUT=>1),array('Connection: Keep-Alive','Keep-Alive: 300'));
-        $this->pool->add( $job );
+        $this->pool->add( $job, array(CURLOPT_CONNECTTIMEOUT=>1, CURLOPT_HTTPHEADER =>array('Connection: Keep-Alive','Keep-Alive: 300')) );
     }
     
     protected static function hostinfo(){
