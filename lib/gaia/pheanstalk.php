@@ -1,6 +1,5 @@
 <?php
 namespace Gaia;
-require __DIR__ . '/../../vendor/pheanstalk/pheanstalk_init.php';
 
 class Pheanstalk extends \Pheanstalk {
     protected $hostinfo;

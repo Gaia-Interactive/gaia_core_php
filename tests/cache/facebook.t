@@ -2,7 +2,6 @@
 <?php
 // @see https://github.com/gaiaops/gaia_core_php/wiki/cache-facebook
 require __DIR__ . '/../common.php';
-require  __DIR__ . '/../../vendor/facebook/php-sdk/src/facebook.php';
 use Gaia\Test\Tap;
 use Gaia\DB;
 

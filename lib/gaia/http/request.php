@@ -4,11 +4,18 @@ use Gaia\Container;
 use Gaia\Exception;
 
 // +---------------------------------------------------------------------------+
-// | This file is part of the Job Framework.                                   |
+// | This file is part of the HTTP Framework.                                   |
 // | Author 72squared  (john@gaiaonline.com)                                   |
 // +---------------------------------------------------------------------------+
 
-
+/*
+* Use this class to run curl calls easily.
+* $request = new \Gaia\Http\Request('http://news.yahoo.com/rss/');
+* $response = $request->exec();
+* 
+*
+*
+*/
 class Request extends Container implements \Iterator {
     
    /**
