@@ -11,7 +11,7 @@ $a = new Cache\Prefix($m, '#a');
 $b = new Cache\Prefix($m, '#b');
 
 $m = new Cache\Replica(array($a, $b));
-Tap::ok( $m instanceof Cache\Iface, 'replicamemcache instantiated successfully');
+Tap::ok( $m instanceof Cache\Iface, 'cache\replica instantiated successfully');
 
 $key = 'test' . microtime(TRUE);
 $res = $m->get($key);

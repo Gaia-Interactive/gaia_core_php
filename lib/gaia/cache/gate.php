@@ -9,6 +9,7 @@ class Gate extends Wrap {
         if( is_array( $request ) ) return $this->getMulti( $request );
         if( ! is_scalar( $request ) ) return FALSE;
         $res = $this->getMulti( array( $request ) );
+        //var_dump( $res );
         if( ! isset( $res[ $request ] ) ) return FALSE;
         return $res[ $request ];
     }
@@ -17,7 +18,7 @@ class Gate extends Wrap {
         if( ! is_array($keys ) ) return FALSE;
         foreach( $keys as $k ) {
             $matches[ $k ] = NULL;
-            $matches[ $exp_keys[] = '/__exp/' . $k ] = NULL;
+            $matches[ $exp_keys[] = $k .  '/__exp/' ] = NULL;
         }
         $res = $this->core->get( array_keys( $matches ) );
         if( ! is_array( $res ) ) $res = array();
@@ -25,9 +26,9 @@ class Gate extends Wrap {
             $matches[ $k ] = $v;
         }
         
-        $now = time();
+        $now = self::time();
         foreach( $exp_keys as $k ){
-            if( ! isset( $matches[ ($parent_key = substr( $k,7)) ] ) ) continue;
+            if( ! isset( $matches[ ($parent_key = substr( $k,0, -7)) ] ) ) continue;
             $diff = ( ctype_digit( (string) $matches[ $k ] ) ) ? $matches[ $k ] - $now : 0;
             if( $diff > 0 && // if the soft ttl is too old, reset it
                 mt_rand(1, pow( $diff, 3) ) != 1 // randomly reset it based on a parabolic curve approaching timeout.
@@ -51,7 +52,7 @@ class Gate extends Wrap {
         $this->core->set($k . '/__lock/', 1, $expire );
         if( ! $expire ) $expire = self::DEFAULT_TTL;
         $res = $this->core->set($k, $v);
-        $this->core->set($k . '/__exp/', time() + $expire);
+        $this->core->set($k . '/__exp/', self::time() + $expire);
         return $res;
     }
     
@@ -64,14 +65,14 @@ class Gate extends Wrap {
     function add($k, $v, $expire = 0 ){
         if( ! $this->core->add($k . '/__lock/', 1, $expire ) ) return FALSE;
         if( ! $expire ) $expire = self::DEFAULT_TTL;
-        $this->core->set($k . '/__exp/', time() + $expire);
+        $this->core->set($k . '/__exp/', self::time() + $expire);
         return $this->core->set($k, $v );
     }
     
     function replace($k, $v, $expire = 0 ){
         if( ! $this->core->replace( $k . '/__lock/', 1, $expire ) ) return FALSE;
         if( ! $expire ) $expire = self::DEFAULT_TTL;
-        $this->core->set($k . '/__exp/', time() + $expire);
+        $this->core->set($k . '/__exp/', self::time() + $expire);
         return $this->core->set($k, $v );
     }
     
@@ -83,5 +84,9 @@ class Gate extends Wrap {
     function decrement($k, $v = 1){
         if( ! $this->core->get($k . '/__exp/' ) ) return FALSE;
         return $this->core->decrement($k, $v );
+    }
+    
+    protected function time(){
+        return time();
     }
 }

@@ -158,7 +158,7 @@ modifications for gaiaonline.com by John Loehrer <jloehrer@gaiaonline.com>
     public static function getNames(){ return self::data()->getNames(); }
     public static function size($name = ""){ return self::data()->size( $name ); }
     public static function all(){ return self::data()->all();}
-=    public static function data() {
+    public static function data() {
         if ( self::$data !== NULL ) return self::$data;
         return self::$data = new Container( array(
                 'request_id' => NULL,

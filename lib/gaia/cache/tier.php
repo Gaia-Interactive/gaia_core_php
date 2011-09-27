@@ -72,7 +72,6 @@ class Tier extends Wrap {
         foreach( $missing as $k ) unset( $matches[ $k] );
 
         if( count( $missing ) < 1 ) {
-            if( $single ) return isset( $matches[ $request ] ) ? $matches[ $request ] : FALSE;
             return $matches;
         }
         $expires = $this->tier1_expires();

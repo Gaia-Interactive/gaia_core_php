@@ -1,14 +1,8 @@
-#!/usr/bin/env php
 <?php
-include __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\Cache;
 
-Tap::plan(7);
-
-$cache = new Cache\Mock();
-
-Tap::ok( $cache instanceof Cache\Mock, 'instantiated mock cache object');
+Tap::plan(8);
 
 $data = array();
 for( $i = 1; $i <= 3; $i++){
@@ -31,6 +25,7 @@ Tap::ok( $res, 'wrote all of my data into the cache');
 
 $res = TRUE;
 foreach( $data as $k => $v ){
+//var_dump($cache->get( $k ));
    if(  $cache->get( $k ) != $v ) $res = FALSE;
 }
 Tap::ok( $res, 'checked each key and got back what I wrote');
@@ -46,3 +41,8 @@ $k = 'gaia/cache/test/' . microtime(TRUE) . '/' . mt_rand(1, 10000);
 Tap::ok( $cache->add( $k, 1, 10), 'adding a non-existent key');
 Tap::ok( ! $cache->add( $k, 1, 10), 'second time, the add fails');
 
+Cache\Mock::$time_offset += 11;
+
+Tap::ok( $cache->add( $k, 1, 10), 'after expiration time, add works');
+
+Tap::ok( $cache->replace( $k, 1, 10 ), 'replace works after the successful add');
