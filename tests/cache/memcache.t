@@ -12,7 +12,7 @@ if( ! class_exists('\Memcache') && ! class_exists('\Memcached') ){
     Tap::plan('skip_all', 'no pecl-memcache or pecl-memcached extension installed');
 }
 
-Tap::plan(8);
+Tap::plan(11);
 
 $cache = new Cache\Memcache();
 
@@ -57,4 +57,18 @@ Tap::ok( $res, 'grabbed the keys all at once, got what I wrote');
 $k = 'gaia/cache/test/' . microtime(TRUE) . '/' . mt_rand(1, 10000);
 Tap::ok( $cache->add( $k, 1, 10), 'adding a non-existent key');
 Tap::ok( ! $cache->add( $k, 1, 10), 'second time, the add fails');
+
+$cache = new Cache\Memcache();
+for( $i = 1; $i < 4; $i++){
+    $cache->addServer('10.0.0.' . $i, '11211', 1);
+}
+
+Tap::is( count( $cache->servers() ), 3, 'added 3 connections to server');
+
+$replicas = $cache->replicas(2);
+
+Tap::is( $replicas[0]->servers(), array( array( 'host' => '10.0.0.1', 'port' => 11211, 'weight' => 1), array( 'host' => '10.0.0.3', 'port' => 11211, 'weight' => 1)  ), 'first replica has the correct servers in it');
+Tap::is( $replicas[1]->servers(), array( array( 'host' => '10.0.0.2', 'port' => 11211, 'weight' => 1) ), 'second replica has the correct servers in it');
+
+
 

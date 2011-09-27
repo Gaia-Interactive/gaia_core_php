@@ -15,6 +15,7 @@ class Memcache extends Wrap implements Iface {
 
     const COMPRESS_THRESHOLD = 2000;
     
+    protected $conns = array();
     
     public function __construct(){
         if( class_exists( '\Memcached' )){
@@ -64,6 +65,28 @@ class Memcache extends Wrap implements Iface {
     
     public function delete( $k ){
         return $this->core->delete( $k, 0);
+    }
+    
+    public function replicas( $ct = NULL ){
+        $conns = $this->servers();
+        $max = count( $conns );
+        if( $ct < 1 || $ct > $max) $ct = $max;
+        $replicas = array();
+        foreach( $conns as $i=>$conn ){
+            $hash = $i % $ct;
+            if( ! isset( $replicas[ $hash ] ) ) $replicas[ $hash ] = new self;
+            $replicas[ $hash ]->addServer( $conn['host'], $conn['port'], $conn['weight'] );
+        }
+        return $replicas;
+    }
+    
+    public function servers(){
+        return $this->conns;
+    }
+    
+    public function addServer( $host, $port, $weight = 0 ){
+        $this->conns[] = array( 'host'=>$host, 'port'=>$port, 'weight'=>$weight );
+        return $this->core->addServer( $host, $port, $weight );
     }
     
     protected static function should_compress( $v ){
