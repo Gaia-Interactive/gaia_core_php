@@ -2,7 +2,7 @@
 use Gaia\Test\Tap;
 use Gaia\Cache;
 
-Tap::plan(8);
+Tap::plan(12);
 
 $data = array();
 for( $i = 1; $i <= 3; $i++){
@@ -46,3 +46,10 @@ Cache\Mock::$time_offset += 11;
 Tap::ok( $cache->add( $k, 1, 10), 'after expiration time, add works');
 
 Tap::ok( $cache->replace( $k, 1, 10 ), 'replace works after the successful add');
+
+Tap::ok( $cache->delete($k ), 'successfully deleted the key');
+
+Tap::ok( ! $cache->replace( $k, 1, 10), 'replace fails after key deletion');
+Tap::ok( $cache->add( $k, 1, 10), 'add works after key deletion');
+Tap::ok( $cache->replace( $k, 1, 10), 'replace works after key is added');
+
