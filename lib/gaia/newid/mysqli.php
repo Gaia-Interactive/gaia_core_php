@@ -3,8 +3,8 @@ namespace Gaia\NewID;
 
 class MySQLI extends MySQL implements Iface {
     
-    public function __construct( \MySQLI $db, $cache, $app ){
-        parent::__construct( $db, $cache, $app );
+    public function __construct( $app, \MySQLI $db, $cache = NULL ){
+        parent::__construct( $app, $db, $cache );
     }
 
     protected function fetch_assoc( $rs ){

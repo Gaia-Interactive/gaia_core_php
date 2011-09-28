@@ -9,22 +9,20 @@ if( ! class_exists('\PDO') ){
     Tap::plan('skip_all', 'php-pdo not installed');
 }
 
-if( ! in_array( 'mysql', PDO::getAvailableDrivers()) ){
-    Tap::plan('skip_all', 'this version of PDO does not support mysql');
+if( ! in_array( 'pgsql', PDO::getAvailableDrivers()) ){
+    Tap::plan('skip_all', 'this version of PDO does not support postgres');
 }
 
-if( ! @fsockopen('127.0.0.1', '3306')) {
-    Tap::plan('skip_all', 'mysql-server not running on localhost');
+if( ! fsockopen('localhost', 5432) ){
+    Tap::plan('skip_all', 'postgres not running on localhost:5432');
 }
-
-
 Tap::plan(4);
 
-$db = new Gaia\DB\Driver\PDO('mysql:host=127.0.0.1;dbname=test;port=3306');
+$db = new Gaia\DB\Driver\PDO('pgsql:host=127.0.0.1;dbname=test;port=5432');
 $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT );
 $cache = new Cache\Mock();
 $app = 'test';
-$new = new NewId\MyPDO( $app, $db, $cache );
+$new = new NewId\PgPDO( $app, $db, $cache );
 $res = $new->testInit();
 
 $id = $new->id();

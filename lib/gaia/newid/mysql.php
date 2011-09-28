@@ -18,11 +18,11 @@ abstract class MySQL implements Iface {
     protected $db;
     protected $cache;
     
-    public function __construct( $db, Cache\Iface $cache, $app ){
-        $this->db = $db;
-        if( $app ) $this->app = $app;
+    public function __construct( $app, $db, Cache\Iface $cache = NULL ){
         if( ! preg_match('/^[a-z0-9_]+$/', $app) ) throw new Exception('invalid-app');
-        $this->app = $app; 
+        $this->app = $app;
+        $this->db = $db;
+        if( ! $cache ) $cache = new Cache\Mock;
         $this->cache = new Cache\Prefix( $cache, __CLASS__ . '/' . $app);
     }
     
