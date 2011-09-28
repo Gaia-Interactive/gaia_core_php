@@ -309,16 +309,23 @@ class Job extends Request implements \Iterator {
         'Accept-language: en-us',
         'Accept: text/xml,application/xml,application/xhtml+xml,text/html,text/plain,image/png,image/jpeg,image/gif,*/*',
         );
-        if( $this->id ) $opts[CURLOPT_HTTPHEADER][] = 'job-id: ' . $this->id;
-
+        if( $this->id ) $opts[CURLOPT_HTTPHEADER][] = 'X-Job-Id: ' . $this->id;
+        $callback = self::config()->get('build');
+        if( is_callable( $callback ) ) {
+            call_user_func( $callback, $this, & $opts );
+        }
+        
         $ch = parent::build($opts);
         return $ch;
     }
     
     public function handle( $curl_data, $curl_info ){
         $response = parent::handle( $curl_data, $curl_info );
+        $callback = self::config()->get('handle');
+        if( is_callable( $callback ) ) {
+            call_user_func( $callback, $this, $response );
+        }
         if( $response->http_code == 200 ) {
-            if($response->headers->{'gaia-job-id'}==$this->id) $this->flag = 1;
             $this->complete();
         } else {
             $this->fail();

@@ -107,7 +107,7 @@ class JobRunner {
         $time = time();
         if( ( $time - 2 ) < $this->lastrun ) return;
         if( $this->debug && $this->debug_level > 1 ) $this->debug('maintenance tasks');
-        if( $this->debug ) $this->debug('jobs running: ' . count( $this->pool->requests() ) );
+        if( $this->debug &&  $this->debug_level > 1 ) $this->debug('jobs running: ' . count( $this->pool->requests() ) );
 
         $this->checkIfDisabled();
         $this->register();
