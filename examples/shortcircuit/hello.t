@@ -4,7 +4,7 @@ include __DIR__ . '/common.php';
 use Gaia\Test\Tap;
 use Gaia\ShortCircuit\Router;
 
-Tap::plan(4);
+Tap::plan(5);
 $_SERVER['REQUEST_URI'] = '/hello/';
 Router::config()->appdir = __DIR__ . '/app/';
 ob_start();
@@ -17,6 +17,14 @@ Router::request()->set('title', 'Hello Jack!');
 Router::request()->set('message', 'How are you?');
 ob_start();
 Router::dispatch('hello/echo');
+$out = ob_get_clean();
+Tap::like( $out, '/hello jack/i', 'dynamic message renders' );
+Tap::debug( $out );
+
+Router::request()->set('title', 'Hello Jack!');
+Router::request()->set('message', 'How are you?');
+ob_start();
+Router::dispatch('hellosymlink/echo');
 $out = ob_get_clean();
 Tap::like( $out, '/hello jack/i', 'dynamic message renders' );
 Tap::debug( $out );
