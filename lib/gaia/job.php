@@ -312,7 +312,8 @@ class Job extends Request implements \Iterator {
         if( $this->id ) $opts[CURLOPT_HTTPHEADER][] = 'X-Job-Id: ' . $this->id;
         $callback = self::config()->get('build');
         if( is_callable( $callback ) ) {
-            call_user_func( $callback, $this, & $opts );
+            $args = array( $this, & $opts );
+            call_user_func_array( $callback, $args );
         }
         
         $ch = parent::build($opts);
