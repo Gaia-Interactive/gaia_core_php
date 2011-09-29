@@ -189,6 +189,39 @@ class Job extends Request implements \Iterator {
         return TRUE;
     }
     
+    /**
+    * remove all of the jobs from a given queue.
+    *
+    */
+    public static function flush( $pattern = '*' ){
+        $tubes = array();
+        $conns = self::connections();
+        foreach( $conns as $conn ){
+            foreach( $conn->listTubes() as $tube ) {
+                if( fnmatch('gaia_job_' . $pattern, $tube) ) {
+                    $tubes[ $tube ] = true;
+                }
+            }
+        }
+        
+        $tubes = array_keys( $tubes );
+        $ct = 0;
+        foreach( $conns as $conn ){
+            foreach( $tubes as $tube ){
+                foreach( array( 'buried', 'delayed', 'ready' ) as $type ){
+                    $cmd = 'peek' . $type;
+                    try {
+                        while( $res = $conn->$cmd( $tube ) ) {
+                            $conn->delete( $res );
+                            $ct++;
+                        }
+                    } catch( \Exception $e ){}
+                }
+            }
+        }
+        return $ct;
+    }
+    
     public static function dequeue( $ct = 10 ){
         $list = array();
         $conns = self::connections();
@@ -211,7 +244,23 @@ class Job extends Request implements \Iterator {
         return $list;
     }
     
-    
+    public static function findJob( $key ){
+        if( ! $key ) return FALSE;
+        list( $server, $id ) = explode('-', $key, 2);
+        if( ! $server ) return FALSE;
+        $conns = self::connections();
+        if( ! isset( $conns[ $server ] ) ) return false;
+        $conn = $conns[ $server ];
+        $res = $conn->peek( new \Pheanstalk_Job($id, '') );
+        if( ! $res ) throw new Exception('conn error', $conn );
+        $job = new self( $res->getData() );
+        if( ! $job->url ) {
+            $conn->delete( $res );
+            continue;
+        }
+        $job->id = $key;
+        return $res;
+    }
     
     
     

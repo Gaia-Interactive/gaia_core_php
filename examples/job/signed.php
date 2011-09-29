@@ -6,6 +6,7 @@ use Gaia\Job;
 use Gaia\JobRunner;
 use Gaia\Pheanstalk;
 use Gaia\Nonce;
+$queue = 'signedtest';
 
 set_time_limit(0);
 if( ! @fsockopen('127.0.0.1', '11300')) {
@@ -16,19 +17,22 @@ if( ! @fsockopen('127.0.0.1', '11299')) {
     die("unable to connect to test job url\n");
 }
 
-
-$tube = '__test__';
-
 Job::attach( 
     function(){
         return array( new Pheanstalk('127.0.0.1', '11300' ) );
     }
 );
 
+$ct = Job::flush($queue);
+
+print "\nJOBS flushed from the queue before starting: $ct\n";
+
+
+
 for( $i = 0; $i < 1000; $i++){
     $start = microtime(TRUE);
-    $job = new Job('http://127.0.0.1:11299/?t=' . time());
-    $job->queue = 'signed';
+    $job = new Job('http://127.0.0.1:11299/?signed=1');
+    $job->queue = $queue;
     $id = $job->store();
     $elapsed = number_format( microtime(TRUE) - $start, 3);
     print "\nSTORE " . $id . ' ' . $elapsed . 's';
@@ -39,7 +43,7 @@ $start = microtime(TRUE);
 $nonce = new Nonce('test001');
 
 
-Job::watch('signed');
+Job::watch($queue);
 Job::config()->set('build', function($job, array & $opts ) use ($nonce) {
     $parts = new Gaia\Container( @parse_url( $job->url ));
     $uri = isset( $parts->path ) ? $parts->path : '/';
@@ -51,7 +55,7 @@ Job::config()->set('handle', function($job, $response ) {
     if( $response->headers->{'X-JOB-STATUS'} == 'complete') $job->flag = 1;
 });
 
-Job::config()->set('register_url', 'http://127.0.0.1:11299/?register');
+Job::config()->set('register_url', 'http://127.0.0.1:11299/?register=1');
 
 print "\nInstantiating job runner ... \n";
 $runner = new JobRunner();
