@@ -303,12 +303,6 @@ class Job extends Request implements \Iterator {
         }
         
         if( ! isset($opts[CURLOPT_HTTPHEADER]) )$opts[CURLOPT_HTTPHEADER] = array();
-        
-        $opts[CURLOPT_HTTPHEADER] += array(
-        'Accept-Charset: ISO-8859-1,utf-8',
-        'Accept-language: en-us',
-        'Accept: text/xml,application/xml,application/xhtml+xml,text/html,text/plain,image/png,image/jpeg,image/gif,*/*',
-        );
         if( $this->id ) $opts[CURLOPT_HTTPHEADER][] = 'X-Job-Id: ' . $this->id;
         $callback = self::config()->get('build');
         if( is_callable( $callback ) ) {
