@@ -9,14 +9,13 @@ use Gaia\Nonce;
 
 set_time_limit(0);
 if( ! @fsockopen('127.0.0.1', '11300')) {
-    Tap::plan('skip_all', 'Beanstalkd not running on localhost');
+    die("Beanstalkd not running on localhost\n");
 }
 
 if( ! @fsockopen('127.0.0.1', '11299')) {
-    Tap::plan('skip_all', 'unable to connect to test job url');
+    die("unable to connect to test job url\n");
 }
 
-Tap::plan(5);
 
 $tube = '__test__';
 
@@ -54,13 +53,49 @@ Job::config()->set('handle', function($job, $response ) {
 
 Job::config()->set('register_url', 'http://127.0.0.1:11299/?register');
 
-print "\nHELLO\n";
+print "\nInstantiating job runner ... \n";
 $runner = new JobRunner();
 
 $runner->setTimelimit(20);
 $runner->enableDebug();
 $runner->setDebugLevel(1);
 $runner->setMax(10);
+
+declare(ticks = 1);
+
+// signal handler function
+$sig_handler = function ($signo) use ($runner, $start){
+
+     switch ($signo) {
+         case SIGTERM:
+         case SIGINT:
+         case SIGHUP:
+
+             // handle shutdown tasks
+             echo "\nEXITING ... \nFinishing jobs in queue ...\n";
+             sleep(1);
+             $runner->shutdown();
+             $elapsed = number_format( microtime(TRUE) - $start, 3);
+             print "\nDONE: $elapsed\n";
+             exit;
+             break;
+         default:
+             // handle all other signals
+     }
+
+};
+
+if( function_exists('pcntl_signal')){
+
+    echo "Installing signal handler...\n";
+    
+    // setup signal handlers
+    pcntl_signal(SIGTERM, $sig_handler);
+    pcntl_signal(SIGINT, $sig_handler);
+    pcntl_signal(SIGHUP,  $sig_handler);
+}
+
+
 $runner->send();
 
 $elapsed = number_format( microtime(TRUE) - $start, 3);

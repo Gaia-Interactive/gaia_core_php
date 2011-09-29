@@ -26,10 +26,20 @@ class JobRunner {
     */
     protected $limit = 0;
     
+    /**
+    * how many seconds to run before shutting down.
+    */
     protected $timelimit = 0;
     
+    /**
+    * keep track of the time we started.
+    */
     protected $start = 0;
     
+    /**
+    * keep track of whether or not we are in the middle of sending an http request
+    * to register via the callback url.
+    */
     protected $registering = FALSE;
     
    /**
@@ -67,7 +77,6 @@ class JobRunner {
     */
     protected $dequeue = TRUE;
     
-    
    /**
     * @type int     debug stream
     */
@@ -78,10 +87,16 @@ class JobRunner {
     */
     protected $debug_level = 1;
     
+   /**
+    * the http pool object.
+    */
     protected $pool;
     
-    public function __construct(){
-        $this->pool = new Http\Pool;
+    /**
+    * class constructor. Optionally pass in an http pool object.
+    */
+    public function __construct( Http\Pool $pool = NULL ){
+        $this->pool = ( $pool ) ? $pool : new Http\Pool;
         $this->pool->attach( array( $this, 'handle' ) );
     }
     
@@ -100,8 +115,7 @@ class JobRunner {
     
     /**
     * run all the tasks that need to be done every few seconds.
-    *
-    *
+    * mainly, populate new jobs, attach a register callback, any other callbacks.
     */
     public function runTasks(){
         $time = time();
@@ -204,6 +218,10 @@ class JobRunner {
         return $this->limit = intval( $v );
     }
     
+    /**
+    * how many secs do we want to run before quitting.
+    * 0 means run forever.
+    */
     public function setTimeLimit( $v ){
         return $this->timelimit = intval( $v );
     }
@@ -249,9 +267,7 @@ class JobRunner {
     }
 
 	/**
-	 * Cleans up the curl multi request
-	 *
-	 * If individual curl requests were not completed, they will be closed through curl_close()
+	 * don't allow any more jobs to be dequeued. start orderly shutdown.
 	 */
 	public function shutdown()
 	{
