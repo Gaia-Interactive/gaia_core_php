@@ -32,14 +32,14 @@ $rs = $db->execute('SELECT %s as foo, %s as bar', 'dummy\'', 'rummy');
 Tap::ok( $rs, 'query executed successfully');
 Tap::is($rs->fetch(PDO::FETCH_ASSOC), array('foo'=>'dummy\'', 'bar'=>'rummy'), 'sql query preparation works on strings');
 
-$rs = $db->execute('SELECT %i as test', '1112122445543333333333');
-Tap::is( $rs->fetch(PDO::FETCH_ASSOC), array('test'=>'1112122445543333333333'), 'query execute works injecting big integer in');
+$rs = $db->execute('SELECT %i as test', '111212244554333333');
+Tap::is( $rs->fetch(PDO::FETCH_ASSOC), array('test'=>'111212244554333333'), 'query execute works injecting big integer in');
 
 $rs = $db->execute('SELECT %i as test', 'dummy');
 Tap::is( $rs->fetch(PDO::FETCH_ASSOC), array('test'=>'0'), 'query execute sanitizes non integer');
 
-$rs = $db->execute('SELECT %f as test', '1112.122445543333333333');
-Tap::is( $rs->fetch(PDO::FETCH_ASSOC), array('test'=>'1112.122445543333333333'), 'query execute works injecting big float in');
+$rs = $db->execute('SELECT %f as test', '1112.12244554333');
+Tap::is( $rs->fetch(PDO::FETCH_ASSOC), array('test'=>'1112.12244554333'), 'query execute works injecting big float in');
 
 $rs = $db->execute('SELECT %f as test', 'dummy');
 Tap::is( $rs->fetch(PDO::FETCH_ASSOC), array('test'=>'0'), 'query execute sanitizes non float');

@@ -9,7 +9,7 @@ if( ! @fsockopen('127.0.0.1', '6379')) {
 }
 
 if( ! class_exists('Predis\Client') ){
-    Tap::plan('skip_all', 'Predis library not loaded. check vendors/predis.');
+    Tap::plan('skip_all', 'Predis library not loaded. check vendor/predis.');
 }
 
 Tap::plan(20);

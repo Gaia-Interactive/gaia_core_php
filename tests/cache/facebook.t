@@ -5,6 +5,10 @@ require __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\DB;
 
+if( ! function_exists('curl_init') ){
+    Tap::plan('skip_all', 'php curl library not installed');
+}
+
 class NoAuthFacebook extends BaseFacebook {
   public function __construct(){ parent::__construct( array('appId'=>'', 'secret'=>'')); }
   protected function setPersistentData($key, $value){ return false; }
