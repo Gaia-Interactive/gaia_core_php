@@ -168,8 +168,9 @@ class JobRunner {
     }
     
     protected static function hostinfo(){
-        if( isset( self::$hostid ) ) return self::$hostid;
+        if( isset( self::$hostinfo ) ) return self::$hostinfo;
         $ifconfig = @shell_exec('/sbin/ifconfig');
+        $ip = '';
         if( preg_match('/inet addr:((?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:[.](?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3})/', $ifconfig, $matches) ) {
             $ip = $matches[1];
         }
