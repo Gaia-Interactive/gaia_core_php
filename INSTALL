@@ -1,0 +1,65 @@
+To run any of the code provided by this library, you must have PHP5.3+ installed. After that,
+run the tests to see what packages you still need to install to get everything working.
+
+we assume the user who runs the test can connect to the database over 127.0.0.1 with no password
+for mysql and postgres.
+
+Check below for the relevant packages we have installed on our test machines.
+
+Tested on Centos 5 x86_64 GNU/Linux with the following packages installed:
+
+beanstalkd.x86_64                        1.4.6-2.el5
+httpd.x86_64                             2.2.3-53.el5.centos.1
+lighttpd.x86_64                          1.4.26-2.el5
+lighttpd-fastcgi.x86_64                  1.4.26-2.el5
+membase-server.x86_64                    1.7.1-1
+memcached.x86_64                         1.4.5-1.el5
+mysql-server.x86_64                      5.0.77-4.el5_6.6
+php53-pecl-http.x86_64                   1.6.6-1
+php53u.x86_64                            5.3.8-2.ius.el5
+php53u-bcmath.x86_64                     5.3.8-2.ius.el5
+php53u-cli.x86_64                        5.3.8-2.ius.el5
+php53u-common.x86_64                     5.3.8-2.ius.el5
+php53u-devel.x86_64                      5.3.8-2.ius.el5
+php53u-mbstring.x86_64                   5.3.8-2.ius.el5
+php53u-mysql.x86_64                      5.3.8-2.ius.el5
+php53u-pdo.x86_64                        5.3.8-2.ius.el5
+php53u-pear.noarch                       1:1.9.4-3.ius.el5
+php53u-pecl-apc.x86_64                   3.1.9-4.ius.el5
+php53u-pecl-memcache.x86_64              3.0.6-3.ius.el5
+php53u-pecl-xdebug.x86_64                2.1.2-2.ius.el5
+php53u-pgsql84.x86_64                    5.3.5-1.ius.el5
+postgresql84-server.x86_64               8.4.7-1.el5_6.1
+redis.x86_64                             2.0.3-2.el5
+spawn-fcgi.x86_64                        1.6.3-1.el5
+sqlite.x86_64                            3.3.6-5
+
+Tested on Mac OS 10.7.1 with MacPorts 2.0.3:
+
+beanstalkd                     @1.4.6
+lighttpd                       @1.4.29_0+ssl 
+memcached                      @1.4.5_1
+mysql5-server                  @5.1.57_0
+php5                           @5.3.8_0+apache2 
+php5                           @5.3.8_0+fastcgi 
+php5-apc                       @3.1.9_1 
+php5-big_int                   @1.0.7_0 
+php5-curl                      @5.3.8_0 
+php5-mbstring                  @5.3.8_0 
+php5-mcrypt                    @5.3.8_0 
+php5-memcached                 @1.0.2_0 
+php5-mysql                     @5.3.8_0+mysqlnd 
+php5-pcntl                     @5.3.8_0 
+php5-posix                     @5.3.8_0 
+php5-postgresql                @5.3.8_0+postgresql90 
+php5-sockets                   @5.3.8_0 
+php5-sqlite                    @5.3.8_0
+postgresql84-server            @8.4.8_0
+spawn-fcgi                     @1.6.3_0 
+sqlite3                        @3.7.8_1
+
+
+Note: need to enable apc on php cli ...
+
+apc.enable_cli=1
+apc.cache_by_default=0
