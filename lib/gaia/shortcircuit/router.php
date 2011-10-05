@@ -89,13 +89,21 @@ class Router {
     }
     
     public static function controller( $data = NULL ){
-        $class = self::config()->controller;
-        return new $class($data);
+        $c = self::config()->controller;
+       if( is_object( $c ) ){
+            $c->load( $data );
+            return $c;
+        }
+        return new $c($data);
     }
     
     public static function view( $data = NULL ){
-        $class = self::config()->view;
-        return new $class($data);
+        $v = self::config()->view;
+        if( is_object( $v ) ){
+            $v->load( $data );
+            return $v;
+        }
+        return new $v($data);
     }
 
     /**

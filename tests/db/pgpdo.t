@@ -12,7 +12,7 @@ if( ! in_array( 'pgsql', PDO::getAvailableDrivers()) ){
     Tap::plan('skip_all', 'this version of PDO does not support postgres');
 }
 
-if( ! fsockopen('localhost', 5432) ){
+if( ! @fsockopen('localhost', 5432) ){
     Tap::plan('skip_all', 'postgres not running on localhost:5432');
 }
 
