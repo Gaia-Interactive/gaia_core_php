@@ -58,3 +58,8 @@ postgresql84-server            @8.4.8_0
 spawn-fcgi                     @1.6.3_0 
 sqlite3                        @3.7.8_1
 
+
+Note: need to enable apc on php cli ...
+
+apc.enable_cli=1
+apc.cache_by_default=0
