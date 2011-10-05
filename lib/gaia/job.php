@@ -117,10 +117,8 @@ class Job extends Request implements \Iterator {
     * Class constructor.
     * pass in a url and timestamp of the job to be called
     * @param string     URL
-    * @param int        Unix timestamp (optional)
     */
-    public function __construct($data = NULL, $delay = NULL ){
-        $this->delay = $delay;
+    public function __construct($data = NULL ){
         parent::__construct( $data );
         if( substr( $this->url, 0, 1) == '/' && ! self::config()->isEmpty('default_domain')) 
             $this->url ='http://' . self::config()->get('default_domain') . $this->url;
@@ -245,11 +243,11 @@ class Job extends Request implements \Iterator {
     }
     
     public static function findJob( $key ){
-        if( ! $key ) return FALSE;
+        if( ! $key ) throw new Exception('invalid id', $key );
         list( $server, $id ) = explode('-', $key, 2);
-        if( ! $server ) return FALSE;
+        if( ! $server ) throw new Exception('invalid id', $key );
         $conns = self::connections();
-        if( ! isset( $conns[ $server ] ) ) return false;
+        if( ! isset( $conns[ $server ] ) ) throw new Exception('server not found', $key );;
         $conn = $conns[ $server ];
         $res = $conn->peek( new \Pheanstalk_Job($id, '') );
         if( ! $res ) throw new Exception('conn error', $conn );
