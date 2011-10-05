@@ -26,7 +26,7 @@ Router::request()->set('message', 'How are you?');
 ob_start();
 Router::dispatch('hellosymlink/echo');
 $out = ob_get_clean();
-Tap::like( $out, '/hello jack/i', 'dynamic message renders' );
+Tap::like( $out, '/hello jack/i', 'symlink message renders' );
 Tap::debug( $out );
 
 ob_start();
