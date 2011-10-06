@@ -14,5 +14,5 @@ echo "-----------------------------------"
 
 
 f=`dirname $0`
-/usr/bin/env prove -r $* $f
+/usr/bin/env prove -r --exec=php $* $f
 
