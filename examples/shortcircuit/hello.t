@@ -6,7 +6,7 @@ use Gaia\ShortCircuit\Router;
 
 Tap::plan(5);
 $_SERVER['REQUEST_URI'] = '/hello/';
-Router::config()->appdir = __DIR__ . '/app/';
+Router::setAppDir( __DIR__ . '/app/');
 ob_start();
 Router::run();
 $out = ob_get_clean();

@@ -21,10 +21,18 @@ class Request extends Container
         return array();
     }
     
+    /**
+    * wrapper around the container accessor ... filtering the input values.
+    * by default all values are filtered. you can access the raw data by doing:
+    *   $request->get( $key, 'raw');
+    */
     public function get( $key, $filter = 'safe', $default = NULL ){
         return $this->filter( parent::__get( $key ), $filter, $default );
     }
     
+    /**
+    * wrapper around the container accessor ... filtering the input values.
+    */
     public function __get( $key ){
         return $this->filter( parent::__get( $key ) );
     }

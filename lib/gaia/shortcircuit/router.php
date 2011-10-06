@@ -3,28 +3,60 @@ namespace Gaia\ShortCircuit;
 use Gaia\Container;
 use Gaia\Exception;
 
-
 /**
  * Routes requests to the correct shortcircuit object, performs the action, and routes
  * the response to a view to render the output.
+ * This class is static and can be accessed from anywhere throughout the lifetime of the request.
+ * this is the only static class in the framework. the rest are instantiated and attached to this
+ * static class.
  */
 class Router {
-
+    
+    /*
+    * a return value of the controller to indicate we no longer should proceed with processing.
+    */
     const ABORT = '__ABORT__';
     
+    /*
+    * a Request object ... used to access $_REQUEST variables.
+    */
     protected static $request;
+    
+    /**
+    * the config object, where we can change runtime behavior of ShortCircuit
+    */
     protected static $config;
     
+    /*
+    * the controller object.
+    */
+    protected static $controller;
+    
+    /**
+    * the view object
+    */
+    protected static $view;
+    
+    /**
+    * the resolver object.
+    */
+    protected static $resolver;
+    
+    /**
+    * request object.
+    */
     public static function request(){
         if( isset( self::$request ) ) return self::$request;
         return self::$request = new Request( $_REQUEST );
     }
     
+    /**
+    * grab the singleton config object.
+    * on first access, set up some defaults.
+    */
     public static function config(){
         if( isset( self::$config ) ) return self::$config;
         self::$config = new Container();
-        self::$config->controller = 'Gaia\ShortCircuit\Controller';
-        self::$config->view = 'Gaia\ShortCircuit\View';
         self::$config->uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/';
         $r = self::request();
         if (isset($r->{'_'})) {
@@ -45,10 +77,6 @@ class Router {
         self::$config->action = $action;
         return self::$config;
     }
-    
-    public static function appdir(){
-        return self::config()->appdir;
-    }
 
     // the URL path should be the implicit path in the request URI.  We remove
     // the following for universal compatibility:
@@ -59,6 +87,20 @@ class Router {
     // if there is ?_=, use that first
     public function run(){        
         return self::dispatch( self::config()->action  );
+    }
+    
+   /**
+    * make it easy to access the app dir in the resolver
+    */
+    public function appdir(){
+        return self::resolver()->appdir();
+    }
+
+   /**
+    * make it easy to set the app dir in the resolver
+    */
+    public function setAppDir( $dir ){
+        self::resolver()->setAppDir( $dir );
     }
     
    /**
@@ -77,33 +119,52 @@ class Router {
             }
             $data = $controller->execute( $name );
             if( $data === self::ABORT || $skip_render ) return $data;
-            $view = self::view($data);
+            $view = self::view();
+            $view->load( $data );
             return $view->render( $name );
         } catch( Exception $e ){
             if( $skip_render ) throw $e;
-            if( ! $view ) $view = self::view($data);
+            if( ! $view ) $view = self::view();
+            $view->load( $data );
             $view->set('exception', $e );
             return $view->render( $name .  '/' . $invoke . 'error');
         }
         return FALSE;
     }
     
-    public static function controller( $data = NULL ){
-        $c = self::config()->controller;
-       if( is_object( $c ) ){
-            $c->load( $data );
-            return $c;
-        }
-        return new $c($data);
+    /**
+    * get the singleton controller ojbect. Can pipe data into it,
+    * though we really don't often need to do that.
+    * customize by doing:
+    *   Router::controller( new MyController );
+    */
+    public static function controller( $controller = NULL ){
+        if( is_object( $controller ) ) return self::$controller = $controller;
+        if( isset( self::$controller ) ) return self::$controller;
+        return self::$controller = new Controller();
     }
     
-    public static function view( $data = NULL ){
-        $v = self::config()->view;
-        if( is_object( $v ) ){
-            $v->load( $data );
-            return $v;
-        }
-        return new $v($data);
+    /*
+    * grab the view object.
+    * customize by doing:
+    *   Router::view( new MyView );
+    */
+    public static function view( $view = NULL ){
+        if( is_object( $view ) ) return self::$view = $view;
+        if( isset( self::$view ) ) return self::$view;
+        return self::$view = new View();
+    }
+    
+    /**
+    * get the singleton resolver object. This object decides how to resolve the 
+    * names and uris to files.
+    * customize by doing:
+    *   Router::resolver( new MyResolver );
+    */
+    public static function resolver( $resolver = NULL ){
+        if( is_object( $resolver ) ) return self::$resolver = $resolver;
+        if( isset( self::$resolver ) ) return self::$resolver;
+        return self::$resolver = new Resolver();
     }
 
     /**
@@ -116,3 +177,5 @@ class Router {
     	return self::dispatch( $action_name, TRUE );
     }
 }
+
+// EOF

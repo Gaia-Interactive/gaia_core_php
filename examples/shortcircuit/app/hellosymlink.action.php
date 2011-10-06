@@ -1,5 +1,5 @@
 <?php 
 use Gaia\ShortCircuit\Router;
 
-Router::dispatch('hello/' . implode('/', Router::request()->get('__args__')));
+Router::dispatch('hello/' . implode('/', $this->request()->getArgs()));
 return Router::ABORT;
