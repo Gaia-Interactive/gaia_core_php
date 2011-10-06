@@ -56,7 +56,27 @@ php5-sockets                   @5.3.8_0
 php5-sqlite                    @5.3.8_0
 postgresql84-server            @8.4.8_0
 spawn-fcgi                     @1.6.3_0 
+redis						   @2.2.14
 sqlite3                        @3.7.8_1
+
+
+Tested on Windows 7 x86 with cygwin 1.7.9.1
+memcached						@1.2.5-win32
+mysql5-server					@5.5.15
+php5 							@5.3.8-wamp-server-2.2a
+php5-bitint 					@5.3.8-wamp-server-2.2a
+php5-curl 						@7.21.7-wamp-server-2.2a
+php5-apc-win7					@3.1.8-dev (http://downloads.php.net/pierre/)
+php5-memcache					@2.2.6	(http://downloads.php.net/pierre/)
+php5-mysql 						@5.3.8-wamp-server-2.2a
+php5-mysqli 				    @5.3.8-wamp-server-2.2a
+php5-pdo_mysql 				    @5.3.8-wamp-server-2.2a
+php5-pdo_pgsql 				    @5.3.8-wamp-server-2.2a
+php5-pdo_sqlite 				@5.3.8-wamp-server-2.2a
+redis							@2.0.2-http://servicestack.googlecode.com/files/redis-2.0.2.zip
+
+
+
 
 
 Note: need to enable apc on php cli ...
