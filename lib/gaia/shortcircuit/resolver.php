@@ -4,7 +4,8 @@ namespace Gaia\ShortCircuit;
 /**
 * A utility class designed to convert names into file paths for actions and views.
 */
-class Resolver {
+class Resolver implements Iface\Resolver
+{
 
     protected $appdir = '';
     
@@ -49,8 +50,6 @@ class Resolver {
     public function setAppDir( $dir ){
         return $this->appdir = $dir;
     }
-    
-    
 }
 
 // EOF

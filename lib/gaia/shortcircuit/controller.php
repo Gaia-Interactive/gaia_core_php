@@ -11,7 +11,7 @@ use Gaia\Container;
  *
  * The class will be used when Router::controller() is called.
  */
-class Controller extends Container
+class Controller extends Container implements Iface\Controller
 {
    /**
     * call an action file.
@@ -43,12 +43,5 @@ class Controller extends Container
     */
     public function request(){
         return Router::request();
-    }
-    
-   /**
-    * alias method for the router config object.
-    */
-    public function config(){
-        return Router::config();
     }
 }

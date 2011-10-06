@@ -6,8 +6,8 @@ use Gaia\Cache;
 * allows us to cache the results of the resolver so we don't have to do expensive file I/O every
 * time we need to resolve a URI to an action, or a view name to a template file.
 */
-class CachedResolver {
-
+class CachedResolver implements Iface\Resolver
+{
     /**
     * used when writing to the cache to store a missing value.
     */
@@ -63,8 +63,12 @@ class CachedResolver {
         return $path;
     }
     
-    public function __call( $method, array $args ){
-        return call_user_func_array( array( $this->resolver, $method ), $args );
+    public function appdir(){
+        return $this->resolver->appdir();
+    }
+    
+    public function setAppDir( $dir ){
+        return $this->resolver->setAppDir( $dir );
     }
 }
 

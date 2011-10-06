@@ -22,11 +22,6 @@ class Router {
     */
     protected static $request;
     
-    /**
-    * the config object, where we can change runtime behavior of ShortCircuit
-    */
-    protected static $config;
-    
     /*
     * the controller object.
     */
@@ -42,41 +37,7 @@ class Router {
     */
     protected static $resolver;
     
-    /**
-    * request object.
-    */
-    public static function request(){
-        if( isset( self::$request ) ) return self::$request;
-        return self::$request = new Request( $_REQUEST );
-    }
-    
-    /**
-    * grab the singleton config object.
-    * on first access, set up some defaults.
-    */
-    public static function config(){
-        if( isset( self::$config ) ) return self::$config;
-        self::$config = new Container();
-        self::$config->uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/';
-        $r = self::request();
-        if (isset($r->{'_'})) {
-            $action = $r->{'_'};
-        }
-        else if (isset($_SERVER['PATH_INFO'])) {
-            $action = $_SERVER['PATH_INFO'];
-        }
-        else {
-            $pos = strpos(self::$config->uri, '?');
-            $action =( $pos === FALSE ) ? 
-                self::$config->uri : substr(self::$config->uri , 0, $pos);
-        }
-        $script_name = isset($_SERVER['SCRIPT_NAME']) ? $_SERVER['SCRIPT_NAME'] : '';
-        $action = str_replace(array($script_name.'/', $script_name.'?_='), '', $action);
-        $action = trim($action, "/\n\r\0\t\x0B ");
-        if( ! $action ) $action = '/';
-        self::$config->action = $action;
-        return self::$config;
-    }
+
 
     // the URL path should be the implicit path in the request URI.  We remove
     // the following for universal compatibility:
@@ -86,7 +47,7 @@ class Router {
     // /index.php?_=            remove leading slash, index.php, and the special controller _=
     // if there is ?_=, use that first
     public function run(){        
-        return self::dispatch( self::config()->action  );
+        return self::dispatch( self::request()->action()  );
     }
     
    /**
@@ -104,8 +65,7 @@ class Router {
     }
     
    /**
-    * Alternate approach to the general dispatch method.
-    * gets called if there is no entry in the config.
+    * take a route name, and run it
     */
     public static function dispatch( $input, $skip_render = FALSE ){
         $invoke = FALSE;
@@ -115,7 +75,7 @@ class Router {
             $controller = self::controller();
             $name = $controller->resolveRoute( $input );
             if( strpos($input, $name) !== FALSE ) {
-                $r->set('__args__', explode('/', substr($input, strlen($name)+1)));
+                $r->setArgs( explode('/', substr($input, strlen($name)+1)));
             }
             $data = $controller->execute( $name );
             if( $data === self::ABORT || $skip_render ) return $data;
@@ -132,6 +92,18 @@ class Router {
         return FALSE;
     }
     
+    
+    /**
+    * get the singleton request object.
+    * can customize by doing:
+    * Router::request( new MyRequest );
+    */
+    public static function request( Iface\Request $request = NULL){
+        if( $request ) return self::$request = $request;
+        if( isset( self::$request ) ) return self::$request;
+        return self::$request = new Request();
+    }
+    
     /**
     * get the singleton controller ojbect. Can pipe data into it,
     * though we really don't often need to do that.
@@ -139,7 +111,7 @@ class Router {
     *   Router::controller( new MyController );
     */
     public static function controller( $controller = NULL ){
-        if( is_object( $controller ) ) return self::$controller = $controller;
+        if( $controller ) return self::$controller = $controller;
         if( isset( self::$controller ) ) return self::$controller;
         return self::$controller = new Controller();
     }
@@ -150,7 +122,7 @@ class Router {
     *   Router::view( new MyView );
     */
     public static function view( $view = NULL ){
-        if( is_object( $view ) ) return self::$view = $view;
+        if( $view ) return self::$view = $view;
         if( isset( self::$view ) ) return self::$view;
         return self::$view = new View();
     }
@@ -162,7 +134,7 @@ class Router {
     *   Router::resolver( new MyResolver );
     */
     public static function resolver( $resolver = NULL ){
-        if( is_object( $resolver ) ) return self::$resolver = $resolver;
+        if( $resolver ) return self::$resolver = $resolver;
         if( isset( self::$resolver ) ) return self::$resolver;
         return self::$resolver = new Resolver();
     }

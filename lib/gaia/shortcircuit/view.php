@@ -6,7 +6,7 @@ use Gaia\Container;
  * Circuit View
  * @package CircuitMVC
  */
-class View extends Container
+class View extends Container implements Iface\View
 {
    /**
     * Render a template
@@ -34,12 +34,5 @@ class View extends Container
     */
     public function request(){
         return Router::request();
-    }
-
-   /**
-    * used to get the config object inside of the view template files
-    */
-    public function config(){
-        return Router::config();
     }
 }
