@@ -34,4 +34,4 @@ Router::dispatch('hello/greetings/extra/args');
 $out = ob_get_clean();
 Tap::like( $out, '/(howzit|wazzup|yo yo yo)/i', 'random greeting renders' );
 Tap::debug( $out );
-Tap::is( $args = Router::request()->getArgs(), array('extra', 'args'), 'extra args set correctly' );
+Tap::is( $args = Router::request()->args(), array('extra', 'args'), 'extra args set correctly' );

@@ -44,7 +44,7 @@ class Request extends Container implements Iface\Request
     * @return array
     * @access protected
     */
-    public function getArgs() {
+    public function args() {
         return $this->args;
     }
     
@@ -99,8 +99,9 @@ class Request extends Container implements Iface\Request
      * @author llee
      */
     public static function filter($value, $filter = 'safe', $default = NULL ) {
+        $options = NULL;
         if ( is_array($filter) ) {
-            switch(key($filter)) {
+            switch($key = key($filter)) {
             case 'regex':
                 $pattern = $filter['regex'];
                 $filter = 'regex';
@@ -110,7 +111,9 @@ class Request extends Container implements Iface\Request
                 $filter = 'enum';
                 break;
             default:
-                // nothing...
+                // nothing..
+                $options = $filter[ $key ];
+                $filter = $key;
                 break;
             }
         }
@@ -138,7 +141,6 @@ class Request extends Container implements Iface\Request
         case 'regex':
             return preg_match($pattern, $value) ? $value : $default;
         case 'safe':
-        default:
             $unsafe = array('<', '>', '"', "'", '#', '&', '%', '{', '(');
             if( is_array( $value ) ){
                 foreach( $value as $k=>$v ) $value[ $k ] = str_replace($unsafe, '', strval($v));
@@ -146,6 +148,10 @@ class Request extends Container implements Iface\Request
                 $value = str_replace($unsafe, '', strval($value));
             }
             // set to default value if there is nothing left after filtering
+            return $value ? $value : $default;
+            
+        default:
+            $value = filter_var( $value, $filter, $options );
             return $value ? $value : $default;
         }
     }
