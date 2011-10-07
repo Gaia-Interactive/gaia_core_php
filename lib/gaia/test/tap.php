@@ -138,25 +138,7 @@ class Tap {
             echo "# $line\n";
         }
     }
-    
-    public static function include_ok($file, $desc = '')
-    {
-        $pass = include $file;
-        return self::_proclaim($pass, $desc == '' ? "include $file" : $desc);
-    }
-    
-    public static function require_ok($file, $desc = '')
-    {
-        $pass = require $file;
-        return self::_proclaim($pass, $desc == '' ? "require $file" : $desc);
-    } 
-    
-    public static function isa_ok($obj, $want, $desc = '')
-    {
-        $pass = is_a($obj, $want);
-        self::_proclaim($pass, $desc, /* todo */ false, $name, $want);
-    }
-    
+
     public static function todo_start($why = '')
     {    
         self::$test['todo'][] = $why;
