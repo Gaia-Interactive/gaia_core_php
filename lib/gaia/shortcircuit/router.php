@@ -110,7 +110,7 @@ class Router {
     * customize by doing:
     *   Router::controller( new MyController );
     */
-    public static function controller( $controller = NULL ){
+    public static function controller( Iface\Controller $controller = NULL ){
         if( $controller ) return self::$controller = $controller;
         if( isset( self::$controller ) ) return self::$controller;
         return self::$controller = new Controller();
@@ -121,7 +121,7 @@ class Router {
     * customize by doing:
     *   Router::view( new MyView );
     */
-    public static function view( $view = NULL ){
+    public static function view( Iface\View $view = NULL ){
         if( $view ) return self::$view = $view;
         if( isset( self::$view ) ) return self::$view;
         return self::$view = new View();
@@ -133,7 +133,7 @@ class Router {
     * customize by doing:
     *   Router::resolver( new MyResolver );
     */
-    public static function resolver( $resolver = NULL ){
+    public static function resolver( Iface\Resolver $resolver = NULL ){
         if( $resolver ) return self::$resolver = $resolver;
         if( isset( self::$resolver ) ) return self::$resolver;
         return self::$resolver = new Resolver();
