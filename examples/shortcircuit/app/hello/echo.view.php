@@ -1,1 +1,2 @@
-index.view.php
+<?php
+$this->render('hello');

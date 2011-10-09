@@ -6,13 +6,13 @@ use Gaia\Container;
  * Circuit View
  * @package CircuitMVC
  */
-class View extends Container
+class View extends Container implements Iface\View
 {
    /**
     * Render a template
     */
     public function render($name, $strict = TRUE ){
-        $path = Resolver::get( $name, 'view' );
+        $path = Router::resolver()->get( $name, 'view' );
         if( ! $path ){
             if( $strict ) trigger_error('invalid view: ' . $name, E_USER_WARNING );
             return;
@@ -29,11 +29,10 @@ class View extends Container
         return ob_get_clean();
     }
     
-    function request(){
+   /**
+    * used to get the request object inside of the view template files
+    */
+    public function request(){
         return Router::request();
-    }
-    
-    function config(){
-        return Router::config();
     }
 }

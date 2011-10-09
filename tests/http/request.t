@@ -18,8 +18,8 @@ $request = new Request('https://github.com/gaiaops/gaia_core_php');
 $start = microtime(TRUE);
 $response = $request->exec(
     array(
-    CURLOPT_CONNECTTIMEOUT=>1, 
-    CURLOPT_TIMEOUT=>3, 
+    CURLOPT_CONNECTTIMEOUT=>5, 
+    CURLOPT_TIMEOUT=>10, 
     CURLOPT_HTTPHEADER => array('Connection: Keep-Alive','Keep-Alive: 300')));
 $elapsed = number_format( microtime(TRUE) - $start, 5);
 Tap::is( $response->http_code, '200', 'got back a 200 response');

@@ -5,14 +5,13 @@ use Gaia\Container;
 /**
  * Controller
  * this can be subclassed if you wish to change the default behavior of the controller.
- * To attach your new version, do one of the following: 
+ * To attach your new version, do: 
  *
- *    Gaia\ShortCircuit\Router::config()->controller = 'MyController';
- *    Gaia\ShortCircuit\Router::config()->controller = new MyController;
+ *    Router::controller( new MyController );
  *
  * The class will be used when Router::controller() is called.
  */
-class Controller extends Container
+class Controller extends Container implements Iface\Controller
 {
    /**
     * call an action file.
@@ -23,7 +22,7 @@ class Controller extends Container
     * if strict, trigger errors if the path isn't found.
     */
     public function execute($name, $strict = TRUE ){
-        $path = Resolver::get( $name, 'action' );
+        $path = Router::resolver()->get( $name, 'action' );
         if( ! $path ){
             if( $strict ) trigger_error('invalid action: ' . $name, E_USER_WARNING );
             return;
@@ -35,21 +34,14 @@ class Controller extends Container
     * converts a URI into an action name.
     */
     public function resolveRoute( $name ){
-         $name = Resolver::search( $name, 'action');
+         $name = Router::resolver()->search( $name, 'action');
          return ( $name ) ? $name : '404';
     }
     
     /**
     * alias method for the router request object.
     */
-    function request(){
+    public function request(){
         return Router::request();
-    }
-    
-   /**
-    * alias method for the router config object.
-    */
-    function config(){
-        return Router::config();
     }
 }

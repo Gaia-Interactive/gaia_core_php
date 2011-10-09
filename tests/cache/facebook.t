@@ -13,6 +13,10 @@ if( ! @fsockopen('api.facebook.com', '443') ){
     Tap::plan('skip_all', 'unable to connect to facebook api');
 }
 
+if( ! class_exists('BaseFacebook') ){
+    Tap::plan('skip_all', 'basefacebook class not loaded.');
+}
+
 class NoAuthFacebook extends BaseFacebook {
   public function __construct(){ parent::__construct( array('appId'=>'', 'secret'=>'')); }
   protected function setPersistentData($key, $value){ return false; }

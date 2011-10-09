@@ -3,8 +3,8 @@
 include_once __DIR__ . '/../common.php';
 define('BASEPATH', __DIR__ . '/../../vendor/CodeIgniter/system/');
 define('APPPATH', __DIR__ . '/lib/codeigniter/app/');
-require BASEPATH . 'database/DB.php';
-require BASEPATH . 'core/Common.php';
+@include BASEPATH . 'database/DB.php';
+@include BASEPATH . 'core/Common.php';
 
 use Gaia\Test\Tap;
 use Gaia\DB;
@@ -13,6 +13,9 @@ if( ! @fsockopen('127.0.0.1', '3306')) {
     Tap::plan('skip_all', 'mysql-server not running on localhost');
 }
 
+if( ! function_exists('DB') ){
+	Tap::plan('skip_all', 'CodeIgniter database library not loaded');
+}
 
 try {
     DB\Connection::load( array(

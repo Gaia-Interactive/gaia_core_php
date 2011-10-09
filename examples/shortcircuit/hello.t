@@ -6,7 +6,7 @@ use Gaia\ShortCircuit\Router;
 
 Tap::plan(5);
 $_SERVER['REQUEST_URI'] = '/hello/';
-Router::config()->appdir = __DIR__ . '/app/';
+Router::setAppDir( __DIR__ . '/app/');
 ob_start();
 Router::run();
 $out = ob_get_clean();
@@ -26,7 +26,7 @@ Router::request()->set('message', 'How are you?');
 ob_start();
 Router::dispatch('hellosymlink/echo');
 $out = ob_get_clean();
-Tap::like( $out, '/hello jack/i', 'dynamic message renders' );
+Tap::like( $out, '/hello jack/i', 'symlink message renders' );
 Tap::debug( $out );
 
 ob_start();
@@ -34,4 +34,4 @@ Router::dispatch('hello/greetings/extra/args');
 $out = ob_get_clean();
 Tap::like( $out, '/(howzit|wazzup|yo yo yo)/i', 'random greeting renders' );
 Tap::debug( $out );
-Tap::is( $args = Router::request()->getArgs(), array('extra', 'args'), 'extra args set correctly' );
+Tap::is( $args = Router::request()->args(), array('extra', 'args'), 'extra args set correctly' );

@@ -18,6 +18,19 @@ Peruse the [Top level Module Documentation](https://github.com/gaiaops/gaia_core
 In the future, we may try to make the library PHPDoc compliant.
 
 
+
+TESTING
+==============================
+All of the tests were written using the [Gaia\Test\Tap class]
+(https://github.com/gaiaops/gaia_core_php/blob/master/lib/gaia/test/tap.php). They produce 
+[TAP](http://en.wikipedia.org/wiki/Test_Anything_Protocol) output 
+which is both human-readable and can be run from the command line on its own as a stand-alone executable 
+file. In addition, it can be parsed by perl's prove harness to run all the tests together.
+
+Try it out by running ./test.sh 
+
+
+
 CONTACT
 ==============================
 Questions, concerns, and guidance: project lead [John Loehrer](mailto:jloehrer@gaiaonline.com)

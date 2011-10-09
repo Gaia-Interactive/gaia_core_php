@@ -4,6 +4,10 @@ include __DIR__ . '/../common.php';
 use Gaia\Cache;
 use Gaia\Test\Tap;
 
+if( ! class_exists('\Memcache') && ! class_exists('\Memcached') ){
+    Tap::plan('skip_all', 'no pecl-memcache or pecl-memcached extension installed');
+}
+
 if( ! @fsockopen( 'localhost', 11211) ){
     Tap::plan('skip_all', 'could not connect to memcache on localhost:11211');
 }
