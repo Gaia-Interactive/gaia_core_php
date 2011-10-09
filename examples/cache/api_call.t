@@ -57,6 +57,10 @@ class GoogleMaps {
     }
 }
 
+if( ! function_exists('curl_init') ){
+    Tap::plan('skip_all', 'php curl library not installed');
+}
+
 if( ! @fsockopen('maps.googleapis.com', 80) ){
     Tap::plan('skip_all', 'could not connect to google api');
 }

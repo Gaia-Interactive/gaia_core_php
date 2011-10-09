@@ -1,13 +1,19 @@
 <?php
 namespace Gaia\Cache;
 
-class Replica extends Wrap {
+class Replica implements Iface {
 
-    private $replicas;
+    private $replicas = array();
     const DEFAULT_TTL = 259200;
-    function __construct( Iface $core, $replicas = NULL ){ 
-        $this->replicas = ( $replicas && is_numeric( $replicas) && $replicas > 1) ? intval($replicas) : 3;
-        parent::__construct( $core );
+    
+    public function __construct( array $replicas ){ 
+        foreach( $replicas as $cache ){
+            if( ! $cache instanceof Iface ){
+                throw new Exception('invalid cache');
+            }
+            $this->replicas[] = $cache;
+        }
+        if( count( $this->replicas ) < 1 ) throw new Exception('invalid cache replicas');
     }
     
     public function get( $request ){
@@ -22,24 +28,17 @@ class Replica extends Wrap {
         foreach( $keys as $k ) {
             $matches[ $k ] = NULL;
         }
-        
-        $replicas = range(1, $this->replicas);
+        $replicas = $this->replicas;
         shuffle( $replicas );
-        foreach( $replicas as $i ){
-            $ask = array();
-            foreach( $matches as $k=>$v){
-                if( $v !== NULL ) continue;
-                $ask[ $k . '/REPLICA/' . $i ] = $k;
-            }
+        foreach( $replicas as $cache ){
+            $ask = array_keys( $matches, NULL, TRUE);
             if( count( $ask ) < 1 ) break;
-            $res = $this->core->get( array_keys( $ask ) );
-            
+            $res = $cache->get( $ask );
             if( ! is_array( $res ) ) $res = array();
             foreach( $res as $k=>$v ){
-                $matches[ $ask[ $k ] ] = $v;
+                $matches[ $k ] = $v;
             }
         }
-        $now = time();
         $res = array();
         foreach( $keys as $k ){
             if( ! isset( $matches[ $k ] ) ) continue;
@@ -50,9 +49,10 @@ class Replica extends Wrap {
     
     function set($k, $v, $expire = 0 ){
         $res = FALSE;
-        $replicas = range(1, $this->replicas );
-        foreach( $replicas as $i){
-            $r = $this->core->set($k . '/REPLICA/' . $i, $v, $expire);
+        $replicas = $this->replicas;
+        shuffle( $replicas );
+        foreach( $replicas as $cache){
+            $r = $cache->set($k, $v, $expire);
             if( $r ) $res = $r;
         }
         return $res;
@@ -60,9 +60,10 @@ class Replica extends Wrap {
     
     function delete( $k ){
         $res = TRUE;
-        $replicas = range(1, $this->replicas );
-        foreach( $replicas as $i){
-            $r = $this->core->delete($k . '/REPLICA/' . $i);
+        $replicas = $this->replicas;
+        shuffle( $replicas );
+        foreach( $replicas as $cache){
+            $r = $cache->delete($k);
             if( ! $r ) $res = FALSE;
         }
         return $res;
@@ -70,58 +71,86 @@ class Replica extends Wrap {
     
     function add($k, $v, $expire = 0 ){
         $res = FALSE;
-        $replicas = range(1, $this->replicas );
+        $replicas = $this->replicas;
+        shuffle( $replicas );
         $method = __FUNCTION__;
-        foreach( $replicas as $i){
-            $r = $this->core->{$method}($k . '/REPLICA/' . $i, $v, $expire );
+        $repair = array();
+        foreach( $replicas as $cache){
+            $r = $cache->{$method}($k, $v, $expire );
             if( $r ){
                 $res = $r;
                 $method = 'set';
+            } else {
+                $repair[] = $cache;
             }
+        }
+        if( $res ){
+            foreach( $repair as $cache ) $cache->set( $k, $v, $expire );
         }
         return $res;
     }
     
     function replace($k, $v, $expire = 0 ){
         $res = FALSE;
-        $replicas = range(1, $this->replicas );
+        $replicas = $this->replicas;
+        shuffle( $replicas );
         $method = __FUNCTION__;
-        foreach( $replicas as $i){
-            $r = $this->core->set($k . '/REPLICA/' . $i, $v );
+        $repair = array();
+        foreach( $replicas as $cache){
+            $r = $cache->$method($k, $v, $expire );
             if( $r ){
                 $res = $r;
                 $method = 'set';
+            } else {
+                $repair[] = $cache;
             }
+        }
+        if( $res ){
+            foreach( $repair as $cache ) $cache->set( $k, $v, $expire );
         }
         return $res;
     }
     
     function increment($k, $v = 1){
         $res = FALSE;
-        $replicas = range(1, $this->replicas );
+        $replicas = $this->replicas;
+        shuffle( $replicas );
         $method = 'increment';
-        foreach( $replicas as $i){
-            $r = $this->core->$method($k . '/REPLICA/' . $i, $v );
+        $repair = array();
+        foreach( $replicas as $cache){
+            $r = $cache->$method($k, $v );
             if( $r ) {
                 $res = $r;
                 $method = 'set';
                 $v = $res;
+            } else {
+                $repair[] = $cache;
             }
+        }
+        if( $res ){
+            foreach( $repair as $cache ) $cache->set( $k, $v );
         }
         return $res;
     }
     
     function decrement($k, $v = 1){
-        $res = FALSE;
-        $replicas = range(1, $this->replicas );
+                $res = FALSE;
+        $replicas = $this->replicas;
+        shuffle( $replicas );
         $method = 'decrement';
-        foreach( $replicas as $i){
-            $r = $this->core->$method($k . '/REPLICA/' . $i, $v );
+        $repair = array();
+        foreach( $replicas as $cache){
+            $r = $cache->$method($k, $v );
             if( $r ) {
                 $res = $r;
                 $method = 'set';
                 $v = $res;
+            } else {
+                $repair[] = $cache;
             }
+        }
+        if( $res ){
+            foreach( $repair as $cache ) $cache->set( $k, $v );
         }
         return $res;
     }

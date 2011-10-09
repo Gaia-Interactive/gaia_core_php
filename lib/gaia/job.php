@@ -117,10 +117,8 @@ class Job extends Request implements \Iterator {
     * Class constructor.
     * pass in a url and timestamp of the job to be called
     * @param string     URL
-    * @param int        Unix timestamp (optional)
     */
-    public function __construct($data = NULL, $delay = NULL ){
-        $this->delay = $delay;
+    public function __construct($data = NULL ){
         parent::__construct( $data );
         if( substr( $this->url, 0, 1) == '/' && ! self::config()->isEmpty('default_domain')) 
             $this->url ='http://' . self::config()->get('default_domain') . $this->url;
@@ -189,6 +187,39 @@ class Job extends Request implements \Iterator {
         return TRUE;
     }
     
+    /**
+    * remove all of the jobs from a given queue.
+    *
+    */
+    public static function flush( $pattern = '*' ){
+        $tubes = array();
+        $conns = self::connections();
+        foreach( $conns as $conn ){
+            foreach( $conn->listTubes() as $tube ) {
+                if( fnmatch('gaia_job_' . $pattern, $tube) ) {
+                    $tubes[ $tube ] = true;
+                }
+            }
+        }
+        
+        $tubes = array_keys( $tubes );
+        $ct = 0;
+        foreach( $conns as $conn ){
+            foreach( $tubes as $tube ){
+                foreach( array( 'buried', 'delayed', 'ready' ) as $type ){
+                    $cmd = 'peek' . $type;
+                    try {
+                        while( $res = $conn->$cmd( $tube ) ) {
+                            $conn->delete( $res );
+                            $ct++;
+                        }
+                    } catch( \Exception $e ){}
+                }
+            }
+        }
+        return $ct;
+    }
+    
     public static function dequeue( $ct = 10 ){
         $list = array();
         $conns = self::connections();
@@ -211,7 +242,23 @@ class Job extends Request implements \Iterator {
         return $list;
     }
     
-    
+    public static function findJob( $key ){
+        if( ! $key ) throw new Exception('invalid id', $key );
+        list( $server, $id ) = explode('-', $key, 2);
+        if( ! $server ) throw new Exception('invalid id', $key );
+        $conns = self::connections();
+        if( ! isset( $conns[ $server ] ) ) throw new Exception('server not found', $key );;
+        $conn = $conns[ $server ];
+        $res = $conn->peek( new \Pheanstalk_Job($id, '') );
+        if( ! $res ) throw new Exception('conn error', $conn );
+        $job = new self( $res->getData() );
+        if( ! $job->url ) {
+            $conn->delete( $res );
+            continue;
+        }
+        $job->id = $key;
+        return $res;
+    }
     
     
     
@@ -303,22 +350,24 @@ class Job extends Request implements \Iterator {
         }
         
         if( ! isset($opts[CURLOPT_HTTPHEADER]) )$opts[CURLOPT_HTTPHEADER] = array();
+        if( $this->id ) $opts[CURLOPT_HTTPHEADER][] = 'X-Job-Id: ' . $this->id;
+        $callback = self::config()->get('build');
+        if( is_callable( $callback ) ) {
+            $args = array( $this, & $opts );
+            call_user_func_array( $callback, $args );
+        }
         
-        $opts[CURLOPT_HTTPHEADER] += array(
-        'Accept-Charset: ISO-8859-1,utf-8',
-        'Accept-language: en-us',
-        'Accept: text/xml,application/xml,application/xhtml+xml,text/html,text/plain,image/png,image/jpeg,image/gif,*/*',
-        );
-        if( $this->id ) $opts[CURLOPT_HTTPHEADER][] = 'job-id: ' . $this->id;
-
         $ch = parent::build($opts);
         return $ch;
     }
     
     public function handle( $curl_data, $curl_info ){
         $response = parent::handle( $curl_data, $curl_info );
+        $callback = self::config()->get('handle');
+        if( is_callable( $callback ) ) {
+            call_user_func( $callback, $this, $response );
+        }
         if( $response->http_code == 200 ) {
-            if($response->headers->{'gaia-job-id'}==$this->id) $this->flag = 1;
             $this->complete();
         } else {
             $this->fail();

@@ -4,6 +4,10 @@ include_once __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\Http\Request;
 
+if( ! function_exists('curl_init') ){
+    Tap::plan('skip_all', 'php curl library not installed');
+}
+
 if( ! @fsockopen('github.com', 443) ){
     Tap::plan('skip_all', 'unable to connect to remote host for test');
 }

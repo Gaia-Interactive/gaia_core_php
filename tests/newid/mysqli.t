@@ -23,7 +23,7 @@ $db = new MySQLi(
                 '3306');
 $cache = new Cache\Mock();
 $app = 'test';
-$new = new NewId\MySQLi( $db, $cache, $app );
+$new = new NewId\MySQLi( $app, $db, $cache );
 $res = $new->testInit();
 
 $id = $new->id();

@@ -8,25 +8,26 @@ if( ! class_exists('\PDO') ){
     Tap::plan('skip_all', 'php-pdo not installed');
 }
 
-if( ! in_array( 'mysql', PDO::getAvailableDrivers()) ){
-    Tap::plan('skip_all', 'this version of PDO does not support mysql');
+if( ! in_array( 'pgsql', PDO::getAvailableDrivers()) ){
+    Tap::plan('skip_all', 'this version of PDO does not support postgres');
 }
 
-if( ! @fsockopen('127.0.0.1', '3306')) {
-    Tap::plan('skip_all', 'mysql-server not running on localhost');
+if( ! @fsockopen('localhost', 5432) ){
+    Tap::plan('skip_all', 'postgres not running on localhost:5432');
 }
 
 
 try {
-    DB\Connection::load( array('test'=>function () {
-        $db = new DB\Driver\PDO('mysql:host=127.0.0.1;dbname=test;port=3306');
+    DB\Connection::load( array(
+    'test'=> function () {
+        $db = new Gaia\DB\Driver\PDO( 'pgsql:host=localhost;port=5432;dbname=test');
         $db->setAttribute(\PDO::ATTR_STATEMENT_CLASS, array('Gaia\DB\Driver\PDOStatement', array($db)));
         $db->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_SILENT );
         return $db;
     }
     ) );
     $db = DB\Connection::instance('test');
-} catch( Exception $e ){
+} catch( \Exception $e ){
     Tap::plan('skip_all', $e->__toString());
 }
 Tap::plan(10);
