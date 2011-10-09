@@ -7,27 +7,25 @@ namespace Gaia\Test;
 
 class Tap {
 
-    protected static $test = array(
-        # How many tests are planned
-        'planned'   => null,
-    
-        # How many tests we've run, if 'planned' is still null by the time we're
-        # done we report the total count at the end
-        'run' => 0,
-    
-        # Are are we currently within todo_start()/todo_end() ?
-        'todo' => array(),
-    );
+    # How many tests are planned
+    protected static $planned = NULL;
+
+    # How many tests we've run, if 'planned' is still null by the time we're
+    # done we report the total count at the end
+    protected static $run = 0;
+
+    # Are are we currently within todo_start()/todo_end() ?
+    protected static $todo = array();
 
     public static function plan($plan, $why = '')
     {
     
-        self::$test['planned'] = true;
+        self::$planned = true;
     
         switch ($plan)
         {
           case 'no_plan':
-            self::$test['planned'] = false;
+            self::$planned = false;
             break;
           case 'skip_all';
             printf("1..0%s\n", $why ? " # Skip $why" : '');
@@ -141,15 +139,15 @@ class Tap {
 
     public static function todo_start($why = '')
     {    
-        self::$test['todo'][] = $why;
+        self::$todo[] = $why;
     }
     
     public static function todo_end()
     {    
-        if (count(self::$test['todo']) == 0) {
+        if (count(self::$todo) == 0) {
             die("todo_end() called without a matching todo_start() call");
         } else {
-            array_pop(self::$test['todo']);
+            array_pop(self::$todo);
         }
     }
     
@@ -165,11 +163,11 @@ class Tap {
         $want = null,
         $negate = false) {
         
-        self::$test['run'] += 1;
+        self::$run += 1;
     
         # We're in a TODO block via todo_start()/todo_end(). TODO via specific
         # functions is currently unimplemented and will probably stay that way
-        if (count(self::$test['todo'])) {
+        if (count(self::$todo)) {
             $todo = true;
         }
     
@@ -181,11 +179,11 @@ class Tap {
         $directive = '';
     
         if ($todo) {
-            $todo_idx = count(self::$test['todo']) - 1;
-            $directive .= ' # TODO ' . self::$test['todo'][$todo_idx];
+            $todo_idx = count(self::$todo) - 1;
+            $directive .= ' # TODO ' . self::$todo[$todo_idx];
         }
     
-        printf("%s %d %s%s\n", $ok, self::$test['run'], $desc, $directive);
+        printf("%s %d %s%s\n", $ok, self::$run, $desc, $directive);
     
         # report a failure
         if (!$cond) {
@@ -224,13 +222,13 @@ class Tap {
     
     public static function _ends()
     {    
-        if (count(self::$test['todo']) != 0) {
-            $todos = join("', '", self::$test['todo']);
+        if (count(self::$todo) != 0) {
+            $todos = join("', '", self::$todo);
             die("Missing todo_end() for '$todos'");
         }
     
-        if (!self::$test['planned']) {
-            printf("1..%d\n", self::$test['run']);
+        if (!self::$planned) {
+            printf("1..%d\n", self::$run);
         }
     }
 }
