@@ -1,5 +1,6 @@
 <?php
 namespace Gaia;
+use Souk\Exception;
 use Gaia\DB\Transaction;
 
 /**
@@ -28,12 +29,12 @@ class Souk implements Souk\Interface {
         
         // validate the app
         if( ! Souk\Util::validateApp( $app ) ) {
-            throw new Souk\Exception('invalid app', $app);
+            throw new Exception('invalid app', $app);
         }
         
         // don't have to pass in a user id, but if you do, make sure it is an int.
         if( $user_id !== NULL && ! Souk\Util::validatePositiveInteger( $user_id ) ){
-            throw new Souk\Exception('invalid user', $user_id);
+            throw new Exception('invalid user', $user_id);
         }
         
         // attach the user id
@@ -87,7 +88,7 @@ class Souk implements Souk\Interface {
             
             // make sure the seller is a positive int.
             if( ! Souk\Util::validatePositiveInteger( $listing->seller ) ) {
-                throw new Souk\Exception('seller invalid', $listing->seller);
+                throw new Exception('seller invalid', $listing->seller);
             }
             
             // grab all the fields passed in that don't map to pre-defined fields.
@@ -116,7 +117,7 @@ class Souk implements Souk\Interface {
             $this->rollback();
             
             // wrap the exception in our own exception so we can control the message.
-            $e = new Souk\Exception('cannot auction: ' . $e->getMessage(), $e->__toString() );
+            $e = new Exception('cannot auction: ' . $e->getMessage(), $e->__toString() );
             
             // throw the exception up the chain.
             throw $e;
@@ -138,12 +139,12 @@ class Souk implements Souk\Interface {
             
             // can't close a non-existent listing.
             if( ! $listing || ! $listing->id ) {
-                throw new Souk\Exception('not found', $id );
+                throw new Exception('not found', $id );
             }
             
             // if we are already closed, don't do anything.
             if( $listing->closed ){
-                throw new Souk\Exception('already closed', $listing );
+                throw new Exception('already closed', $listing );
             }
             
             // set up the prior state of the listing before going further.
@@ -174,12 +175,12 @@ class Souk implements Souk\Interface {
             
             // if the query fails, toss an exception.
             if( ! $rs ) {
-                throw new Souk\Exception('database error', $db );
+                throw new Exception('database error', $db );
             }
             
             // should have affected a row. if it didn't toss an exception.
             if( $rs->affected_rows < 1 ) {
-                throw new Souk\Exception('failed', $rs );
+                throw new Exception('failed', $rs );
             }
             
             // if we created the transaction internally, commit it.
@@ -212,7 +213,7 @@ class Souk implements Souk\Interface {
             
             // if we didn't get any listing, toss an exception.
             if( ! $listing || ! $listing->id ) {
-                throw new Souk\Exception('not found', $id );
+                throw new Exception('not found', $id );
             }
             
             // need the current time to make sure it is a valid time to buy
@@ -226,27 +227,27 @@ class Souk implements Souk\Interface {
             
             // if no user id passed into the constructor, can't buy
             if( ! Souk\Util::validatePositiveInteger( $buyer ) ) {
-                throw new Souk\Exception('invalid buyer', $buyer );
+                throw new Exception('invalid buyer', $buyer );
             }
             
             // can't buy if the listing is already closed
             if( $listing->closed ){
-                throw new Souk\Exception('sold', $listing );
+                throw new Exception('sold', $listing );
             }
             
             // can't buy if the seller is the same as the buyer.
             if( $listing->seller == $buyer ){
-                throw new Souk\Exception('invalid buyer', $listing );
+                throw new Exception('invalid buyer', $listing );
             }
             
             // can't buy if no price was set.
             if( $listing->price < 1 ){
-                throw new Souk\Exception('bid only', $listing );
+                throw new Exception('bid only', $listing );
             }
             
             // cant buy if the listing has expired.
             if( $listing->expires <= $ts ){
-                throw new Souk\Exception('expired', $listing );
+                throw new Exception('expired', $listing );
             }
             
             // keep a pristine copy of what the listing looks like right now for later.
@@ -257,10 +258,10 @@ class Souk implements Souk\Interface {
             $db = Transaction::instance('souk');
             $sql = "update table_$shard set buyer = %i. touch = %i, closed = %i, pricesort = NULL WHERE rowid = %i";
             $rs = $db->query($sql, $listing->buyer = $buyer, $listing->touch = $ts,  $listing->closed = 1, $row_id);
-            if( ! $rs ) throw new Souk\Exception('database error', $db );
+            if( ! $rs ) throw new Exception('database error', $db );
             
             // should have affected 1 row. if it didn't something is wrong.
-            if( $db->affected_rows < 1 ) throw new Souk\Exception('failed', $db );
+            if( $db->affected_rows < 1 ) throw new Exception('failed', $db );
             
             // if we created the transaction internally, commit it.
             $this->complete();
@@ -295,13 +296,13 @@ class Souk implements Souk\Interface {
             
             // if no bidder was passed into the constructor, blow up.
             if( ! Souk\Util::validatePositiveInteger( $bidder ) ) {
-                throw new Souk\Exception('invalid bidder', $bidder );
+                throw new Exception('invalid bidder', $bidder );
             }
             
             // get a row lock on the listing.
             $listing = $this->get( $id, TRUE);
             if( ! $listing || ! $listing->id ) {
-                throw new Souk\Exception('not found', $id );
+                throw new Exception('not found', $id );
             }
             
             // need the current time to do some comparisons.
@@ -309,29 +310,29 @@ class Souk implements Souk\Interface {
             
             // don't go anywhere if the bidding is already closed.
             if( $listing->closed ){
-                throw new Souk\Exception('closed', $listing );
+                throw new Exception('closed', $listing );
             }
             
             // can't let the seller bid on the listing.
             if( $listing->seller == $bidder ){
-                throw new Souk\Exception('invalid bidder', $listing );
+                throw new Exception('invalid bidder', $listing );
             }
             
             // step is set when it is a biddable item. if it isn't there, don't allow bidding.
             if( $listing->step < 1 ){
-                throw new Souk\Exception('buy only', $listing );
+                throw new Exception('buy only', $listing );
             }
             
             // has time expired on this listing? 
             if( $listing->expires <= $ts ){
-                throw new Souk\Exception('expired', $listing );
+                throw new Exception('expired', $listing );
             }
             
             // make sure we bid enough to challenge the current bid level.
             // if proxy bidding is enabled we still might not win the bid,
             // but at least we pushed it up a bit.
             if( $listing->bid + $listing->step > $bid ){
-                throw new Souk\Exception('too low', $listing );
+                throw new Exception('too low', $listing );
             }
             
             // keep a pristine copy of the listing internally so other wrapper classes can compare
@@ -394,12 +395,12 @@ class Souk implements Souk\Interface {
             
             // if the query failed, blow up.
             if( ! $rs ) {
-                throw new Souk\Exception('database error', $db );
+                throw new Exception('database error', $db );
             }
             
             // should have affected 1 row. if not, blow up.
             if( $rs->affected_rows < 1 ) {
-                throw new Souk\Exception('failed', $rs );
+                throw new Exception('failed', $rs );
             }
             
             // commit the transaction and remove it if it was created internally.
@@ -429,7 +430,7 @@ class Souk implements Souk\Interface {
     public function get( $id, $lock = FALSE ){
         $res = $this->fetch( array( $id ), $lock );
         if( ! isset( $res[ $id ] ) ) {
-            if( $lock ) throw new Souk\Exception('not found');
+            if( $lock ) throw new Exception('not found');
             return NULL;
         }
         return $res[ $id ];
@@ -477,7 +478,7 @@ class Souk implements Souk\Interface {
             
             // blow up if the query failed.
             if( ! $rs->isSuccess() ) {
-                throw new Souk\Exception('database error', $rs );
+                throw new Exception('database error', $rs );
             }
             
             // grab the rows returned and populate the result as Souk\listings.
@@ -510,7 +511,7 @@ class Souk implements Souk\Interface {
             
             // blow up if we hit a query error.
             if( ! $rs->isSuccess() ) {
-                throw new Souk\Exception('database error', $rs );
+                throw new Exception('database error', $rs );
             }
             
             // no rows? no problem, just skip it. that is expected.
@@ -644,7 +645,7 @@ class Souk implements Souk\Interface {
             
             // if the query fails, blow up.
             if( ! $rs->isSuccess() ) {
-                throw new Souk\Exception('database error', $rs );
+                throw new Exception('database error', $rs );
             }
             
             // extract the current shard from the dao.
@@ -707,9 +708,8 @@ class Souk implements Souk\Interface {
     * @return mysql result set object from the dao.
     */
     public function pending( $age = 0 ){
-        $overflow_limit = config()->get('mysql_overflow_limit');
-        config()->set('mysql_overflow_limit', 0);
         $ts = Souk\Util::now() - $age;
+        
         $dao = Souk\Util::dao('listing');
         $dao->resolveApp( $this->app() );
         $dao->select('row_id');
@@ -724,14 +724,12 @@ class Souk implements Souk\Interface {
             //print_r( $rs );
             if( ! $rs->isSuccess() ) {
                 config()->set('mysql_overflow_limit', $overflow_limit);
-                throw new Souk\Exception('database error', $rs );
+                throw new Exception('database error', $rs );
             }
             $stack[ $dao->dateshard() ] = $rs;
             
         } while( $dao->nextTable() );
         ksort( $stack );
-        config()->set('mysql_overflow_limit', $overflow_limit);
-
         return new MultiQueryResult( $stack );
     }
     
@@ -766,7 +764,7 @@ class Souk implements Souk\Interface {
         $dao->setQuantity( $listing->quantity );
         $rs = $dao->execute();
         if( ! $rs->isSuccess() ) {
-            throw new Souk\Exception('database error', $rs );
+            throw new Exception('database error', $rs );
         }
         $listing->id = Souk\Util::composeId( $shard = $dao->dateshard(), $row_id = $rs->insertId());
     }
@@ -791,7 +789,7 @@ class Souk implements Souk\Interface {
         $dao->handleCollision();
         $rs = $dao->execute();
         if( ! $rs->isSuccess() ) {
-            throw new Souk\Exception('database error', $rs );
+            throw new Exception('database error', $rs );
         }
     }
     
