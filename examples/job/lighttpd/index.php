@@ -1,6 +1,11 @@
 <?php
 include __DIR__ . '/../../common.php';
 
+if( isset( $_GET['register'] ) ){
+    print json_encode( array('127.0.0.1:11300' ) );
+    exit;
+}
+
 if( ! isset( $_GET['signed'] ) ){
     die( "\n<h1>ok</h1>\n");
 }
@@ -17,12 +22,8 @@ $status = ( $valid ) ? 'complete' : 'failed';
 if( $id ) header('X-JOB-ID: ' . $id);
 
 if( $id && $valid ){
-    Job::attach( 
-        function(){
-            return array( new Pheanstalk('127.0.0.1', '11300' ) );
-        }
-    );
-    $job = Job::findJob( $id );
+    Job::config()->addConnection( new Pheanstalk('127.0.0.1', '11300' ) );
+    $job = Job::find( $id );
     if( ! $job->complete() ) {
         $status = 'failed-to-mark-complete';
         $valid = FALSE;

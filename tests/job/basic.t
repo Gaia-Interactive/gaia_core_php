@@ -1,9 +1,9 @@
 #!/usr/bin/env php
 <?php
-include __DIR__ . '/common.php';
+include __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\Job;
-use Gaia\JobRunner;
+use Gaia\Job\Runner;
 use Gaia\Pheanstalk;
 
 if( ! class_exists('Pheanstalk') ) {
@@ -22,12 +22,7 @@ Tap::plan(7);
 
 $tube = '__test__';
 
-Job::attach( 
-    function(){
-        return array( new Pheanstalk('127.0.0.1', '11300' ) );
-    }
-);
-
+Job::config()->addConnection( new Pheanstalk('127.0.0.1', '11300') );
 
 
 $job = new Job('http://graph.facebook.com/cocacola');
