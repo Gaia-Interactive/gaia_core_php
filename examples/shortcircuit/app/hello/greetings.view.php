@@ -1,2 +1,0 @@
-<?php
-$this->render('hello');
