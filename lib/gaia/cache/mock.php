@@ -80,6 +80,10 @@ class Mock Implements Iface {
         return $res;
     }
     
+    public function offset( $increment = 0 ){
+        return self::$time_offset += $increment;
+    }
+    
     protected function time(){
         return time() + self::$time_offset;
     }

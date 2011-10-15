@@ -10,7 +10,7 @@ if( ! function_exists('curl_init') ){
 }
 
 if( ! @fsockopen('127.0.0.1', '11299')) {
-    die("unable to connect to test job url: please run examples/job/lighttpd/start.sh\n");
+    Tap::plan('skip_all', "unable to connect to test job url: please do: examples/job/lighttpd/start.sh\n");
 }
 
 Tap::plan(5);
