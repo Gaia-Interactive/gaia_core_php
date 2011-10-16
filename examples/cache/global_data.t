@@ -43,7 +43,7 @@ class SiteConfig {
     protected static function cache(){
         return new Cache\Prefix( 
                 new Cache\Tier( 
-                    new Cache\Gate( Connection::memcache() ),
+                    new Cache\Gate( new Cache\Replica( Connection::memcache()->replicas(3)  ) ),
                     Connection::apc()
                 ), __CLASS__ . '/');
     }
