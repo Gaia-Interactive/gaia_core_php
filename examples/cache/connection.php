@@ -32,7 +32,7 @@ class Connection {
      
      public static function apc(){
         if( isset( self::$apc ) ) return self::$apc;
-        return self::$apc = new Cache\Prefix( new Cache\Mock, 'apc/' . self::cacheprefix() );
+        return self::$apc = new Cache\Prefix( new Cache\Apc, self::cacheprefix() ); 
     }
      
      // make this function return an appropriate prefix based on whether
