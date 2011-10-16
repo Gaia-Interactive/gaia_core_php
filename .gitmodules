@@ -1,3 +1,6 @@
 [submodule "vendor/CodeIgniter"]
 	path = vendor/CodeIgniter
 	url = http://github.com/EllisLab/CodeIgniter.git
+[submodule "vendor/predis"]
+	path = vendor/predis
+	url = http://github.com/nrk/predis.git
