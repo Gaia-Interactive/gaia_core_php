@@ -26,13 +26,17 @@ class Connection {
     */
     public static function memcache(){
         if( isset( self::$memcache ) ) return self::$memcache;
-        self::$memcache = new Cache\Prefix( new Cache\Mock, 'memcache/' . self::cacheprefix() );
+        self::$memcache = new Cache\Prefix( new Cache\Memcache, self::cacheprefix() );
+        foreach( self::cacheservers() as $entry){
+            list( $host, $port, $weight ) = $entry;
+            self::$memcache->addServer($host, $port, $weight);
+        }
         return self::$memcache;
      }
      
      public static function apc(){
         if( isset( self::$apc ) ) return self::$apc;
-        return self::$apc = new Cache\Prefix( new Cache\Mock, 'apc/' . self::cacheprefix() );
+        return self::$apc = new Cache\Prefix( new Cache\Mock, 'apc/' . self::cacheprefix() ); 
     }
      
      // make this function return an appropriate prefix based on whether
