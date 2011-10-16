@@ -3,8 +3,12 @@
 include __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\Job;
-use Gaia\JobRunner;
+use Gaia\Job\Runner;
+use Gaia\Job\Config;
 use Gaia\Pheanstalk;
+use Gaia\Debugger;
+use Gaia\Http;
+
 set_time_limit(0);
 
 $queue = 'simple';
@@ -37,13 +41,11 @@ Tap::plan(5);
 
 $tube = '__test__';
 
-Job::attach( 
-    function(){
-        return array( new Pheanstalk('127.0.0.1', '11300' ) );
-    }
-);
+Job::config()->addConnection( new Pheanstalk('127.0.0.1', '11300') );
+Job::config()->setQueuePrefix('test');
 
-$ct = Job::flush($queue);
+$runner = new Runner();
+$ct = $runner->flush($queue);
 
 print "\nJOBS flushed from the queue before starting: $ct\n";
 
@@ -59,16 +61,37 @@ for( $i = 0; $i < 100; $i++){
 $start = microtime(TRUE);
 
 
-Job::watch($queue);
-
-print "\nInstantiating job runner ... \n";
-$runner = new JobRunner();
-
+$runner->watch($queue);
 $runner->setTimelimit(20);
-$runner->enableDebug();
-$runner->setDebugLevel(1);
 $runner->setMax(10);
-$runner->send();
+$debugger = new Debugger();
+
+$runner->attachDebugger( $debugger );
+print "\nkicking off job runner ... \n";
+
+Job::config()->setHandler( 
+    function( Http\Request $request ) use( $debugger ){
+        $out = "\nHTTP";
+        if( $request->id ) $out .=" - " . $request->id;
+        $info = $request->response;
+        if( $info->http_code != 200 ) $out .= '-ERR';
+        $out .= ": " . $info->url;
+        $post = substr( (is_array( $request->post ) ? http_build_query( $request->post  ) : $request->post ),0, 75);
+        $out .= '  ' . $post;
+        if( strlen( $post )  >= 75 ) $out .= ' ...';
+        if(  strlen( $info->response_header ) < 1 ) {
+            $out .= " - NO RESPONSE";
+        } else {
+            $out .= "\n------\n";
+            $out .= "\n" . $info->request_header;
+            $out .= "\n" . $info->response_header . $info->body;
+            $out .= "\n------\n";
+        }
+        $debugger->render( $out );
+    }
+);
+
+$runner->process();
 
 $elapsed = number_format( microtime(TRUE) - $start, 3);
 

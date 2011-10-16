@@ -88,7 +88,7 @@ class Pool {
 	* process all of the requests in the pool.
 	*/
 	public function finish(){
-		while ($this->select() === TRUE) { /* no op */ }
+		while ($this->select(1) === TRUE) { /* no op */ }
 		return TRUE;
 	}
 
@@ -102,7 +102,6 @@ class Pool {
 	 */
 	public function poll(){
 		$still_running = 0; // number of requests still running.
-
 		do {
 			$result = curl_multi_exec($this->handle, $still_running);
 			if ($result != CURLM_OK) continue;
@@ -120,7 +119,6 @@ class Pool {
                 unset( $this->requests[ (int) $info['handle'] ] );
                 $request->handle( $curl_data, $curl_info );
                 $this->handle( $request );
-                return TRUE;
             }
             while($messages_in_queue > 0);
 			
