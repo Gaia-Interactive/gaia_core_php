@@ -4,3 +4,6 @@
 [submodule "vendor/predis"]
 	path = vendor/predis
 	url = http://github.com/nrk/predis.git
+[submodule "vendor/pheanstalk"]
+	path = vendor/pheanstalk
+	url = http://github.com/pda/pheanstalk.git
