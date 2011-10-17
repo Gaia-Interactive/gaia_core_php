@@ -18,6 +18,19 @@ Peruse the [Top level Module Documentation](https://github.com/gaiaops/gaia_core
 In the future, we may try to make the library PHPDoc compliant.
 
 
+BRANCHES
+==============================
+Each sub-component of the gaia library has its own branch. We create a dependency tree in `branches/dependencies`. You can use the entire library by using master, or just checkout the branches you want to use.
+
+Here is an example. Suppose I need to use the nonce class and the container class only. I create a new branch based off of the framework which only has the bare structure:
+
+    git checkout framework
+    git checkout -b mybranch
+    git merge container
+    git merge nonce
+    
+This will give me only the code needed for these two components. At any point later I can pull in other branches as I need them.
+
 
 TESTING
 ==============================
