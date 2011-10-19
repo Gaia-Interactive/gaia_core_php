@@ -27,7 +27,8 @@ class UserController {
     * UPDATE users set name = ? WHERE user_id = ?;
     */
     public static function setName($id, $name ){
-        $row = array_pop( self::get( array( $id ) ) );
+        $v = self::get( array( $id ) );
+        $row = array_pop( $v );
         if( ! $row ) return FALSE;
         $row['name'] = $name;
         self::cache()->set($id, $row, self::CACHE_TIMEOUT);
@@ -89,7 +90,8 @@ Tap::is( count($result2), 2, 'got back 2 records in second search');
 Tap::ok( $found, 'different ordered keys returns same result set out of the cache');
 
 Tap::ok(UserController::setName(1, $name = 'barney-' . time()), 'successfully overwrote name of user 1');
-$row = array_pop( UserController::get( array( 1 ) ) );
+$rows = UserController::get( array( 1 ) );
+$row = array_pop( $rows );
 Tap::is($row['name'], $name, "fetching username for user 1, got back $name");
 
 
