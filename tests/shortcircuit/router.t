@@ -7,7 +7,7 @@ use Gaia\ShortCircuit\Resolver;
 use Gaia\ShortCircuit\Controller;
 use Gaia\Shortcircuit\Request;
 use Gaia\Shortcircuit\View;
-Tap::plan(7);
+Tap::plan(9);
 
 class MyRequest extends Request {}
 class MyController extends Controller {}
@@ -40,3 +40,20 @@ ob_start();
 Router::run();
 $out = ob_get_clean();
 Tap::is( $out, 'hello 123', 'run called the action and mapped the var into the view');
+
+
+$_SERVER['REQUEST_URI'] = '/exceptiontest/';
+Router::request( $request = new Request() );
+Router::resolver( new Resolver( $appdir = __DIR__ . '/app/' ) );
+ob_start();
+Router::run();
+$out = ob_get_clean();
+Tap::is( $out, 'testing exception', 'exception caught and passed to action error view');
+
+$_SERVER['REQUEST_URI'] = '/unmanagedexceptiontest/';
+Router::request( $request = new Request() );
+Router::resolver( new Resolver( $appdir = __DIR__ . '/app/' ) );
+ob_start();
+Router::run();
+$out = ob_get_clean();
+Tap::like( $out, '/default error handler/i', 'exception caught and passed to default error view');

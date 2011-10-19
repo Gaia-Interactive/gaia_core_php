@@ -68,7 +68,6 @@ class Router {
     * take a route name, and run it
     */
     public static function dispatch( $input, $skip_render = FALSE ){
-        $invoke = FALSE;
         $r = self::request();
         $data = $view = NULL;
         try {
@@ -89,12 +88,16 @@ class Router {
             $view = self::view();
             $view->load( $data );
             return $view->render( $name );
-        } catch( Exception $e ){
+        } catch( \Exception $e ){
             if( $skip_render ) throw $e;
             if( ! $view ) $view = self::view();
             $view->load( $data );
             $view->set('exception', $e );
-            return $view->render( $name .  '/' . $invoke . 'error');
+            if( self::resolver()->get(  $name . 'error', 'view' ) ){
+                return $view->render(  $name . 'error');
+            } else {
+                return $view->render('error');
+            }
         }
         return FALSE;
     }
