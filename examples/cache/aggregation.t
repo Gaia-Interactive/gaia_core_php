@@ -120,7 +120,7 @@ class AnimalFood {
     * faking the query from the db:
     *    SELECT id, name from foods where id IN(? ... );
     */
-    function _fromDB( array $ids ){
+    public static function _fromDB( array $ids ){
         $foods = array(
             1 => 'hay',
             2 => 'slop',
