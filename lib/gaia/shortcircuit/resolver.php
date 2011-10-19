@@ -17,7 +17,7 @@ class Resolver implements Iface\Resolver
     * convert a URI string into an action.
     */
     public function match( $uri, & $args ){
-        if( ! is_array( $args ) ) $args = array();
+        $args = array();
         $uri = strtolower(trim( $uri, '/'));
         if( strlen( $uri ) < 1) $uri = 'index';
         $elements = explode('/', $uri );

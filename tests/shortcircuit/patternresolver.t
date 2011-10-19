@@ -21,7 +21,7 @@ $patterns = array(
 );
 
 $r = new PatternResolver( new Resolver( __DIR__ . '/app/'), $patterns);
-Tap::is( $r->match('/', $args = array()), 'index', 'default url matched index');
+Tap::is( $r->match('/', $args), 'index', 'default url matched index');
 Tap::is( $r->match('/go/123', $args), 'nested/test', 'go url matched action' );
 Tap::is( $args['id'], '123', 'number extracted into the request id');
 Tap::is( $r->match('/foo/bar/bazz/test/quux', $args ), 'nested/deep/test', 'deeply nested url matched action' );

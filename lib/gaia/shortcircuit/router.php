@@ -46,21 +46,21 @@ class Router {
     // /index.php/foo/bar       remove leading slash, then remove /index.php/
     // /index.php?_=            remove leading slash, index.php, and the special controller _=
     // if there is ?_=, use that first
-    public function run(){        
+    public static function run(){        
         return self::dispatch( self::request()->action()  );
     }
     
    /**
     * make it easy to access the app dir in the resolver
     */
-    public function appdir(){
+    public static function appdir(){
         return self::resolver()->appdir();
     }
 
    /**
     * make it easy to set the app dir in the resolver
     */
-    public function setAppDir( $dir ){
+    public static function setAppDir( $dir ){
         self::resolver()->setAppDir( $dir );
     }
     

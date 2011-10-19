@@ -12,7 +12,7 @@ class PatternResolver implements Iface\Resolver {
     }
 
     public function match( $uri, & $args ){
-        if( ! is_array( $args ) ) $args = array();
+        $args = array();
         foreach( $this->patterns as $action => $pattern ){
             if( preg_match( $pattern['regex'], $uri, $matches ) ) {
                 $args = array_slice($matches, 1);
