@@ -25,7 +25,7 @@ Tap::is( $r->get('var1', array(FILTER_SANITIZE_STRING=>FILTER_FLAG_ENCODE_AMP)),
 $_SERVER['REQUEST_URI'] = '/test/a/b/c?hello=1';
 
 $r = new Request();
-Tap::is( $r->action(), 'test/a/b/c', 'action extracted from REQUEST_URI' );
+Tap::is( $r->action(), '/test/a/b/c', 'action extracted from REQUEST_URI' );
 $r->setArgs( $args = array('a', 'b', 'c') );
 Tap::is( $r->args(), $args, 'args set and retrieved properly');
 

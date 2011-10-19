@@ -15,6 +15,8 @@ class Request extends Input implements Iface\Request
     private $uri = '/';
     
     private $action = '';
+    
+    private $base = '';
 
    /**
     * Class constructor.
@@ -23,8 +25,8 @@ class Request extends Input implements Iface\Request
     public function __construct( $data = NULL ){
         if( $data === NULL ) $data = $_REQUEST;
         parent::__construct( $data );
-        
-        $this->uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/';
+        $trim_chars = "/\n\r\0\t\x0B ";
+        $this->uri = isset($_SERVER['REQUEST_URI']) ? '/' . trim($_SERVER['REQUEST_URI'], $trim_chars) : '/';
         if (isset($this->{'_'})) {
             $action = $this->{'_'};
         }
@@ -38,9 +40,13 @@ class Request extends Input implements Iface\Request
         }
         $script_name = isset($_SERVER['SCRIPT_NAME']) ? $_SERVER['SCRIPT_NAME'] : '';
         $action = str_replace(array($script_name.'/', $script_name.'?_='), '', $action);
-        $action = trim($action, "/\n\r\0\t\x0B ");
-        if( ! $action ) $action = '/';
-        $this->action = $action;
+        $action = trim($action, $trim_chars);
+        $this->action = '/' . $action;
+          if (strpos($this->uri, $script_name) === 0) {
+            $this->base = $script_name;
+        } else {
+            $this->base = '';
+        }
     }
    
    /**
@@ -71,5 +77,9 @@ class Request extends Input implements Iface\Request
     */
     public function uri(){
         return $this->uri;
+    }
+    
+    public function base(){
+        return $this->base;
     }
 }
