@@ -11,18 +11,18 @@ class AddFriendPage {
     protected static $session_id;
     const NONCE_TIMEOUT = 10;
     
-    function render(){
+    public static function render(){
         if( ! isset( $_REQUEST['mynonce'] ) ) return self::renderForm('submit nonce, please');
         if( ! self::checkNonce( $_REQUEST['mynonce'] ) ) return self::renderForm('invalid nonce .. try again');
         self::addFriend( $_REQUEST['friend'] );
         return self::renderSuccess($_REQUEST['friend']);
     }
     
-    function addFriend( $friend ){
+    public static function addFriend( $friend ){
         // write to the database.
     }
     
-    public function renderForm($message){
+    public static function renderForm($message){
         return 
             '<h1>' . $message  . '<h1>' . "\n" .
             '<form action="/site/addfriend" method="post">' . "\n" .
@@ -32,7 +32,7 @@ class AddFriendPage {
             '</form>';
     }
     
-    public function renderSuccess($friend){
+    public static function renderSuccess($friend){
         return '<h1>successfully added friend: ' . $friend . '</h1>';
     }
     
@@ -40,7 +40,7 @@ class AddFriendPage {
         return self::nonce()->create(self::token(), time() + self::NONCE_TIMEOUT);
     }
     
-    public function checkNonce( $nonce ){
+    public static function checkNonce( $nonce ){
         return self::nonce()->check( $nonce, self::token() );
     }
     
