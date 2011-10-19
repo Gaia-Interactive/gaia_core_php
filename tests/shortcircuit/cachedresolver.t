@@ -3,12 +3,14 @@
 include_once __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\ShortCircuit\Resolver;
+use  Gaia\ShortCircuit\CachedResolver;
+use Gaia\Cache\Mock;
 Tap::plan(19);
-$r = new Resolver;
+$r = new CachedResolver( new Resolver, new Mock);
 
 Tap::ok($r instanceof \Gaia\ShortCircuit\Iface\Resolver, 'able to instantiate the resolver');
 Tap::is($r->appdir(), '', 'by default, nothing in appdir');
-$r = new Resolver('test');
+$r = new CachedResolver( new Resolver('test'), new Mock );
 Tap::is( $r->appDir(), 'test', 'arg passed to constructor sets appdir');
 $r->setAppDir('test2');
 Tap::is( $r->appdir(), 'test2', 'setAppDir() method changes appdir');
