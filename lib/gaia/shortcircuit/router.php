@@ -73,9 +73,16 @@ class Router {
         $data = $view = NULL;
         try {
             $controller = self::controller();
-            $name = $controller->resolveRoute( $input );
-            if( strpos($input, $name) !== FALSE ) {
-                $r->setArgs( explode('/', substr($input, strlen($name)+1)));
+            $name = self::resolver()->match( $input, $args );
+            if( ! $name ) $name = '404';
+            if( is_array( $args ) ){
+                foreach( $args as $k => $v ){
+                    if( ! is_int( $k ) ) {
+                        unset( $args[ $k ] );
+                        $r->set( $k, $v );
+                    }
+                }
+                $r->setArgs( $args );
             }
             $data = $controller->execute( $name );
             if( $data === self::ABORT || $skip_render ) return $data;
@@ -134,7 +141,12 @@ class Router {
     *   Router::resolver( new MyResolver );
     */
     public static function resolver( Iface\Resolver $resolver = NULL ){
-        if( $resolver ) return self::$resolver = $resolver;
+        if( $resolver ){
+            if( self::$resolver && ! $resolver->appdir() ){
+                $resolver->setAppDir( self::$resolver->appdir() );
+            }
+            return self::$resolver = $resolver;
+        }
         if( isset( self::$resolver ) ) return self::$resolver;
         return self::$resolver = new Resolver();
     }
