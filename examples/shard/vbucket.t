@@ -30,7 +30,7 @@ class UserDSN {
         if( isset( self::$vb ) ) return self::$vb;
         //$cache =self::cache();
         //$vb = $cache->get('vbucket');
-        if( $vb instanceof VBucket ) return self::$vb = $vb;
+        //if( $vb instanceof VBucket ) return self::$vb = $vb;
         $vb = new VBucket( range(1, 3) );
         //$rs = $db->execute( 'SELECT `vbucket`, `shard` FROM `user_vbuckets`' );
         //$list = array();
