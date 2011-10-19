@@ -35,4 +35,8 @@ class View extends Container implements Iface\View
     public function request(){
         return Router::request();
     }
+    
+    public function link( $name, array $params = array() ){
+        return Router::resolver()->link( $name, $params );
+    }
 }
