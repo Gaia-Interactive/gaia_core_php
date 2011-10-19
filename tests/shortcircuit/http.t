@@ -2,7 +2,6 @@
 <?php
 include_once __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
-Tap::plan(5);
 
 if( ! @fsockopen('127.0.0.1', 11299) ){
     Tap::plan('skip_all', 'unable to connect to remote host for test');
@@ -11,6 +10,8 @@ if( ! @fsockopen('127.0.0.1', 11299) ){
 if( ! function_exists('curl_init') ){
     Tap::plan('skip_all', 'php curl library not installed');
 }
+
+Tap::plan(5);
 
 $ch = curl_init("http://127.0.0.1:11299/shortcircuit.php/test/");
 curl_setopt( $ch, CURLOPT_RETURNTRANSFER, 1 );
