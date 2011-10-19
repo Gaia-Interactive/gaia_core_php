@@ -3,9 +3,10 @@
 include_once __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\ShortCircuit\Resolver;
+use Gaia\ShortCircuit\PatternResolver;
 use  Gaia\ShortCircuit\CachedResolver;
 use Gaia\Cache\Mock;
-Tap::plan(26);
+Tap::plan(27);
 $r = new CachedResolver( new Resolver, new Mock);
 
 Tap::ok($r instanceof \Gaia\ShortCircuit\Iface\Resolver, 'able to instantiate the resolver');
@@ -41,7 +42,7 @@ $patterns = array(
                     'params'=>array('id')
                     ),
                     
-    'nested/deeply/test' => array(
+    'nested/deep/test' => array(
                     'regex'=>'#^/foo/bar/([a-z]+)/test/([a-z]+)$#i',
                     'params'=>array('a','b')
                     ),
@@ -49,11 +50,12 @@ $patterns = array(
     'index' =>'#^/$#',
 );
 
-$r->setPatterns( $patterns );
+$r = new PatternResolver( $r, $patterns );
 Tap::is( $r->match('/', $args = array()), 'index', 'default url matched index');
 Tap::is( $r->match('/go/123', $args), 'nested/test', 'go url matched action' );
 Tap::is( $args['id'], '123', 'number extracted into the request id');
-Tap::is( $r->match('/foo/bar/bazz/test/quux', $args ), 'nested/deeply/test', 'deeply nested url matched action' );
+Tap::is( $r->match('/foo/bar/bazz/test/quux', $args ), 'nested/deep/test', 'deeply nested url matched action' );
 Tap::is( $args, array(0=>'bazz', 1=>'quux', 'a'=>'bazz', 'b'=>'quux'), 'extracted the correct args');
 Tap::is( $r->link('nested/test', array('id'=>123) ), '/go/123', 'pattern converted back into a url' );
-Tap::is( $r->link('nested/deeply/test', array('b'=>'quux', 'a'=>'bazz', 'c'=>'test', 0=>'bazz')), '/foo/bar/bazz/test/quux?c=test', 'converted longer pattern with several parts into url');
+Tap::is( $r->link('nested/deep/test', array('b'=>'quux', 'a'=>'bazz', 'c'=>'test', 0=>'bazz')), '/foo/bar/bazz/test/quux?c=test', 'converted longer pattern with several parts into url');
+Tap::is( $r->match('nested/deep/test/1', $args), 'nested/deep/test', 'without a pattern match, falls back on the core match method');
