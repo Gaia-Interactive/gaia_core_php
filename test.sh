@@ -14,5 +14,11 @@ echo "-----------------------------------"
 
 
 f=`dirname $0`
-/usr/bin/env prove -r --exec=php $* $f
 
+execsupported=$(prove -? | grep "\--exec")
+
+if [ "$execsupported" ]; then
+    /usr/bin/env prove -r --exec=php $* $f
+else
+    /usr/bin/env prove -r $* $f
+fi
