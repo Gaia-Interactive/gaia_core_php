@@ -78,6 +78,10 @@ class CachedResolver implements Iface\Resolver
     public function setAppDir( $dir ){
         return $this->resolver->setAppDir( $dir );
     }
+    
+    public function __call( $method, $args ){
+        return call_user_func_array( array( $this->resolver, $method ), $args );
+    }
 }
 
 // EOF
