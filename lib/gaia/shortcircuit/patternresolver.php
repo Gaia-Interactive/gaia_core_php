@@ -63,21 +63,22 @@ class PatternResolver implements Iface\Resolver {
         }
         
         foreach( $pattern['params'] as $i => $key ){
-            if( isset( $params[ $key ] ) ) {
+            if( array_key_exists( $key, $params ) ) {
                 $args[ $i ] = urlencode($params[ $key ]);
                 unset( $params[ $key ] );
             }
         }
-        $params = http_build_query($params);
-        if( $params ) $params = '?' . $params;
+        
         
         $args_count = count( $args );
         if ($args_count) {
             $groups = array_fill(0, $args_count, '#\(([^)]+)\)#'); 
             $url = preg_replace($groups, $args, $url, 1);
         }
-        if( ! preg_match('/^#\^?([^#\$]+)/', $url, $matches) ) return $params;
-        return $matches[1] . $params;
+        if( ! preg_match('/^#\^?([^#\$]+)/', $url, $matches) ) return $this->core->link($action, $params );
+        $qs = http_build_query($params);
+        if( $qs ) $qs = '?' . $qs;
+        return '/' . trim($matches[1], '/') . $qs;
     }
     
     public function appdir(){

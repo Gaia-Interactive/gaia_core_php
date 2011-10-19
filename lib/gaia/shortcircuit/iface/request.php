@@ -6,5 +6,6 @@ interface Request {
     public function setArgs( array $v );
     public function action();
     public function uri();
+    public function base();
     public function get( $key );
 }
