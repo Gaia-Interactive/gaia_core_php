@@ -3,7 +3,7 @@
 include_once __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\ShortCircuit\Resolver;
-Tap::plan(14);
+Tap::plan(19);
 $r = new Resolver;
 
 Tap::ok($r instanceof \Gaia\ShortCircuit\Resolver, 'able to instantiate the resolver');
@@ -25,5 +25,10 @@ Tap::is( $r->get('', 'view'), __DIR__ . '/app/index.view.php', 'getting path to 
 Tap::is( $r->get('nested', 'view'), __DIR__ . '/app/nested/index.view.php', 'getting path to nested index view');
 Tap::is( $r->get('nested/test', 'view'), __DIR__ . '/app/nested/test.view.php', 'getting path to nested touch view');
 
-Tap::is( $r->search('nested/test/1/r3', 'action'), 'nested/test', 'search test resolves correctly');
-Tap::is( $r->search('nested/xxx/1/r3', 'action'), 'nested', 'search index resolves correctly');
+Tap::is( $r->match('nested/test/1/r3', $args = array()), 'nested/test', 'match test resolves correctly');
+Tap::is( $r->match('nested/xxx/1/r3',  $args = array()), 'nested', 'match index resolves correctly');
+Tap::is( $r->match('',  $args = array()), 'index', 'empty match resolves to index');
+Tap::is( $r->match('badpath/1/1',  $args = array()), '', 'bad path resolves to nothing');
+Tap::is( $r->match('nested/deep/test/1/1/1',  $args = array()), 'nested/deep/test', 'match traverses into a folder without an index');
+Tap::is( $r->match('nested/deep/test',  $args = array()), 'nested/deep/test', 'match finds deep match even when it is exact match');
+Tap::is( $r->match('nested/deep/no/1/1/1',  $args = array()), 'nested', 'if it doesnt find it drops back down');
