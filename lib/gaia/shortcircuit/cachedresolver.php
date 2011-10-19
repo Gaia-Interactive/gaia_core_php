@@ -26,7 +26,7 @@ class CachedResolver implements Iface\Resolver
     /**
     * class constructor.
     */
-    public function __construct( Resolver $resolver , Cache\IFace $cache){
+    public function __construct( Iface\Resolver $resolver , Cache\IFace $cache){
         $this->cache = $cache;
         $this->resolver = $resolver;
     }
@@ -34,19 +34,27 @@ class CachedResolver implements Iface\Resolver
     /**
     * wrap the search method in a cache.
     */
-    public function search( $name, $type ){
+    public function match( $uri,  & $args ){
+        if( ! is_array( $args ) ) $args = array();
         $dir =  $this->resolver->appdir();
-        $key = md5( __CLASS__ . '/' . __FUNCTION__ . '/' . $dir . '/' . $type . '/' . $name);
-        $n = $this->cache->get( $key );
-        if( $n == self::UNDEF ) return '';
-        if( $n ) return $n;
-        $n = $this->resolver->search( $name, $type );
-        if( $n ){
-            $this->cache->set($key, $n, 300);
+        $key = md5( __CLASS__ . '/' . __FUNCTION__ . '/' . $dir . '/' . $uri);
+        $res = $this->cache->get( $key );
+        if( $res == self::UNDEF ) return '';
+        if( is_array( $res ) ) {
+            if( is_array( $res['args'] ) ) $args = $res['args'];
+            return $res['name'];
+        }
+        $name = $this->resolver->match( $uri, $args );
+        if( $name ){
+            $this->cache->set($key, array('name'=>$name, 'args'=>$args), 300);
         } else {
             $this->cache->set($key, self::UNDEF, 30);
         }
-        return $n;
+        return $name;
+    }
+    
+    public function link( $action, array $params = array() ){
+        return $this->resolver->link( $action, $params );
     }
     
     /**
