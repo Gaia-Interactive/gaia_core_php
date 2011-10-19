@@ -36,4 +36,8 @@ class Controller extends Container implements Iface\Controller
     public function request(){
         return Router::request();
     }
+    
+    public function link( $name, array $params = array() ){
+        return Router::link( $name, $params );
+    }
 }
