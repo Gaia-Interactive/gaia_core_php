@@ -26,7 +26,8 @@ class User {
         if( is_array( $v ) ){
             $this->data = $v;
         } else {
-            $this->data = array_pop( $this->loadData( array( $v ) ) );
+            $v = $this->loadData( array( $v ) );
+            $this->data = array_pop( $v );
         }
     }
     
