@@ -6,7 +6,7 @@ use Gaia\ShortCircuit\Resolver;
 Tap::plan(19);
 $r = new Resolver;
 
-Tap::ok($r instanceof \Gaia\ShortCircuit\Resolver, 'able to instantiate the resolver');
+Tap::ok($r instanceof \Gaia\ShortCircuit\Iface\Resolver, 'able to instantiate the resolver');
 Tap::is($r->appdir(), '', 'by default, nothing in appdir');
 $r = new Resolver('test');
 Tap::is( $r->appDir(), 'test', 'arg passed to constructor sets appdir');
