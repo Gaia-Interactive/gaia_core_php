@@ -30,14 +30,6 @@ class Controller extends Container implements Iface\Controller
         return include( $path );
     }
     
-   /**
-    * converts a URI into an action name.
-    */
-    public function resolveRoute( $name ){
-         $name = Router::resolver()->search( $name, 'action');
-         return ( $name ) ? $name : '404';
-    }
-    
     /**
     * alias method for the router request object.
     */
