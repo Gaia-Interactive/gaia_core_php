@@ -53,7 +53,7 @@ class Runner {
     /**
     * how many jobs dequeued?
     */
-    protected $deqeued = 0;
+    protected $dequeued = 0;
     
    /**
     * @type int     how many failures?
@@ -277,6 +277,10 @@ class Runner {
         try {
             if( ! $this->active && count( $this->pool->requests() ) == 0 ){
                 return TRUE;
+            }
+            
+            if( $this->limit && $this->dequeued >= $this->limit ){
+                return $this->shutdown();
             }
                         
             if( $this->active && count( $this->queue ) < $this->max ){
