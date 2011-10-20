@@ -88,7 +88,7 @@ $runner->addTask(
         $job->task = 'register'; 
         $info = $runner->stats();
         $info['host'] = php_uname('n');
-        $info['pid'] = posix_getpid();
+        if( function_exists('posix_getpid')) $info['pid'] = posix_getpid();
         $job->post = $info;
         $runner->addJob( $job, array(
                     CURLOPT_CONNECTTIMEOUT=>1, 

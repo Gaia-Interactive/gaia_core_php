@@ -15,7 +15,7 @@ if( ! @fsockopen('127.0.0.1', '11300')) {
 }
 
 if( ! @fsockopen('127.0.0.1', '11299')) {
-    die("unable to connect to test job url: please run tests/webservice/start.sh\n");
+    Tap::plan('skip_all', "unable to connect to test job url: please run tests/webservice/start.sh\n");
 }
 
 Tap::plan(8);
@@ -64,7 +64,7 @@ $elapsed = number_format( microtime(TRUE) - $start, 3);
 
 Tap::is( $handle_ct, $expected_jobs, 'processed up to the limit of jobs');
 Tap::is( $build_ct, $expected_jobs, 'only dequeued and built the jobs we needed up to the limit');
-Tap::cmp_ok( $elapsed, '<', 1, "took less than a sec to run all the jobs we stored ( actual is $elapsed s)");
+Tap::cmp_ok( $elapsed, '<', 3, "took less than 3 secs to run all the jobs we stored ( actual is $elapsed s)");
 Tap::is( $stats['processed'], $expected_jobs, 'stats marked all the jobs as processed');
 Tap::is( $stats['failed'], 0, 'no failures reported');
 Tap::is( $stats['noreplies'], 0, 'no cases of no-reply reported');
