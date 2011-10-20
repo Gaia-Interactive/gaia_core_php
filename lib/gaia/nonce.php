@@ -14,11 +14,17 @@ class Nonce {
     // seed characters for random string.
     protected static $charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     
-    // how many characters to use in the digest and random strings.
-    protected $chunk_length = 40;
+    // how many characters to use in the digest
+    protected $digestlen = 40;
     
-    // the private key of the nonce, known only to the application. Keep this value safe!
+    // how many characters to use in the random string.
+    protected $randlen = 9;
+    
+    // the private key of the nonce, known only to the application. 
+    // Keep this value out of your application code.
     protected $secret = '';
+    
+    const expireslen = 11;
     
     /**
     * class constructor.
@@ -29,10 +35,16 @@ class Nonce {
     * timestamp and at least 1 character for the random chunk and 1 character for the checksum.
     * in practice a number between 30 and 91 is pretty good. 91 is virtually unhackable.
     */
-    public function __construct( $secret, $length = 91 ){
+    public function __construct( $secret, $len = NULL ){
         $this->secret = $secret;
-        $this->chunk_length = floor( ($length - 11) / 2 );
-        if( $this->chunk_length < 1 ) $this->chunk_length = 1;
+        if( $len != NULL ){
+            if( $len < 15 ) $len = 15;
+            $this->digestlen = floor( ($len - self::expireslen ) / 2 );
+            if( $this->digestlen < 3 ) $this->digestlen = 3;
+            if( $this->digestlen > 40 ) $this->digestlen = 40;
+            $this->randlen = $len - ( $this->digestlen + self::expireslen );
+            if( $this->randlen < 1 ) $this->randlen = 1;
+        }
     }
     
     /**
@@ -51,9 +63,11 @@ class Nonce {
     */
     public function create($token, $expires = null) {
         if ($expires === NULL) $expires = time() + self::INTERVAL;
-        $rand = self::rand($this->chunk_length);
-        $digest = substr(sha1( $rand . $token . $this->secret . $expires ), 0, $this->chunk_length);
-        return $digest . $rand . str_pad( $expires, 11, '0', STR_PAD_LEFT);        
+        $rand = '';
+        $charset_len = strlen( self::$charset ) - 1;
+        for ($i=0; $i<$this->randlen; $i++) $rand .= self::$charset[(mt_rand(0,$charset_len))];        
+        $digest = substr(sha1( $rand . $token . $this->secret . $expires ), 0, $this->digestlen);
+        return $digest . $rand . str_pad( $expires, self::expireslen, '0', STR_PAD_LEFT);        
     }
     
     /**
@@ -62,23 +76,18 @@ class Nonce {
     */
     public function check($hash, $token ) {
         if( ! is_string( $hash ) ) return FALSE;
-        if( strlen( $hash ) < ($this->chunk_length * 2) + 1 ) return FALSE;
-        $digest = substr($hash, 0, $this->chunk_length);
-        $rand = substr($hash, $this->chunk_length, $this->chunk_length);
-        $expires = ltrim(substr($hash, $this->chunk_length * 2), '0');
+        $expireslen = self::expireslen;
+        if( strlen( $hash ) != ($this->digestlen + $this->randlen + self::expireslen)  ) return FALSE;
+        $digest = substr($hash, 0, $this->digestlen);
+        $rand = substr($hash, $this->digestlen, $this->randlen);
+        $expires = ltrim(substr($hash, $this->digestlen + $this->randlen), '0');
         if( ! is_numeric( $expires ) ) return FALSE;
         if( $expires < time() ) return FALSE;
-        if( substr( sha1( $rand . $token . $this->secret . $expires ), 0, $this->chunk_length) != $digest ) return FALSE;
+        if( substr( sha1( $rand . $token . $this->secret . $expires ), 0, $this->digestlen) != $digest ) return FALSE;
         return TRUE;
     }
     
-   /**
-    * create a random string of N characters from the charset
-    */
-    protected static function rand($length = 10 ){
-        $rand = '';
-        $charset_len = strlen( self::$charset ) - 1;
-        for ($i=0; $i<$length; $i++) $rand .= self::$charset[(mt_rand(0,$charset_len))];
-        return $rand;
+    public function __toString(){ 
+        return 'object ' . get_class( $this ) . '{}'; 
     }
 }
