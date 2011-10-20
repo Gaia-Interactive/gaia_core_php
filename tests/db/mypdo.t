@@ -29,7 +29,7 @@ try {
 } catch( Exception $e ){
     Tap::plan('skip_all', $e->__toString());
 }
-Tap::plan(10);
+Tap::plan(11);
 Tap::ok( DB\Connection::instance('test') === $db, 'db instance returns same object we instantiated at first');
 
 $rs = $db->execute('SELECT %s as foo, %s as bar', 'dummy\'', 'rummy');
@@ -56,3 +56,17 @@ Tap::is($query, '1, 2, 3', 'format query handles arrays of integers');
 
 $query = $db->format_query('%f', array(1.545,2.2,3));
 Tap::is($query, '1.545, 2.2, 3', 'format query handles arrays of floats');
+
+
+$db = new DB\Except( $db );
+
+$err = NULL;
+try {
+    $db->execute('err');
+} catch( Exception $e ){
+    $err = (string) $e;
+}
+
+Tap::like($err, '/database error/i', 'When a bad query is run using execute() the except wrapper tosses an exception');
+
+
