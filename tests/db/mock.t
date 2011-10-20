@@ -17,8 +17,14 @@ DB\Connection::load( array(
 ));
 $db = DB\Connection::instance('test');
 
-Tap::plan(25);
+Tap::plan(27);
 Tap::ok( DB\Connection::instance('test') === $db, 'db instance returns same object we instantiated at first');
+
+Tap::is( DB\Connection::instances(), array('test'=>$db), 'Connection::instances() returns test db object');
+
+DB\Connection::reset();
+
+Tap::is( DB\Connection::instances(), array(), 'after reset, no more test connection cached in instances');
 
 $db = new DB\Mock( function($method, $args){
     if( $method == 'execute' ) {

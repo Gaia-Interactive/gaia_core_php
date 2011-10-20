@@ -21,6 +21,14 @@ class Connection {
         return self::$instances[ $name ] = self::get( $name );
     }
     
+    public static function instances(){
+        return self::$instances;
+    }
+    
+    public static function reset(){
+        self::$instances = array();
+    }
+    
     public static function get( $name ){
         if( ! isset( self::$map[ $name ] ) ) throw new Exception('invalid config', $name );
         $db = call_user_func( self::$map[ $name ] );
