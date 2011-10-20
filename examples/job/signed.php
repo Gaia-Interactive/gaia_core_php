@@ -46,7 +46,7 @@ $config->setHandler( function($job, $response ) use ($runner, $debugger) {
     if( $response->headers->{'X-JOB-STATUS'} == 'complete') $job->flag = 1;
     if( $job->task == 'register'){
         Job::config()->registering = FALSE;
-        $res = json_decode($response->body);
+        $res = json_decode($response->body, TRUE);
         if( ! is_array( $res ) ){
             $runner->shutdown();
         }
@@ -76,9 +76,6 @@ $config->setHandler( function($job, $response ) use ($runner, $debugger) {
     $debugger->render( $out );
     
 });
-
-$config->set('register_url', 'http://127.0.0.1:11299/job.php?register=1');
-
 
 
 $runner->addTask( 
