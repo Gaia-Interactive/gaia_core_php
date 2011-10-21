@@ -3,6 +3,7 @@
 include __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\Cache;
+use Gaia\StorageIface as Iface;
 
 Tap::plan(36);
 
@@ -11,7 +12,7 @@ $a = new Cache\Prefix($m, '#a');
 $b = new Cache\Prefix($m, '#b');
 
 $m = new Cache\Replica(array($a, $b));
-Tap::ok( $m instanceof Cache\Iface, 'cache\replica instantiated successfully');
+Tap::ok( $m instanceof Iface, 'cache\replica instantiated successfully');
 
 $key = 'test' . microtime(TRUE);
 $res = $m->get($key);
