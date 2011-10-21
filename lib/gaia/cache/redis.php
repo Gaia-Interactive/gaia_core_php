@@ -3,6 +3,8 @@
  * @copyright 2003-present GAIA Interactive, Inc.
  */
 namespace Gaia\Cache;
+use Gaia\StorageIface as Iface;
+
 
 // basic wrapper to make redis library conform to the cache interface.
 // todo: figure out ways to make some of the more elegant list and member set functionality 
@@ -73,4 +75,26 @@ class Redis extends Wrap implements Iface {
         if( substr( $v, 0, $len) != self::SERIALIZE_PREFIX) return $v;
         return unserialize(substr( $v, $len) );
     }
+    
+
+    public function load( $input ){
+        if( $input === NULL ) return;
+        if( is_array( $input ) || $input instanceof Iterator ) {
+            foreach( $input as $k=>$v ) $this->__set( $k, $v);
+        }
+    }
+    public function __set( $k, $v ){
+        return $this->set( $k, $v );
+    }
+    public function __get( $k ){
+        return $this->get( $k );
+    }
+    public function __unset( $k ){
+        return $this->delete( $k );
+    }
+    public function __isset( $k ){
+        $v = $this->get( $k );
+        if( $v === FALSE || $v === NULL ) return FALSE;
+        return TRUE;
+    } 
 }
