@@ -6,7 +6,7 @@ include __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\SignedCookie;
 
-Tap::plan(21);
+Tap::plan(22);
 $cookie = new SignedCookie();
 
 
