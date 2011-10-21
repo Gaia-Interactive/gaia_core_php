@@ -3,6 +3,7 @@
  * @copyright 2003-present GAIA Interactive, Inc.
  */
 namespace Gaia\Cache;
+use Gaia\StorageIface as Iface;
 
 /*
 * conform the pecl memcache client to our own interface. Most notable difference is the compression
@@ -95,4 +96,26 @@ class Memcache extends Wrap implements Iface {
         $len = is_scalar( $v ) ? strlen( strval($v) ) : strlen( print_r($v, TRUE) );
         return $len < self::COMPRESS_THRESHOLD ? 0 : MEMCACHE_COMPRESSED;
     }
+    
+    public function load( $input ){
+        if( $input === NULL ) return;
+        if( is_array( $input ) || $input instanceof Iterator ) {
+            foreach( $input as $k=>$v ) $this->__set( $k, $v);
+        }
+    }
+    public function __set( $k, $v ){
+        return $this->set( $k, $v );
+    }
+    public function __get( $k ){
+        return $this->get( $k );
+    }
+    public function __unset( $k ){
+        return $this->delete( $k );
+    }
+    public function __isset( $k ){
+        $v = $this->get( $k );
+        if( $v === FALSE || $v === NULL ) return FALSE;
+        return TRUE;
+    } 
+    
 }
