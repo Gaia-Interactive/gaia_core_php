@@ -1,6 +1,7 @@
 <?php
 namespace Gaia\NewID;
 use Gaia\Exception;
+use Gaia\StorageIface;
 use Gaia\Cache;
 
 abstract class MySQL implements Iface {
@@ -18,7 +19,7 @@ abstract class MySQL implements Iface {
     protected $db;
     protected $cache;
     
-    public function __construct( $app, $db, Cache\Iface $cache = NULL ){
+    public function __construct( $app, $db, StorageIface $cache = NULL ){
         if( ! preg_match('/^[a-z0-9_]+$/', $app) ) throw new Exception('invalid-app');
         $this->app = $app;
         $this->db = $db;

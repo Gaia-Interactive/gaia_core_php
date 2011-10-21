@@ -1,11 +1,12 @@
 <?php
 namespace Gaia\NewID;
+use Gaia\StorageIface;
 
 class TimeRandLock extends TimeRand implements Iface {
     
     protected $cache;
     
-    public function __construct( \Gaia\Cache\Iface $cache ){
+    public function __construct( StorageIface $cache ){
         $this->cache = $cache;
     }
     
