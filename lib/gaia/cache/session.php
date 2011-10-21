@@ -1,5 +1,6 @@
 <?php
 namespace Gaia\Cache;
+use Gaia\StorageIface as Iface;
 
 /**
  * cache sessions.

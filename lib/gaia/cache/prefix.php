@@ -5,7 +5,7 @@ class Prefix extends Wrap
 {
     private $prefix = '';
     
-    public function __construct( Iface $core, $prefix ){ 
+    public function __construct( $core, $prefix ){ 
         parent::__construct( $core );
         $this->prefix = $prefix;
     }

@@ -5,7 +5,7 @@ use Gaia\Container;
 class Callback extends Wrap
 {
 
-    public function __construct( Iface $core, $options ){
+    public function __construct( $core, $options ){
         parent::__construct( $core );
         if( ! $options instanceof Container ) $options = new Container( $options );
         $this->options = $options;
