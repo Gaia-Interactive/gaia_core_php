@@ -2,7 +2,7 @@
 include_once __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\Container;
-
+Tap::plan(6);
 $c = new Container();
 foreach( array('result_set', 'result_get', 'result_isset', 'result_unset') as $key ){
     $$key = array();
@@ -21,3 +21,6 @@ Tap::is( $input, $result_get, 'get works properly' );
 Tap::is( array_fill_keys( array_keys( $input ), TRUE), $result_isset, 'isset works properly' );
 Tap::is( array_fill_keys( array_keys( $input ), NULL), $result_unset, 'unset works properly' );
 Tap::is( $c->non_existent, NULL, 'non-existent variables are null' );
+
+$c->load( $input );
+Tap::is( $c->get( array_keys($input) ), $input, 'multi-get works properly');

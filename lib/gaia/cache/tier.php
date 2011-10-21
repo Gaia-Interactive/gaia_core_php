@@ -1,5 +1,6 @@
 <?php
 namespace Gaia\Cache;
+use Gaia\StorageIface as Iface;
 
 /**
 * Combine two different caching layers in a tiered arrangement, where we fetch data from a 1st-tier

@@ -1,10 +1,7 @@
 <?php
 namespace Gaia\Cache;
+use Gaia\StorageIface as Iface;
 
-/**
-* make APC conform to our cache interface. Works pretty well except for the replace call, since apc
-* doesn't exactly support that. I can fake it though.
-*/
 class Mock Implements Iface {
 
     protected static $data = array();
@@ -14,7 +11,7 @@ class Mock Implements Iface {
         self::$data = array();
     }
     
-    function set( $k, $v, $expires = 0 ){
+    public function set( $k, $v, $expires = 0 ){
         if( $v === FALSE ) return FALSE;
         if( $expires < 1 ){
             $expires = 0;
@@ -25,19 +22,19 @@ class Mock Implements Iface {
         return TRUE;
     }
     
-    function add( $k, $v, $expires = 0 ){
+    public function add( $k, $v, $expires = 0 ){
         $res = $this->get( $k );
         if( $res !== FALSE ) return FALSE;
         $res = $this->set( $k, $v, $expires );
         return $res;
     }
     
-    function replace( $k, $v, $expires = 0 ){
+    public function replace( $k, $v, $expires = 0 ){
         if( ! $this->get( $k ) ) return FALSE;
         return $this->set( $k, $v, $expires );
     }
     
-    function increment( $k, $step = 1){
+    public function increment( $k, $step = 1){
         $v = $this->get( $k );
         if( $v === FALSE ) return FALSE;
         $v = strval( $v );
@@ -45,7 +42,7 @@ class Mock Implements Iface {
         return self::$data[ $k ][0] = bcadd( $v, $step );
     }
     
-    function decrement( $k, $step = 1){
+    public function decrement( $k, $step = 1){
         $v = $this->get( $k );
         if( $v === FALSE ) return FALSE;
         $v = strval( $v );
@@ -53,7 +50,7 @@ class Mock Implements Iface {
         return self::$data[ $k ][0] = bcsub( $v, $step );
     }
     
-    function delete( $k ){
+    public function delete( $k ){
         unset( self::$data[ $k ] );
         return TRUE;
     }
@@ -87,4 +84,26 @@ class Mock Implements Iface {
     protected function time(){
         return time() + self::$time_offset;
     }
+    
+    public function load( $input ){
+        if( $input === NULL ) return;
+        if( is_array( $input ) || $input instanceof Iterator ) {
+            foreach( $input as $k=>$v ) $this->__set( $k, $v);
+        }
+    }
+    public function __set( $k, $v ){
+        return $this->set( $k, $v );
+    }
+    public function __get( $k ){
+        return $this->get( $k );
+    }
+    public function __unset( $k ){
+        return $this->delete( $k );
+    }
+    public function __isset( $k ){
+        $v = $this->get( $k );
+        if( $v === FALSE || $v === NULL ) return FALSE;
+        return TRUE;
+    } 
+    
 }
