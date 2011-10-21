@@ -23,3 +23,7 @@ Tap::is( $cookie->decrement( $key ), --$value, 'decrementing the key returns the
 Tap::is( $cookie->decrement( $key, 10 ), $value -= 10, 'incrementing the key by 10 returns the new value');
 Tap::is( $cookie->$key, $value, 'get returns correct value after decrement');
 Tap::is( $cookie->decrement('non-existent-key'), FALSE, 'decrementing non-existent key returns false');
+
+$data = array( 'a'=>1, 'b'=>2, 'c'=>3 );
+$cookie->load( $data );
+Tap::is( $cookie->get( array_keys( $data ) ), $data, 'loading and multi-get works properly');
