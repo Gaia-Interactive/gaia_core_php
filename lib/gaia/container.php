@@ -44,6 +44,15 @@ class Container implements Iterator, StorageIface {
     }
     
     public function get($name){
+        if( is_array( $name ) ){
+            $res = array();
+            foreach( $name as $_k ){
+                $v = $this->__get( $_k );
+                if( $v === NULL ) continue;
+                $res[ $_k ] = $v;
+            }
+            return $res;
+        }
         return $this->__get( $name );
     }
     
