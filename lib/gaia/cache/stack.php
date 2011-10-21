@@ -4,6 +4,7 @@
 * you can pop items off the list, or get the most recent items added.
 */
 namespace Gaia\Cache;
+use Gaia\StorageIface as Iface;
 
 class Stack {
 
