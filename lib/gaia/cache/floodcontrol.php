@@ -2,7 +2,7 @@
 namespace Gaia\Cache;
 use Gaia\Container;
 use Gaia\Exception;
-
+use Gaia\StorageIface as Iface;
 /**
  * A smarter flood control - allows "burst" activity, 
  * but still enforce the overall flood requirements
@@ -20,7 +20,7 @@ class FloodControl {
 	
 	/* constructor
 	 * instantiate and configure flood control
-	 * @param Gaia\Cache\Iface - a cache object
+	 * @param - Iface - a cache object
 	 * @param - array of options:
 	 *  @param (string) $scope - a unique scope for this flood control, such as "avatarsave/{$user_id}"
 	 *  @param (int) $max - number of times the user can burst before running into flood control (5 is a good number)
