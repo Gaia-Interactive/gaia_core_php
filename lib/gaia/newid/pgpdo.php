@@ -2,6 +2,7 @@
 namespace Gaia\NewID;
 use Gaia\Exception;
 use Gaia\Cache;
+use Gaia\StorageIface;
 
 class PgPDO implements Iface {
 
@@ -9,7 +10,7 @@ class PgPDO implements Iface {
     protected $db;
     protected $cache;
     
-    public function __construct($app, \PDO $db, Cache\Iface $cache = NULL ){
+    public function __construct($app, \PDO $db,StorageIface $cache = NULL ){
         $driver = $db->getAttribute(\PDO::ATTR_DRIVER_NAME);
         if( $driver !== 'pgsql' ) {
             trigger_error('invalid pdo', E_USER_ERROR);
