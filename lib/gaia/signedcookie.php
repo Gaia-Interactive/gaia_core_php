@@ -12,6 +12,14 @@ class SignedCookie extends Cookie {
     }
     
     public function get( $k ){
+        if( is_array( $k ) ){
+            $res = array();
+            foreach( $k as $_k ){
+                $v = $this->get( $_k );
+                if( $v !== FALSE && $v !== NULL ) $res[ $_k ] = $v;
+            }
+            return $res;
+        }
         return $this->unserialize( parent::get( $k ) );
     }
     

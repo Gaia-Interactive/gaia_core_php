@@ -2,7 +2,7 @@
 namespace Gaia;
 use Iterator;
 
-class Container implements Iterator {
+class Container implements Iterator, StorageIface {
  /**
     * internal data storage
     */
@@ -21,6 +21,21 @@ class Container implements Iterator {
         return $this->__d[$name] += $value;
     }
     
+    public function decrement($name, $value = 1) {
+        if(! isset($this->__d[$name]) ) $this->__d[$name] = 0;
+        return $this->__d[$name] -= $value;
+    }
+    
+    public function add( $name, $value ){
+        if( $this->__isset( $name ) ) return NULL;
+        return $this->__set( $name, $value );
+    }
+    
+    public function replace( $name, $value ){
+        if( ! $this->__isset( $name ) ) return NULL;
+        return $this->__set( $name, $value );
+    }
+    
     public function append($name, $value){
         if( ! isset($this->__d[$name]) ) return $this->__d[$name] = array($value);
         if( is_scalar($this->__d[$name]) ) return $this->__d[$name] .= $value;
@@ -29,7 +44,20 @@ class Container implements Iterator {
     }
     
     public function get($name){
+        if( is_array( $name ) ){
+            $res = array();
+            foreach( $name as $_k ){
+                $v = $this->__get( $_k );
+                if( $v === NULL ) continue;
+                $res[ $_k ] = $v;
+            }
+            return $res;
+        }
         return $this->__get( $name );
+    }
+    
+    public function delete($name){
+        return $this->__unset( $name );
     }
     
     public function isEmpty( $name ){
