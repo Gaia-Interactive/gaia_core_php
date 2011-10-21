@@ -2,7 +2,7 @@
 namespace Gaia\Stockpile;
 use \Gaia\Cache;
 use \Gaia\DB\Transaction;
-
+use \Gaia\StorageIface;
 
 /**
  * A wrapper class for stockpile that caches the results.
@@ -36,7 +36,7 @@ class Cacher extends Passthru {
     * this callback only occur once for each unique combination since the transaction onRollback
     * handler makes sure of this.
     */
-    public function __construct( Iface $core, Cache\Iface $cacher ){
+    public function __construct( Iface $core, StorageIface $cacher ){
         parent::__construct( $core );
         
         $app = $this->app();
