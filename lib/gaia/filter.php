@@ -62,13 +62,16 @@ class Filter
             switch($key ) {
             case 'regex':
             case 'enum':
-                return call_user_func( array( self, $key ), $value, $filter[ $key ], $default );
+                return call_user_func( array( __CLASS__, $key ), $value, $filter[ $key ], $default );
             default:
                 $value = filter_var( $value, $key, $filter[ $key ] );
                     return $value ? $value : $default;
             }
         }
-        if( ! method_exists( self, $filter ) ) return self::raw( $value, $default );
-        return call_user_func( array( self, $filter ), $value, $default );
+        if( ! method_exists( __CLASS__, $filter ) ){
+            $value = filter_var( $value, $filter );
+            return $value ? $value : $default;
+        }
+        return call_user_func( array( __CLASS__, $filter ), $value, $default );
     }
 }
