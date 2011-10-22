@@ -1,7 +1,7 @@
 <?php
 namespace Gaia;
 
-class Container implements \Iterator, StorageIface {
+class Container implements \Iterator {
  /**
     * internal data storage
     */
