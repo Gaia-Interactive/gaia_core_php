@@ -1,8 +1,7 @@
 <?php
 namespace Gaia;
-use Iterator;
 
-class Container implements Iterator, StorageIface {
+class Container implements \Iterator, StorageIface {
  /**
     * internal data storage
     */
@@ -13,7 +12,7 @@ class Container implements Iterator, StorageIface {
     }
     
     public function set($name, $value){
-        return $this->__set( $name, $value );
+        return $this->__d[ $name ] = $value;
     }
     
     public function increment($name, $value = 1) {
@@ -26,14 +25,14 @@ class Container implements Iterator, StorageIface {
         return $this->__d[$name] -= $value;
     }
     
-    public function add( $name, $value ){
-        if( $this->__isset( $name ) ) return NULL;
-        return $this->__set( $name, $value );
+    public function add( $name, $value, $ttl = 0 ){
+        if( $this->__isset( $name ) ) return FALSE;
+        return $this->set( $name, $value, $ttl );
     }
     
-    public function replace( $name, $value ){
-        if( ! $this->__isset( $name ) ) return NULL;
-        return $this->__set( $name, $value );
+    public function replace( $name, $value, $ttl = 0 ){
+        if( ! $this->__isset( $name ) ) return FALSE;
+        return $this->set( $name, $value, $ttl );
     }
     
     public function append($name, $value){
@@ -53,11 +52,18 @@ class Container implements Iterator, StorageIface {
             }
             return $res;
         }
-        return $this->__get( $name );
+        if( ! is_scalar( $name ) ) return NULL;
+        return isset( $this->__d[ $name ] ) ? $this->__d[ $name ] : NULL;
+
     }
     
     public function delete($name){
-        return $this->__unset( $name );
+        unset( $this->__d[ $name ] );
+        return TRUE;
+    }
+    
+    public function flush(){
+        $this->__d = array();
     }
     
     public function isEmpty( $name ){
@@ -111,6 +117,12 @@ class Container implements Iterator, StorageIface {
     **/
     public function rewind() {
         reset($this->__d);
+    }
+    
+    public function each(){
+        $key = $this->key();
+        if( $key === FALSE ) return FALSE;
+        return array( $key, $this->get($key) );
     }
     
    /**
@@ -200,28 +212,28 @@ class Container implements Iterator, StorageIface {
     * @see http://www.php.net/oop5.magic
     */
     public function __set( $k, $v ){
-        return $this->__d[ $k ] = $v;
+        return $this->set( $k, $v );
     }
     
    /**
     * @see http://www.php.net/oop5.magic
     */
     public function __get( $k ){
-        return isset( $this->__d[ $k ] ) ? $this->__d[ $k ] : NULL;
+        return $this->get( $k );
     }
     
    /**
     * @see http://www.php.net/oop5.magic
     */
     public function __unset( $k ){
-        unset( $this->__d[ $k ] );
+        $this->delete( $k );
     }
     
    /**
     * @see http://www.php.net/oop5.magic
     */
     public function __isset( $k ){
-        return isset( $this->__d[ $k ] ) ? TRUE : FALSE;
+        return ( $this->get( $k ) !== NULL ) ? TRUE  : FALSE;
     }
      
          
