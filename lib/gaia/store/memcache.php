@@ -33,8 +33,12 @@ class Memcache implements Iface {
     // the newer pecl extension returns false on no results, whereas the older version returned an
     // empty array. we want the older behavior.
     public function get( $k ){
-        if( is_scalar( $k ) ) return $this->core->get( $k );
-        if( ! is_array( $k ) ) return FALSE;
+        if( is_scalar( $k ) ){
+            $res = $this->core->get( $k );
+            if( $res === NULL || $res === FALSE ) return NULL;
+            return $res;
+        }
+        if( ! is_array( $k ) ) return NULL;
         if( count( $k ) < 1 ) return array();
         $res = ( $this->core instanceof \Memcached ) ? $this->core->getMulti( $k ) : $this->core->get( $k );
         if( is_array( $res ) ) return $res;
