@@ -57,8 +57,8 @@ class Apc implements Iface {
         return apc_clear_cache('user');
     }
     
-    public function supportsTTL(){
-        if( $this->core ) return $this->core->supportsTTL();
+    public function ttlEnabled(){
+        if( $this->core ) return $this->core->ttlEnabled();
         return TRUE;
     }
     

@@ -48,8 +48,8 @@ class Wrap implements Iface {
         return $this->core->flush();
     }
     
-    public function supportsTTL(){
-        return $this->core->supportsTTL();
+    public function ttlEnabled(){
+        return $this->core->ttlEnabled();
     }
 
     

@@ -62,7 +62,7 @@ class EmbeddedTTL extends Wrap {
         return $this->set( $name, $value, $ttl );
     }
     
-    public function supportsTTL(){
+    public function ttlEnabled(){
         return TRUE;
     }
     

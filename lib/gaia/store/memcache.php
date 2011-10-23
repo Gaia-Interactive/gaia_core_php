@@ -113,7 +113,7 @@ class Memcache implements Iface {
         }
     }
     
-    public function supportsTTL(){
+    public function ttlEnabled(){
         return TRUE;
     }
     

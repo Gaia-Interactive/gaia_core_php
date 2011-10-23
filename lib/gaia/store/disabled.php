@@ -57,7 +57,7 @@ class Disabled Implements Iface {
         return TRUE;
     }
     
-    public function supportsTTL(){
+    public function ttlEnabled(){
         return FALSE;
     }
 
