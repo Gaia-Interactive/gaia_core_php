@@ -10,7 +10,6 @@ Interface  Iface {
     public function decrement( $key, $value = 1 );
     public function delete( $key );
     public function load( $input );
-    public function supportsTTL();
     public function __set( $k, $v );
     public function __get( $k );
     public function __unset( $k );
