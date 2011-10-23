@@ -67,6 +67,11 @@ class KVP implements Iface {
         // all done.
     }
     
+    public function ttlEnabled(){
+        return FALSE;
+    }
+
+    
    /**
     * @see http://www.php.net/oop5.magic
     */

@@ -15,4 +15,5 @@ Interface  Iface {
     public function __unset( $k );
     public function __isset( $k );
     public function flush();
+    public function ttlEnabled();
 }
