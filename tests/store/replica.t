@@ -6,8 +6,8 @@ use Gaia\Store;
 
 Tap::plan(36);
 
-$a = new Store\ContainerTTL;
-$b = new Store\ContainerTTL;
+$a = new Store\KvpTTL;
+$b = new Store\KvpTTL;
 
 $m = new Store\Replica(array($a, $b));
 Tap::ok( $m instanceof Store\Iface, 'Store\replica instantiated successfully');

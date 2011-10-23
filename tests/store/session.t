@@ -8,7 +8,7 @@ ob_start();
 $limit = 10;
 
 
-$cache = new Store\ContainerTTL;
+$cache = new Store\KvpTTL;
 Tap::plan(8);
 
 $s = Store\Session::init( $o = new Store\Observe( $cache ) );

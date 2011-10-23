@@ -46,7 +46,7 @@ $k = 'gaia/cache/test/' . microtime(TRUE) . '/' . mt_rand(1, 10000);
 Tap::ok( $cache->add( $k, 1, 10), 'adding a non-existent key');
 Tap::ok( ! $cache->add( $k, 1, 10), 'second time, the add fails');
 
-if( $skip_expiration_tests || ! $cache->supportsTTL() ){
+if( $skip_expiration_tests || ! method_exists( $cache, 'supportsTTL') || ! $cache->supportsTTL() ){
     Tap::ok(TRUE, 'skipping expire test');
 } else {
     Time::offset(11);    

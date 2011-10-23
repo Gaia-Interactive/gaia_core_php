@@ -1,9 +1,9 @@
 <?php
 include_once __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
-use Gaia\Store\Internal;
+use Gaia\Store\KVP;
 Tap::plan(6);
-$c = new Internal();
+$c = new KVP();
 foreach( array('result_set', 'result_get', 'result_isset', 'result_unset') as $key ){
     $$key = array();
 }

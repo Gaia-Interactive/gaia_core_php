@@ -7,7 +7,7 @@ use Gaia\Time;
 
 Tap::plan(1);
 
-$cache = new Store\ContainerTTL;
+$cache = new Store\KvpTTL;
 $scope = 'floodcontrol/test/userid-' . microtime(TRUE) .'/';
 $fc = new Store\FloodControl( $cache, array('scope'=>$scope, 'max'=>2 ) );
 $actual = array();

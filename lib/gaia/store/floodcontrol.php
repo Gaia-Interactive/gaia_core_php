@@ -28,7 +28,7 @@ class FloodControl {
 	 *  @param (int) $short - minimum time between events - you probably want 1 second here and it can't be 00001
 	 */
     public function __construct( Iface $core, $options = NULL ){
-		$options = new Container( $options );
+		if( ! $options instanceof Iface ) $options = new KVP( $options );
 		if( ! $options->scope ) throw new Exception('invalid flood-control scope');
 		if( ! $options->max ) $options->max = 1;
 	    if( ! $options->short ) $options->short = 1;

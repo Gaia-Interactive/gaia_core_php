@@ -8,7 +8,7 @@ $limit = 10;
 
 Tap::plan(1);
 
-$cache = new Store\ContainerTTL;
+$cache = new Store\KvpTTL;
 $app = 'test/cache/stack/' . microtime(TRUE) .'/';
 $cl = new Store\Stack( $cache );
 $values = array();

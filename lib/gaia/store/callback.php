@@ -6,7 +6,7 @@ class Callback extends Wrap
 
     public function __construct( $core, $options ){
         parent::__construct( $core );
-        if( ! $options instanceof Container ) $options = new Container( $options );
+        if( ! $options instanceof Iface ) $options = new KVP( $options );
         $this->options = $options;
     }
 

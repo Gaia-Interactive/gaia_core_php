@@ -39,7 +39,7 @@ class TestData {
 
 $ids = array('1', '2');
 
-$m = new Store\Queue( new Store\ContainerTTL() );
+$m = new Store\Queue( new Store\KvpTTL() );
 $t = new TestData();
 
 $options = array(
@@ -143,13 +143,13 @@ $options = array(
             'timeout'=>50,
 );
 
-$m = new Store\Callback( new Store\ContainerTTL, $options);
+$m = new Store\Callback( new Store\KvpTTL, $options);
 
 $res = $m->get(array(1,2) );
 Tap::is($res, array(1=>1, 2=>2), 'Store\Callback returned expected results');
 
 
-$m = new Store\Callback( new Store\Gate(new Store\ContainerTTL), $options);
+$m = new Store\Callback( new Store\Gate(new Store\KvpTTL), $options);
 $t = new TestData();
 
 $res = $m->get(array(1,2) );

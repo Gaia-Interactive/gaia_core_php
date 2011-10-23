@@ -1,7 +1,7 @@
 <?php
 namespace Gaia\Store;
 
-class Options extends Container {
+class Options extends KVP {
 
     public function __construct( array $options ){
         $this->cache_missing = FALSE;
