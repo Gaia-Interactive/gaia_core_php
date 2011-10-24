@@ -3,14 +3,14 @@
 include_once __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\NewID;
-use Gaia\Cache;
+use Gaia\Store;
 Tap::plan(4);
 
 
 // on production should always use memcache pointing at a global pool of cache servers
 // consistent with all the webservers in the farm, but for this test, I can cheat and use the mock
 // since it only applies to this local test and the interface is the same.
-$cache = new Cache\Prefix( new Cache\Mock, 'test');
+$cache = new Store\KVP;
 
 
 $new = new NewId\TimeRandLock( $cache );

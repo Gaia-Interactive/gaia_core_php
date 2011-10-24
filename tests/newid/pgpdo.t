@@ -20,7 +20,7 @@ Tap::plan(4);
 
 $db = new PDO('pgsql:host=127.0.0.1;dbname=test;port=5432');
 $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT );
-$cache = new Cache\Mock();
+$cache = new Store\KVP();
 $app = 'test';
 $new = new NewId\PgPDO( $app, $db, $cache );
 $res = $new->testInit();

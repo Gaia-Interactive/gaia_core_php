@@ -3,7 +3,7 @@
 include_once __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\NewID;
-use Gaia\Cache;
+use Gaia\Store;
 
 if( ! class_exists('\MySQLi') ){
     Tap::plan('skip_all', 'php-mysqli not installed');
@@ -21,7 +21,7 @@ $db = new MySQLi(
                 $pass = NULL, 
                 $dbname = 'test', 
                 '3306');
-$cache = new Cache\Mock();
+$cache = new Store\KVP();
 $app = 'test';
 $new = new NewId\MySQLi( $app, $db, $cache );
 $res = $new->testInit();

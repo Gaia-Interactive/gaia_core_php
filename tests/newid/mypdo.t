@@ -3,7 +3,7 @@
 include_once __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\NewID;
-use Gaia\Cache;
+use Gaia\Store;
 
 if( ! class_exists('\PDO') ){
     Tap::plan('skip_all', 'php-pdo not installed');
@@ -22,7 +22,7 @@ Tap::plan(4);
 
 $db = new \PDO('mysql:host=127.0.0.1;dbname=test;port=3306');
 $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT );
-$cache = new Cache\Mock();
+$cache = new Store\KVP();
 $app = 'test';
 $new = new NewId\MyPDO( $app, $db, $cache );
 $res = $new->testInit();
