@@ -90,8 +90,6 @@ class Persistence extends \BaseFacebook
         $k = $this->persistentVariableName( $k );
         if( ! $k ) return;
         $res = ($v === NULL) ? $this->store->delete( $k ) : $this->store->set( $k, $v );
-        var_dump( $this->store );
-    
     }
     
     // get persistent data out of the cookie.
