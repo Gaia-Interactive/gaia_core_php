@@ -6,7 +6,7 @@ class Cookie implements Iface {
 
     protected $config;
     
-    public function __construct( Iface $config = NULL ){
+    public function __construct( $config = NULL ){
         $config = $config instanceof Iface ? $config : new KVP( $config );
         if( ! isset( $config->prefix ) ) $config->prefix = md5(get_class( $this ));
         if( ! isset( $config->path ) ) $config->path = '/';
