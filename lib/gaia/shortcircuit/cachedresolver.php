@@ -1,6 +1,6 @@
 <?php
 namespace Gaia\ShortCircuit;
-use Gaia\StorageIface;
+use Gaia\Store;
 
 /**
 * allows us to cache the results of the resolver so we don't have to do expensive file I/O every
@@ -26,7 +26,7 @@ class CachedResolver implements Iface\Resolver
     /**
     * class constructor.
     */
-    public function __construct( Iface\Resolver $resolver , StorageIface $cache){
+    public function __construct( Iface\Resolver $resolver , Store\Iface $cache){
         $this->cache = $cache;
         $this->core = $resolver;
     }

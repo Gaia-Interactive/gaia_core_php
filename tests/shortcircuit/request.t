@@ -3,7 +3,7 @@
 include_once __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\ShortCircuit\Request;
-use Gaia\Input;
+use Gaia\ShortCircuit\Input;
 Tap::plan(9);
 
 $_REQUEST = array('test'=>'1');

@@ -5,13 +5,13 @@ use Gaia\Test\Tap;
 use Gaia\ShortCircuit\Resolver;
 use Gaia\ShortCircuit\PatternResolver;
 use  Gaia\ShortCircuit\CachedResolver;
-use Gaia\Cache\Mock;
+use Gaia\Store\KVP;
 Tap::plan(27);
-$r = new CachedResolver( new Resolver, new Mock);
+$r = new CachedResolver( new Resolver, new KVP);
 
 Tap::ok($r instanceof \Gaia\ShortCircuit\Iface\Resolver, 'able to instantiate the resolver');
 Tap::is($r->appdir(), '', 'by default, nothing in appdir');
-$r = new CachedResolver( new Resolver('test'), new Mock );
+$r = new CachedResolver( new Resolver('test'), new KVP );
 Tap::is( $r->appDir(), 'test', 'arg passed to constructor sets appdir');
 $r->setAppDir('test2');
 Tap::is( $r->appdir(), 'test2', 'setAppDir() method changes appdir');
