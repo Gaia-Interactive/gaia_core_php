@@ -1,6 +1,7 @@
 <?php
-namespace Gaia;
-Interface  StorageIface {
+namespace Gaia\Store;
+
+Interface  Iface {
     public function set($name, $value);
     public function get($name);
     public function add( $key, $value );
@@ -13,4 +14,6 @@ Interface  StorageIface {
     public function __get( $k );
     public function __unset( $k );
     public function __isset( $k );
+    public function flush();
+    public function ttlEnabled();
 }
