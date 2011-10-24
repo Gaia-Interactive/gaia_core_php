@@ -18,7 +18,7 @@ if( ! class_exists('BaseFacebook') ){
     Tap::plan('skip_all', 'basefacebook class not loaded.');
 }
 
-$config = @include __DIR__ . '/config.php';
+$config = @include __DIR__ . '/.config.php';
 try {
     
     $fb = new FacebookAPI( new Gaia\Facebook\NoAuth(), $cache = new KVP() );
