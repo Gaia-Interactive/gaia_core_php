@@ -1,70 +1,8 @@
 <?php
 namespace Gaia;
+use Gaia\Store\KVP;
 
-class Container implements \Iterator {
- /**
-    * internal data storage
-    */
-    protected $__d = array();
-    
-    public function __construct( $input = NULL ){
-        $this->load( $input );
-    }
-    
-    public function set($name, $value){
-        return $this->__d[ $name ] = $value;
-    }
-    
-    public function increment($name, $value = 1) {
-        if(! isset($this->__d[$name]) ) $this->__d[$name] = 0;
-        return $this->__d[$name] += $value;
-    }
-    
-    public function decrement($name, $value = 1) {
-        if(! isset($this->__d[$name]) ) $this->__d[$name] = 0;
-        return $this->__d[$name] -= $value;
-    }
-    
-    public function add( $name, $value, $ttl = 0 ){
-        if( $this->__isset( $name ) ) return FALSE;
-        return $this->set( $name, $value, $ttl );
-    }
-    
-    public function replace( $name, $value, $ttl = 0 ){
-        if( ! $this->__isset( $name ) ) return FALSE;
-        return $this->set( $name, $value, $ttl );
-    }
-    
-    public function append($name, $value){
-        if( ! isset($this->__d[$name]) ) return $this->__d[$name] = array($value);
-        if( is_scalar($this->__d[$name]) ) return $this->__d[$name] .= $value;
-        if( ! is_array($this->__d[$name]) ) return $this->__d[$name] = array($value);
-        return $this->__d[$name][] = $value;
-    }
-    
-    public function get($name){
-        if( is_array( $name ) ){
-            $res = array();
-            foreach( $name as $_k ){
-                $v = $this->__get( $_k );
-                if( $v === NULL ) continue;
-                $res[ $_k ] = $v;
-            }
-            return $res;
-        }
-        if( ! is_scalar( $name ) ) return NULL;
-        return isset( $this->__d[ $name ] ) ? $this->__d[ $name ] : NULL;
-
-    }
-    
-    public function delete($name){
-        unset( $this->__d[ $name ] );
-        return TRUE;
-    }
-    
-    public function flush(){
-        $this->__d = array();
-    }
+class Container extends KVP implements \Iterator {
     
     public function isEmpty( $name ){
         if( ! isset( $this->__d[$name] ) ) return TRUE;
@@ -199,56 +137,5 @@ class Container implements \Iterator {
     **/
     public function krsort($sort_flags = NULL){
         return krsort($this->__d, $sort_flags);
-    }
-    
-   /**
-    * @see http://www.php.net/manual/en/function.array-values.php
-    **/
-    public function values(){
-        return array_values( $this->__d );
-    }
-    
-   /**
-    * @see http://www.php.net/oop5.magic
-    */
-    public function __set( $k, $v ){
-        return $this->set( $k, $v );
-    }
-    
-   /**
-    * @see http://www.php.net/oop5.magic
-    */
-    public function __get( $k ){
-        return $this->get( $k );
-    }
-    
-   /**
-    * @see http://www.php.net/oop5.magic
-    */
-    public function __unset( $k ){
-        $this->delete( $k );
-    }
-    
-   /**
-    * @see http://www.php.net/oop5.magic
-    */
-    public function __isset( $k ){
-        return ( $this->get( $k ) !== NULL ) ? TRUE  : FALSE;
-    }
-     
-         
-   /**
-    * if we try to print the object, give something easier to scan.
-    */
-    public function __toString(){
-        $out = get_class( $this ) . " {\n";
-        foreach( $this->__d as $k=>$v ){
-            if( ! is_scalar( $v ) ) $v = print_r( $v, TRUE);
-            if( ( $len = strlen( $v ) ) > 100 ) $v = substr($v, 0, 100) . '... (' . $len . ')';
-            $v = str_replace("\n", '\n',  str_replace("\r", '\r', $v));
-            $out .= '    [' . $k . '] => ' . $v . "\n";
-        }
-        $out .= "}\n";
-        return $out;
     }
 }
