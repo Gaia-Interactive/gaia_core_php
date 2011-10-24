@@ -1,8 +1,8 @@
 <?php
-namespace Gaia\Cache;
-use Gaia\StorageIface as Iface;
+namespace Gaia\Facebook;
+use Gaia\Store;
 
-class Facebook {
+class ApiCache {
 
     protected $facebook;
     protected $cache;
@@ -21,9 +21,9 @@ class Facebook {
     
     public static $RETRIES = 3;
     
-    public function __construct( \BaseFacebook $facebook, Iface $cache ){
+    public function __construct( \BaseFacebook $facebook, Store\Iface $cache ){
         $this->facebook = $facebook;
-        $this->cache = new Prefix( $cache, __CLASS__);
+        $this->cache = $cache;
     }
     
     public function __call( $method, $args ){
