@@ -3,7 +3,7 @@
 include_once __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\NewID;
-use Gaia\Cache;
+use Gaia\Store;
 
 if( ! class_exists('\PDO') ){
     Tap::plan('skip_all', 'php-pdo not installed');
