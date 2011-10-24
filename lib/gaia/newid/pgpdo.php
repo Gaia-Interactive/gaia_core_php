@@ -2,7 +2,7 @@
 namespace Gaia\NewID;
 use Gaia\Exception;
 use Gaia\Cache;
-use Gaia\StorageIface;
+use Gaia\Store;
 
 class PgPDO implements Iface {
 
@@ -10,7 +10,7 @@ class PgPDO implements Iface {
     protected $db;
     protected $cache;
     
-    public function __construct($app, \PDO $db,StorageIface $cache = NULL ){
+    public function __construct($app, \PDO $db, Store\Iface $cache = NULL ){
         $driver = $db->getAttribute(\PDO::ATTR_DRIVER_NAME);
         if( $driver !== 'pgsql' ) {
             trigger_error('invalid pdo', E_USER_ERROR);
@@ -20,7 +20,7 @@ class PgPDO implements Iface {
         if( ! preg_match('/^[a-z0-9_]+$/', $app) ) throw new Exception('invalid-app');
         $this->app = $app; 
         if( ! $cache ) $cache = new Cache\Mock;
-        $this->cache = new Cache\Prefix( $cache, __CLASS__ . '/' . $app);
+        $this->cache = new Store\Prefix( $cache, __CLASS__ . '/' . $app);
 
     }
 
