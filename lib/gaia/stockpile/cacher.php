@@ -1,8 +1,7 @@
 <?php
 namespace Gaia\Stockpile;
-use \Gaia\Cache;
+use \Gaia\Store;
 use \Gaia\DB\Transaction;
-use \Gaia\StorageIface;
 
 /**
  * A wrapper class for stockpile that caches the results.
@@ -36,13 +35,13 @@ class Cacher extends Passthru {
     * this callback only occur once for each unique combination since the transaction onRollback
     * handler makes sure of this.
     */
-    public function __construct( Iface $core, StorageIface $cacher ){
+    public function __construct( Iface $core, Store\Iface $cacher ){
         parent::__construct( $core );
         
         $app = $this->app();
         $user_id = $this->user();
         $core_type = $this->coreType();
-        $cacher = new Cache\Prefix($cacher,  'stockpile/' . $app . '/' . $user_id . '/' . $core_type . '/');
+        $cacher = new Store\Prefix($cacher,  'stockpile/' . $app . '/' . $user_id . '/' . $core_type . '/');
         $this->cacher = $cacher;
         if( $this->inTran() ){
             Transaction::onRollback( array( $this->cacher, 'delete'), array(self::INDEX_CACHEKEY) );
@@ -117,7 +116,7 @@ class Cacher extends Passthru {
             'timeout' => $timeout, // how long do we want the data cached?
             'cache_missing'=> TRUE, // missing keys are stored in the cache, so we don't keep hitting the db.
         );
-        $cb = new Cache\Callback( $cache, $options );
+        $cb = new Store\Callback( $cache, $options );
         $result = $cb->get( $ids );
         if( ! is_array( $result ) ) $result = array();
         foreach( $result as $item=>$quantity ) {
@@ -189,7 +188,7 @@ class Cacher extends Passthru {
     protected function writeToCache($item_id, $total ){
         $cache = $this->cacher;
         $timeout = $this->cacheTimeout();
-        $cache->set( $item_id, Base::quantify( $total ) > 0 ? $total : Cache\Callback::UNDEF, $timeout );
+        $cache->set( $item_id, Base::quantify( $total ) > 0 ? $total : Store\Callback::UNDEF, $timeout );
         if( $this->inTran() ){
             Transaction::onRollback( array( $cache, 'delete'), array($item_id) );
             Transaction::onRollback( array( $this, 'lastTouch'), array(TRUE) );

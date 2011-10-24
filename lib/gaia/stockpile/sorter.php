@@ -1,6 +1,6 @@
 <?php
 namespace Gaia\Stockpile;
-use \Gaia\Cache;
+use \Gaia\Store;
 use \Gaia\DB\Transaction;
 
 /**
@@ -21,13 +21,13 @@ class Sorter extends Passthru {
     * this callback only occur once for each unique combination since the transaction onRollback
     * handler makes sure of this.
     */
-    public function __construct( Iface $core, Cache\Iface $cacher = NULL ){
+    public function __construct( Iface $core, Store\Iface $cacher = NULL ){
         parent::__construct( $core );
         if( ! $cacher ) return;
         $app = $this->app();
         $user_id = $this->user();
         $core_type = $this->coreType();
-        $cacher =  new Cache\Prefix($cacher,  'stockpile/sort/' . $app . '/' . $user_id . '/');
+        $cacher =  new Store\Prefix($cacher,  'stockpile/sort/' . $app . '/' . $user_id . '/');
         $this->cacher = $cacher;
     }
     
@@ -95,7 +95,7 @@ class Sorter extends Passthru {
                 'timeout' => $timeout, // how long do we want the data cached?
                 'cache_missing'=> TRUE, // missing keys are stored in the cache, so we don't keep hitting the db.
             );
-            $cacher = new Cache\Callback( $this->cacher, $options );
+            $cacher = new Store\Callback( $this->cacher, $options );
             $result = $cacher->get( $ids );
         } else {
             $result = $this->fetchPos( $ids );

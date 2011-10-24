@@ -3,7 +3,7 @@ namespace Gaia\Stockpile\Storage\MyPDO;
 use \Gaia\DB\Driver\PDO;
 use \Gaia\Stockpile\Exception;
 use \Gaia\Stockpile\Storage\Iface;
-use \Gaia\Cache;
+use \Gaia\Store;
 
 class Core implements Iface {
     protected $db;
@@ -14,7 +14,7 @@ class Core implements Iface {
         $this->app = $app;
         $this->user_id = $user_id;
         if( ! \Gaia\Stockpile\Storage::isAutoSchemaEnabled() ) return;
-        $cache = function_exists('apc_fetch') ? new Cache\Gate( new Cache\Apc() ) : new Cache\Mock;
+        $cache = function_exists('apc_fetch') ? new Store\Gate( new Store\Apc() ) : new Store\KVP;
         $key = 'stockpile/storage/__create/' . md5( $dsn . '/' . $app . '/' . get_class( $this ) );
         if( $cache->get( $key ) ) return;
         if( ! $cache->add( $key, 1, 60 ) ) return;
