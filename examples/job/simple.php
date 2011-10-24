@@ -6,7 +6,6 @@ use Gaia\Job;
 use Gaia\Job\Runner;
 use Gaia\Job\Config;
 use Gaia\Pheanstalk;
-use Gaia\Debugger;
 use Gaia\Http;
 
 set_time_limit(0);
@@ -64,11 +63,14 @@ $start = microtime(TRUE);
 $runner->watch($queue);
 $runner->setTimelimit(20);
 $runner->setMax(10);
-$debugger = new Debugger();
 
-$runner->attachDebugger( $debugger );
-print "\nkicking off job runner ... \n";
-
+$runner->attachDebugger( $debugger = function ( $v ){
+    if( $v instanceof Exception ) $v = $v->__toString();
+    if( ! is_scalar( $v ) ) strval( $v );
+    $dt =  "\n[" . date('H:i:s') . '] ';        
+    echo( $dt . str_replace("\n", $dt, trim( $v )) );
+});
+$debugger("kicking off job runner ...\n---------------------");
 Job::config()->setHandler( 
     function( Http\Request $request ) use( $debugger ){
         $out = "\nHTTP";
@@ -87,7 +89,7 @@ Job::config()->setHandler(
             $out .= "\n" . $info->response_header . $info->body;
             $out .= "\n------\n";
         }
-        $debugger->render( $out );
+        $debugger( $out );
     }
 );
 

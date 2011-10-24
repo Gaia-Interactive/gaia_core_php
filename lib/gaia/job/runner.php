@@ -133,8 +133,8 @@ class Runner {
             }
                 
             if( ( $time - 2 ) >= $this->lastrun ) {
-                if( $this->debug ) $this->debug->render('maintenance tasks');
-                if( $this->debug) $this->debug->render('jobs running: ' . count( $this->pool->requests() ) );
+                if( $this->debug ) call_user_func( $this->debug, 'maintenance tasks');
+                if( $this->debug) call_user_func( $this->debug, 'jobs running: ' . count( $this->pool->requests() ) );
         
                 $this->syncwatch();
                 $this->lastrun = $time;
@@ -143,7 +143,7 @@ class Runner {
                     foreach( $this->tasks as $cb ) call_user_func( $cb, $this );
                     
                 } catch( Exception $e ){
-                    $this->debug->render( $e->__toString());
+                    call_user_func( $this->debug,  $e->__toString());
                 }
             }
             if( $this->active && ! $this->pool->select(1) ) sleep(1);
@@ -285,7 +285,7 @@ class Runner {
                         
             if( $this->active && count( $this->queue ) < $this->max ){
                 $ct = $this->max;
-                if( $this->debug) $this->debug->render('starting dequeue: '.count( $this->queue ));
+                if( $this->debug) call_user_func( $this->debug, 'starting dequeue: '.count( $this->queue ));
                 $conns = Job::config()->connections();
                 $keys = array_keys( $conns );
                 shuffle( $keys ); 
@@ -305,24 +305,24 @@ class Runner {
                         if( $ct-- < 1 ) break 2;
                     }
                 }                
-                if( $this->debug) $this->debug->render('ending dequeue: ' . count( $this->queue ) );
+                if( $this->debug) call_user_func( $this->debug, 'ending dequeue: ' . count( $this->queue ) );
             }
             
             while( count( $this->pool->requests() ) <  $this->max ){
                 if( ! ( $job = array_shift( $this->queue ) ) ) break;
                 if( ! $job instanceof Job ) {
-                    if( $this->debug ) $this->debug->render( $job );
+                    if( $this->debug ) call_user_func( $this->debug,  $job );
                     continue;
                 }
                 try { 
                     $this->pool->add( $job );
                 } catch( Exception $e ){
-                    if( $this->debug ) $this->debug->render( $e );
+                    if( $this->debug ) call_user_func( $this->debug,  $e );
                 }
             }
             return TRUE;
          } catch( Exception $e ){
-            $this->debug->render( $e );
+            call_user_func( $this->debug,  $e );
             return FALSE;
          }
     }
@@ -335,9 +335,9 @@ class Runner {
 		if( ! $this->active ) return;
 		$this->active = FALSE;
 		while( $job = array_pop( $this->queue ) ) $this->pool->add( $job );
-		if( $this->debug ) $this->debug->render('calling http\pool::finish');
+		if( $this->debug ) call_user_func( $this->debug, 'calling http\pool::finish');
 		$this->pool->finish();
-		if( $this->debug ) $this->debug->render('http\pool::finish done');
+		if( $this->debug ) call_user_func( $this->debug, 'http\pool::finish done');
 	}
 	
 	/**
@@ -358,8 +358,8 @@ class Runner {
 	/**
 	* attach a debugger.
 	*/
-	public function attachDebugger( Debugger $debug ){
-	    $this->debug = $debug;
+	public function attachDebugger( $debug ){
+	    if( is_callable( $debug ) ) $this->debug = $debug;
 	}
 }
 // EOC

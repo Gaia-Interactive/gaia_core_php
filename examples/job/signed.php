@@ -7,7 +7,6 @@ use Gaia\Job\Runner;
 use Gaia\Job\Config;
 use Gaia\Pheanstalk;
 use Gaia\Nonce;
-use Gaia\Debugger;
 $queue = 'signedtest';
 
 set_time_limit(0);
@@ -22,11 +21,16 @@ if( ! @fsockopen('127.0.0.1', '11299')) {
 
 
 
+$debugger = function ( $v ){
+    if( $v instanceof Exception ) $v = $v->__toString();
+    if( ! is_scalar( $v ) ) strval( $v );
+    $dt =  "\n[" . date('H:i:s') . '] ';        
+    echo( $dt . str_replace("\n", $dt, trim( $v )) );
+};
 
-
-print "\nInstantiating job runner ... \n";
+$debugger( "\nInstantiating job runner ... \n");
 $runner = new Runner();
-$debugger = new Debugger;
+
 $nonce = new Nonce('test001');
 
 $config = Job::config();
@@ -58,7 +62,7 @@ $config->setHandler( function($job, $response ) use ($runner, $debugger) {
     if( $info->http_code != 200 ) $out .= '-ERR';
     $out .= ": " . $info->url;
     if( $info->http_code == 200 ) {
-        $debugger->render( $out );
+        $debugger( $out );
         return;
     }
     
@@ -73,7 +77,7 @@ $config->setHandler( function($job, $response ) use ($runner, $debugger) {
         $out .= "\n" . $info->response_header . $info->body;
         $out .= "\n------\n";
     }
-    $debugger->render( $out );
+    $debugger( $out );
     
 });
 
@@ -99,7 +103,7 @@ $runner->addTask(
 
 
 $ct = $runner->flush($queue);
-print "\nJOBS flushed from the queue before starting: $ct\n";
+$debugger( "JOBS flushed from the queue before starting: $ct");
 
 
 
@@ -109,7 +113,7 @@ for( $i = 0; $i < 5000; $i++){
     $job->queue = $queue;
     $id = $job->store();
     $elapsed = number_format( microtime(TRUE) - $start, 3);
-    print "\nSTORE " . $id . ' ' . $elapsed . 's';
+    $debugger( "STORE " . $id . ' ' . $elapsed . 's');
 }
 
 $runner->watch($queue);
@@ -119,7 +123,7 @@ $runner->setMax(10);
 declare(ticks = 1);
 
 // signal handler function
-$sig_handler = function ($signo) use ($runner, $start){
+$sig_handler = function ($signo) use ($runner, $start, $debugger){
 
      switch ($signo) {
          case SIGTERM:
@@ -127,11 +131,11 @@ $sig_handler = function ($signo) use ($runner, $start){
          case SIGHUP:
 
              // handle shutdown tasks
-             echo "\nEXITING ... \nFinishing jobs in queue ...\n";
+             $debugger( "EXITING ... \nFinishing jobs in queue ...");
              sleep(1);
              $runner->shutdown();
              $elapsed = number_format( microtime(TRUE) - $start, 3);
-             print "\nDONE: $elapsed\n";
+             $debugger("DONE: $elapsed");
              exit;
              break;
          default:
@@ -142,7 +146,7 @@ $sig_handler = function ($signo) use ($runner, $start){
 
 if( function_exists('pcntl_signal')){
 
-    echo "\nInstalling signal handler...\n";
+    $debugger( "Installing signal handler...");
     
     // setup signal handlers
     pcntl_signal(SIGTERM, $sig_handler);
@@ -156,4 +160,4 @@ $runner->process();
 $elapsed = number_format( microtime(TRUE) - $start, 3);
 
 
-print "\nDONE: $elapsed\n";
+$debugger( "\nDONE: $elapsed\n");
