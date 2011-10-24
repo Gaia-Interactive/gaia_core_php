@@ -4,12 +4,12 @@ include __DIR__ . '/common.php';
 
 use Gaia\Test\Tap;
 use Gaia\ShortCircuit;
-use Gaia\Cache;
+use Gaia\Store;
 
 Tap::plan(2);
 $_SERVER['REQUEST_URI'] = '/';
 $resolver = new ShortCircuit\Resolver(__DIR__ . '/app/');
-$resolver = new ShortCircuit\CachedResolver( $resolver, new Cache\Mock );
+$resolver = new ShortCircuit\CachedResolver( $resolver, new Store\KVP );
 ShortCircuit\Router::resolver( $resolver );
 ob_start();
 $start = microtime(TRUE);
