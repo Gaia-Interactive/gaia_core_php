@@ -59,7 +59,8 @@ class Container extends KVP implements \Iterator {
     
     public function each(){
         $key = $this->key();
-        if( $key === FALSE ) return FALSE;
+        if( $key === NULL ) return FALSE;
+        $this->next();
         return array( $key, $this->get($key) );
     }
     
@@ -85,8 +86,7 @@ class Container extends KVP implements \Iterator {
     * @see http://www.php.net/manual/en/function.array-push.php
     **/
     public function push($v){
-        $keys = $this->keys();
-        return $this->{count( $keys ) > 0 ? max($keys) + 1 : 0} = $v;
+        return array_push($this->__d, $v );
     }
     
    /**
@@ -107,8 +107,7 @@ class Container extends KVP implements \Iterator {
     * @see http://www.php.net/manual/en/function.array-unshift.php
     **/
     public function unshift($v){
-        $keys = $this->keys();
-        return $this->{count( $keys ) > 0 ? min($keys) -1 : 0} = $v;
+        return array_unshift( $this->__d, $v );
     }
     
    /**
