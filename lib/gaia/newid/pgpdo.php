@@ -1,7 +1,6 @@
 <?php
 namespace Gaia\NewID;
 use Gaia\Exception;
-use Gaia\Cache;
 use Gaia\Store;
 
 class PgPDO implements Iface {
@@ -19,7 +18,7 @@ class PgPDO implements Iface {
         $this->db = $db;
         if( ! preg_match('/^[a-z0-9_]+$/', $app) ) throw new Exception('invalid-app');
         $this->app = $app; 
-        if( ! $cache ) $cache = new Cache\Mock;
+        if( ! $cache ) $cache = new Store\KVP;
         $this->cache = new Store\Prefix( $cache, __CLASS__ . '/' . $app);
 
     }
