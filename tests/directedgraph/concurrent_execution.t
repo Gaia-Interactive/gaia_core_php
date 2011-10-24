@@ -55,7 +55,8 @@ class Join extends Node {
         $this->parentReactivationEvent = $event;
     }
     
-    public function execute(ExecutionPath $execution) {
+    public function execute(Execution $execution) {
+        if( ! $execution instanceof ExecutionPath ) throw new Exception('invalid execution path');
         // mark the execution path that arrives in this join as 'ended'
         $execution->end();
         $hasActiveSibling = false;
