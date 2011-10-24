@@ -16,6 +16,8 @@ class GoogleMaps {
     
     public static $time_offset = 0;
     
+    protected static $cache;
+    
     public static function getDirections( $origin, $destination, $waypoints = NULL ){
         $qs = http_build_query(array('origin'=>$origin, 'destination'=>$destination, 'waypoints'=>$waypoints, 'sensor'=>'false'));
         $cachekey = md5($qs);
@@ -47,7 +49,8 @@ class GoogleMaps {
     }
 
     protected static function cache(){
-        return new Store\KVP;
+        if( isset( self::$cache ) ) return self::$cache;
+        return self::$cache = new Store\KVP;
     }
     
     protected static function time(){
