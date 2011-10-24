@@ -54,6 +54,7 @@ modifications for gaiaonline.com by John Loehrer <jloehrer@gaiaonline.com>
  * 
  */
  namespace Gaia;
+ use Gaia\Store\KVP;
  
  class Instrumentation {
 
@@ -94,11 +95,14 @@ modifications for gaiaonline.com by John Loehrer <jloehrer@gaiaonline.com>
      * Any counters on the blacklist will not be added.
      */
     public static function export_counters() {
-        if( ! function_exists('apache_setenv') || config()->get('instrumentation_export_disable') ) return;
+        if( ! function_exists('apache_setenv') ) return;
         apache_setenv('php_instrumented', 1, true);
         $data = self::data()->all();
         $data['basedir'] = DIR_BASE;
         apache_setenv("php_instrumented_json", json_encode( $data ));
+        foreach( $data as $k => $v ){
+            apache_setenv("php_instrumented_" . $k, is_scalar($v) ? $v : json_encode($v) );
+        }
     }
 
 
@@ -160,26 +164,8 @@ modifications for gaiaonline.com by John Loehrer <jloehrer@gaiaonline.com>
     public static function all(){ return self::data()->all();}
     public static function data() {
         if ( self::$data !== NULL ) return self::$data;
-        return self::$data = new Container( array(
-                'request_id' => NULL,
-                'mysql_query_count' => 0,
-                'mysql_conn_count' => 0,
-                'mysql_conn_time' => 0, 
-                'mysql_query_time' => 0, 
-                'mc_delete_count' => 0,
-                'mc_delete_time' => 0,
-                'mc_miss_count' => 0, 
-                'mc_get_count' => 0, 
-                'mc_getkey_count' => 0, 
-                'mc_get_time' => 0,
-                'mc_set_count' => 0,
-                'mc_set_time' => 0,
-                'mc_add_count' => 0,
-                'mc_add_time' => 0,
-                'mc_replace_count' => 0,
-                'mc_replace_time' => 0,
-                'mc_increment_count' => 0,
-                'mc_increment_time' => 0,           
+        return self::$data = new KVP( array(
+                'request_id' => NULL,        
             ));
     }
 }
