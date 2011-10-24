@@ -5,7 +5,7 @@ namespace Gaia\Stockpile;
 function memcache(){
     static $cacher;
     if( isset( $cacher ) ) return $cacher;
-    $cacher = new \Gaia\Cache\Memcache;
+    $cacher = new \Gaia\Store\Memcache;
     $cacher->addServer('127.0.0.1', '11211');
     return $cacher;
 }
@@ -13,7 +13,7 @@ function memcache(){
 function cachemock(){
     static $cacher;
     if( isset( $cacher ) ) return $cacher;
-    $cacher = new \Gaia\Cache\Mock;
+    $cacher = new \Gaia\Store\KVP;
     return $cacher;
 }
 

@@ -1,6 +1,5 @@
 <?php
 namespace Gaia\Stockpile;
-use \Gaia\Cache;
 use \Gaia\DB\Transaction;
 
 /**
