@@ -1,8 +1,5 @@
 <?php
 namespace Gaia\ShortCircuit;
-
-use Gaia\Input;
-
 /**
  * CircuitRequest
  * @package CircuitMVC
