@@ -14,9 +14,7 @@ if( ! class_exists('\PDO') ){
 
 Tap::plan(3);
 
-$db = new DB\Except( $mock = new DB\Mock( function($method, $args){
-    return FALSE;
-}));
+$db = new DB\Except( $mock = new DB\Callback());
 
 $err = '';
 
@@ -33,9 +31,9 @@ Tap::like( $err, '/database error/i', 'except wrapping db object, on query failu
 Tap::is( $debug, array('db'=>$mock, 'query'=>'test', 'exception'=>null), 'debug attached properly to exception');
 
 
-$db = new DB\Except( $mock = new DB\Mock( function($method, $args){
+$db = new DB\Except( $mock = new DB\Callback(array('execute'=> function($query){
     return TRUE;
-}));
+})));
 
 $err = '';
 
