@@ -18,6 +18,7 @@ class Apc implements Iface {
         if( $this->core ) return $this->core->get( $request );
         $res = apc_fetch( $request );
         if( is_array( $request ) && ! is_array( $res ) ) $res = array();
+        //if( $res === FALSE ) return NULL;
         return $res;
     }
     

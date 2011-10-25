@@ -23,7 +23,7 @@ class Cookie implements Iface {
             return $res;
         }
         $key = $this->config->prefix . $k;
-        if( ! isset( $_COOKIE[ $key ] ) ) return FALSE;
+        if( ! isset( $_COOKIE[ $key ] ) ) return NULL;
         return $_COOKIE[ $key ];
     }
     
