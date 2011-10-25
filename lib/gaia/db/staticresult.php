@@ -2,8 +2,13 @@
 namespace Gaia\DB;
 use \PDO;
 
-class MockResult {
-
+class StaticResult {
+    /***
+    * The rows of data
+    * @type array
+    ***/    
+    protected $rows = array();
+    
     public function __construct( array $rows = NULL){
         if( $rows ) $this->rows = $rows;
     }
@@ -106,13 +111,6 @@ class MockResult {
     public function closeCursor(){
         return $this->free();
     }
-        
-    /***
-    * The rows of data
-    * @type array
-    ***/    
-    protected $rows = array();
-    
     
     public function __call( $method, array $args ){
         return FALSE;
