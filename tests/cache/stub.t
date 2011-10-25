@@ -6,7 +6,7 @@ use Gaia\Cache;
 use Gaia\Store;
 
 # make sure all the stub classes work
-Tap::plan(15);
+Tap::plan(16);
 
 Tap::ok( new Cache\Callback( new Store\KVP, function(){}) instanceof Store\Callback, 'callback inherited from store');
 Tap::ok( new Cache\Disabled() instanceof Store\Disabled, 'disabled inherited from store');
@@ -23,3 +23,4 @@ Tap::ok( new Cache\Revision(new Store\KVP) instanceof Store\Revision, 'revision 
 Tap::ok( new Cache\Session(new Store\KVP) instanceof Store\Session, 'session inherited from store');
 Tap::ok( new Cache\Stack(new Store\KVP) instanceof Store\Stack, 'stack inherited from store');
 Tap::ok( new Cache\Wrap(new Store\KVP) instanceof Store\Wrap, 'wrap inherited from store');
+Tap::ok( new Cache\Facebook(new \Gaia\Facebook\NoAuth, new Store\KVP) instanceof Gaia\Facebook\APICache, 'facebook inherited from apicache');
