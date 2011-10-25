@@ -18,9 +18,9 @@ class Replica implements Iface {
     
     public function get( $request ){
         if( is_array( $request ) ) return $this->getMulti( $request );
-        if( ! is_scalar( $request ) ) return FALSE;
+        if( ! is_scalar( $request ) ) return NULL;
         $res = $this->getMulti( array( $request ) );
-        if( ! isset( $res[ $request ] ) ) return FALSE;
+        if( ! isset( $res[ $request ] ) ) return NULL;
         return $res[ $request ];
     }
     
