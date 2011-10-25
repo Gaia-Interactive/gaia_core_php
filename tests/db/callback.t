@@ -13,11 +13,11 @@ if( ! class_exists('\PDO') ){
 }
 
 DB\Connection::load( array(
-    'test'=> function(){return new DB\Mock();}
+    'test'=> function(){return new DB\Callback();}
 ));
 $db = DB\Connection::instance('test');
 
-Tap::plan(27);
+Tap::plan(28);
 Tap::ok( DB\Connection::instance('test') === $db, 'db instance returns same object we instantiated at first');
 
 Tap::is( DB\Connection::instances(), array('test'=>$db), 'Connection::instances() returns test db object');
@@ -26,27 +26,21 @@ DB\Connection::reset();
 
 Tap::is( DB\Connection::instances(), array(), 'after reset, no more test connection cached in instances');
 
-$db = new DB\Mock( function($method, $args){
-    if( $method == 'execute' ) {
-        return new DB\MockResult( array(array('foo'=>'dummy\'', 'bar'=>'rummy')  ) );
-    }
-    return FALSE;
-});
+$db = new DB\Callback( array('execute'=>function($method, $args){
+        return new DB\StaticResult( array(array('foo'=>'dummy\'', 'bar'=>'rummy')  ) );
+}));
 $rs = $db->execute('SELECT %s as foo, %s as bar', 'dummy\'', 'rummy');
 Tap::ok( $rs, 'query executed successfully');
 Tap::is($rs->fetch_assoc(), array('foo'=>'dummy\'', 'bar'=>'rummy'), 'callback injection works to create result set');
 
 
-$db = new DB\Mock( function($method, $args){
-    if( $method == 'execute' ) {
-        return new DB\MockResult( array( 
+$db = new DB\Callback( array('execute'=>function($query){
+        return new DB\StaticResult( array( 
                 array('id'=>'1'),
                 array('id'=>'2'),
                 array('id'=>'3'),
                 ) );
-    }
-    return FALSE;
-});
+}));
 
 $rs = $db->execute('test');
 
@@ -89,7 +83,7 @@ Tap::is( $rs->fetchAll(PDO::FETCH_OBJ), array(), 'pdo fetchAll returns empty arr
 
 
 
-$db = new DB\Mock();
+$db = new DB\Callback();
 
 
 
@@ -102,7 +96,10 @@ Tap::is($query, '1, 2, 3', 'format query handles arrays of integers');
 $query = $db->format_query('%f', array(1.545,2.2,3));
 Tap::is($query, '1.545, 2.2, 3', 'format query handles arrays of floats');
 
-Tap::is($db->begin(), TRUE, 'begin returns true if no callback specified');
-Tap::is($db->commit(), TRUE, 'commit returns true if no callback specified');
-Tap::is($db->rollback(), TRUE, 'rollback returns true if no callback specified');
+Tap::is($db->begin(), FALSE, 'begin returns false if no callback specified');
+Tap::is($db->commit(), FALSE, 'commit returns false if no callback specified');
+Tap::is($db->rollback(), FALSE, 'rollback returns false if no callback specified');
+
+$query = $db->format_query('test %%s ?, (?,?)', array(1, 2), 3, 4);
+Tap::is($query, "test %s '1', '2', ('3','4')", 'format query question mark as string');
 
