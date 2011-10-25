@@ -43,7 +43,7 @@ class Runner {
    /**
     * @type bool    flag for if we want to keep running.
     */
-    protected $active = FALSE;
+    protected $active = TRUE;
     
    /**
     * @type int     how many jobs processed so far?
@@ -117,8 +117,7 @@ class Runner {
     */
     public function process(){
         $this->active = TRUE;
-        $this->start = time();
-        $this->syncwatch();
+        if( ! $this->start ) $this->start = time();
         $this->populate();
         while( $this->active ){
             
@@ -136,7 +135,6 @@ class Runner {
                 if( $this->debug ) call_user_func( $this->debug, 'maintenance tasks');
                 if( $this->debug) call_user_func( $this->debug, 'jobs running: ' . count( $this->pool->requests() ) );
         
-                $this->syncwatch();
                 $this->lastrun = $time;
                 try {
                     $this->populate();            
@@ -146,7 +144,10 @@ class Runner {
                     call_user_func( $this->debug,  $e->__toString());
                 }
             }
-            if( $this->active && ! $this->pool->select(1) ) sleep(1);
+            if( $this->active && ! $this->pool->select(0.2) ) {
+                usleep(200000);
+                $this->populate();
+            }
         }
     }
     
@@ -182,31 +183,42 @@ class Runner {
     }
     
     /**
-    * periodically make sure we are watching the right queues across all the beanstalkd nodes.
+    * make sure we are watching the right queues.
     */
-    protected function syncwatch(){
-        
+    protected function syncWatch($conn){
         $watch = $ignore = array();
         $config = Job::config();
-        $conns = $config->connections();
-        foreach( $conns as $conn ){
-            foreach( $conn->listTubes() as $tube ) {
-                if( fnmatch($config->queuePrefix() . $this->watch, $tube) ) {
-                    $watch[ $tube ] = true;
-                } else {
-                   $ingore[ $tube ] = true; 
+        $block_patterns = array();
+        foreach( $config->queueRates() as $pattern => $rate){
+            if( $rate >= mt_rand(1, 100) ) continue;
+            $block_patterns[] = $pattern;
+        }
+        $debug = $this->debug;
+        $block = function( $tube ) use ($block_patterns, $debug ){
+            if( ! $block_patterns ) return FALSE;
+            foreach( $block_patterns as $pattern ){
+                if( fnmatch( $pattern, $tube ) ) {
+                    if( $debug ) call_user_func( $debug, "blocking $tube"); 
+                    return TRUE;
                 }
             }
-        }
+            return FALSE;
+        };
         
+        foreach( $conn->listTubes() as $tube ) {
+            if( fnmatch($config->queuePrefix() . $this->watch, $tube) && ! $block( $tube ) ) {
+                $watch[] =  $tube;
+            } else {
+               $ingore[] = true; 
+            }
+        }
         if( count( $watch ) < 1 ) return FALSE;
-        
-        foreach( $conns as $conn ){
-            foreach( array_keys( $watch ) as $tube ) $conn->watch( $tube );
-            foreach( array_keys( $ignore ) as $tube ) $conn->ignore( $tube );
-        }
+        foreach( $watch as $tube ) $conn->watch( $tube );
+        foreach( $ignore as $tube ) $conn->ignore( $tube );
         return TRUE;
     }
+    
+    
     
     /**
     * remove all of the jobs from a given queue.
@@ -286,11 +298,13 @@ class Runner {
             if( $this->active && count( $this->queue ) < $this->max ){
                 $ct = $this->max;
                 if( $this->debug) call_user_func( $this->debug, 'starting dequeue: '.count( $this->queue ));
-                $conns = Job::config()->connections();
+                $config = Job::config();
+                $conns = $config->connections();
                 $keys = array_keys( $conns );
                 shuffle( $keys ); 
                 foreach( $keys as $key ){
                     $conn = $conns[ $key ];
+                    if( ! $this->syncWatch( $conn ) ) continue;
                     while( $res = $conn->reserve(0) ){
                         $id = $conn->hostInfo() . '-' . $res->getId();
                         $job = new Job( $res->getData() );

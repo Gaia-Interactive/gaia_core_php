@@ -17,11 +17,19 @@ class Config extends Container
     
     protected $retries = 0;
     
+    protected $queue_rates = array();
+    
+    public function setConnections( array $conns ){
+        $this->connections = array();
+        $this->addConnections( $conns );
+    }
+    
     public function addConnections( array $conns ){
         foreach( $conns as $conn ) $this->addConnection( $conn );
     }
     
-    public function addConnection( Pheanstalk $conn ){
+    public function addConnection( $conn ){
+        if( ! $conn instanceof Pheanstalk ) $conn = new Pheanstalk( $conn );
         return $this->conns[$conn->hostInfo()] = $conn;
     }
     
@@ -71,6 +79,18 @@ class Config extends Container
     
     public function retries(){
         return $this->retries;
+    }
+    
+    public function queueRates(){
+        return $this->queue_rates;
+    }
+    
+    public function addQueueRate( $pattern, $rate = 0 ){
+        $this->queue_rates[ $pattern ] = $rate;
+    }
+    
+    public function setQueueRates( array $patterns ){
+        $this->queue_rates = $patterns;
     }
     
 }

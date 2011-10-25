@@ -2,7 +2,7 @@
 include __DIR__ . '/../common.php';
 
 if( isset( $_GET['register'] ) ){
-    print json_encode( array('beanstalkd-servers'=>array('127.0.0.1:11300') ) );
+    print json_encode( array('connections'=>array('127.0.0.1:11300'), 'queue_rates'=>array(), 'retries'=>3) );
     exit;
 }
 
