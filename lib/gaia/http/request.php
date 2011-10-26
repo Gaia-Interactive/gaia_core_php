@@ -27,7 +27,7 @@ class Request extends Container implements \Iterator {
     */
     public function exec( array $opts = array() ){
         $ch = $this->build( $opts );
-        return $this->handle( curl_exec($ch), curl_getinfo($ch));
+        return $this->handle( curl_exec($ch) );
     }
 
     
@@ -89,7 +89,8 @@ class Request extends Container implements \Iterator {
    /**
     * Handle the response ... internal method only. Used by the Pool class.
     */
-    public function handle( $curl_data, $curl_info ){  
+    public function handle( $curl_data ){  
+        $curl_info = curl_getinfo( $this->handle );
         if( ! is_array( $curl_info ) ) $curl_info = array();
         if( ! isset( $curl_info['http_code'] ) ) $curl_info['http_code'] = 0;
         if( ! isset( $curl_info['header_size'] ) ) $curl_info['header_size'] = 0;
@@ -109,6 +110,15 @@ class Request extends Container implements \Iterator {
         $curl_info['body'] = $body;
         $this->response = new \Gaia\Container( $curl_info );
         return $this->response;
+    }
+    
+    public function close(){
+        if( $this->handle && get_resource_type($this->handle) == 'curl' ) curl_close( $this->handle );
+        unset( $this->handle );
+    }
+    
+    public function __destruct( ){
+        $this->close();
     }
 }
 // EOC

@@ -34,11 +34,10 @@ class Pool {
 	}
 	
 	public function __destruct(){
-		foreach ($this->requests as $http){
+		foreach ($this->requests as $i => $http){
 		    if( ! $http->handle ) continue;
 			curl_multi_remove_handle($this->handle, $http->handle);
-			curl_close($http->handle);
-			unset( $http->handle );
+			unset( $this->requests[ $i ] );
 		}
         curl_multi_close($this->handle);
 	}
@@ -76,12 +75,9 @@ class Pool {
     * wait for the specified timeout for data to come back on the socket.
     */
 	public function select($timeout = 1.0){
-		$result = $this->poll();
-		if ($result){
-			curl_multi_select($this->handle, $timeout);
-			$result = $this->poll();
-		}
-		return $result;
+	    if( ! $this->poll() ) return FALSE;
+        curl_multi_select($this->handle, $timeout);
+		return $this->poll();
 	}
 	
 	/**
@@ -112,12 +108,10 @@ class Pool {
                 if( !  isset($info['handle']) ) continue;
                 if( ! isset($this->requests[(int)$info['handle']]) ) continue;
                 $curl_data = curl_multi_getcontent($info['handle']);
-                $curl_info = curl_getinfo($info['handle']);
                 curl_multi_remove_handle($this->handle, $info['handle']);
-                curl_close($info['handle']);
                 $request = $this->requests[ (int) $info['handle'] ];
                 unset( $this->requests[ (int) $info['handle'] ] );
-                $request->handle( $curl_data, $curl_info );
+                $request->handle( $curl_data );
                 $this->handle( $request );
             }
             while($messages_in_queue > 0);
