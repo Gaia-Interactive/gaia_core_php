@@ -6,8 +6,8 @@ use Gaia\Cache;
 use Gaia\Store;
 
 # make sure all the stub classes work
-Tap::plan(16);
-
+Tap::plan(17);
+Tap::ok( new Cache\APC() instanceof Store\APC, 'apc inherited from store');
 Tap::ok( new Cache\Callback( new Store\KVP, function(){}) instanceof Store\Callback, 'callback inherited from store');
 Tap::ok( new Cache\Disabled() instanceof Store\Disabled, 'disabled inherited from store');
 Tap::ok( new Cache\Floodcontrol(new Store\KVP, array('scope'=>'test')) instanceof Store\FloodControl, 'floodcontrol inherited from store');
