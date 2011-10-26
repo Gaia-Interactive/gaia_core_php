@@ -11,16 +11,19 @@ use Gaia\Exception;
 /*
 * Use this class to run curl calls easily.
 * $request = new \Gaia\Http\Request('http://news.yahoo.com/rss/');
+* $request->post = array('param1'=>1, 'param2'=>2);
 * $response = $request->exec();
-* 
-*
-*
+* print PHP_EOL . "URL: " . $request->url;
+* print PHP_EOL . "RESPONSE: " $response->body;
 */
 class Request extends Container implements \Iterator {
     
    /**
     * try to run the request right away.
     * @return Container of the response.
+    * Usually this is the only method you need to know if you are using this object on its own.
+    * Allows you to run a curl call and get response back.
+    * If you need to do multiple calls in parallel, look at the pool class.
     */
     public function exec( array $opts = array() ){
         $ch = $this->build( $opts );
@@ -29,7 +32,7 @@ class Request extends Container implements \Iterator {
 
     
    /**
-    * import job data from a different http class into this one.
+    * import data from a different http class into this one.
     * @param mixed      either an array or http object
     * @return void
     */
@@ -49,7 +52,10 @@ class Request extends Container implements \Iterator {
     * @param array    curl opts.
     */
     public function build( array $opts = array() ){
+        // if no host is specified, try localhost loopback address.
         $url = substr( $this->url, 0, 1) == '/'  ? 'http://127.0.0.1' . $this->url : $this->url;
+        
+        // parse the url.
         $parts = @parse_url( $url );
         if( ! is_array( $parts ) ) $parts = array();
         $uri = isset( $parts['path'] ) ? $parts['path'] : '/';
@@ -61,10 +67,6 @@ class Request extends Container implements \Iterator {
             $ch = $this->handle = curl_init();
         }
         $opts[ CURLOPT_URL ] = $url;
-        if( isset( $parts['user'] ) && isset( $parts['pass'] ) ){
-            $opts[CURLOPT_USERPWD] = $parts['user'].':'.$parts['pass'];
-        }
-
         if( $this->post ) {
             $opts[CURLOPT_POST] = 1;
             $opts[CURLOPT_POSTFIELDS] = is_array( $this->post ) ? http_build_query( $this->post  ) : $this->post;
@@ -74,13 +76,8 @@ class Request extends Container implements \Iterator {
                 
         if( isset( $opts[CURLOPT_POSTFIELDS] ) && substr( $opts[CURLOPT_POSTFIELDS], 0, 5 ) == '<?xml'){
            $opts[CURLOPT_HTTPHEADER][] = 'Content-Type: text/xml';
-        } else {
+        } elseif( is_array( $this->post ) ) {
             $opts[CURLOPT_HTTPHEADER][] = 'application/x-www-form-urlencoded';
-        }
-        $opts[CURLOPT_FOLLOWLOCATION] = 1;
-        if( substr($url, 0, 5) == 'https' ){
-            $opts[CURLOPT_SSL_VERIFYPEER] = 0;
-            $opts[CURLOPT_SSL_VERIFYHOST] = 0;
         }
         $opts[CURLOPT_RETURNTRANSFER] = 1;
         $opts[CURLINFO_HEADER_OUT] = 1;
@@ -89,6 +86,9 @@ class Request extends Container implements \Iterator {
         return $ch;
     }
     
+   /**
+    * Handle the response ... internal method only. Used by the Pool class.
+    */
     public function handle( $curl_data, $curl_info ){  
         if( ! is_array( $curl_info ) ) $curl_info = array();
         if( ! isset( $curl_info['http_code'] ) ) $curl_info['http_code'] = 0;
