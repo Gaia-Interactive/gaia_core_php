@@ -227,6 +227,11 @@ class Job extends Request implements \Iterator {
     public function build( array $opts = array() ){
         $opts[CURLOPT_TIMEOUT] = $this->ttr;
         if( ! isset($opts[CURLOPT_HTTPHEADER]) )$opts[CURLOPT_HTTPHEADER] = array();
+        $opts[CURLOPT_FOLLOWLOCATION] = 1;
+        if( substr($this->url, 0, 5) == 'https' ){
+            $opts[CURLOPT_SSL_VERIFYPEER] = 0;
+            $opts[CURLOPT_SSL_VERIFYHOST] = 0;
+        }
         $callback = self::config()->builder();
         if( $callback ) {
             $args = array( $this, & $opts );
