@@ -130,26 +130,37 @@ $runner->addTask(
 
 
 
+
 $ct = $runner->flush($queue);
 $debugger( "JOBS flushed from the queue before starting: $ct");
 
-for( $i = 0; $i < 1000; $i++){
-    $start = microtime(TRUE);
-    $job = new Job('http://127.0.0.1:11299/job.php?signed=1');
-    $job->queue = $queue;
-    $id = $job->store();
-    $elapsed = number_format( microtime(TRUE) - $start, 3);
-    $debugger( "STORE " . $id . ' ' . $elapsed . 's');
-}
+$runner->addTask( function() use( $debugger, $queue, $runner ){
+    static $ct;
+    if( ! isset( $ct ) ) $ct = 0;
+    $stats = $runner->stats();
+    $diff = $ct - $stats['processed'];
+    $iterations = 1000 - $diff;
+    for( $i = 0; $i < $iterations; $i++){
+        $job = new Job('http://127.0.0.1:11299/job.php?signed=1&ct=' . $ct . '&s='. microtime(TRUE) );
+        $job->queue = $queue;
+        $id = $job->store();
+        $ct++;
+        $debugger( sprintf("STORE - %s: %s",  $id, $job->url) );
+    }
+});
+
+
 
 $runner->watch($queue);
-$runner->setTimelimit(60);
+$runner->setTimelimit(300);
 $runner->setMax(10);
 //$runner->attachDebugger( $debugger );
 declare(ticks = 1);
 
+$start = microtime(TRUE);
+
 // signal handler function
-$sig_handler = function ($signo) use ($runner, $start, $debugger){
+$sig_handler = function ($signo) use ($runner, $start, $debugger, $start){
 
      switch ($signo) {
          case SIGTERM:
@@ -162,6 +173,7 @@ $sig_handler = function ($signo) use ($runner, $start, $debugger){
              $runner->shutdown();
              $elapsed = number_format( microtime(TRUE) - $start, 3);
              $debugger("DONE: $elapsed");
+             print "\n";
              exit;
              break;
          default:
@@ -180,10 +192,10 @@ if( function_exists('pcntl_signal')){
     pcntl_signal(SIGHUP,  $sig_handler);
 }
 
-$start = microtime(TRUE);
 $runner->process();
 
 $elapsed = number_format( microtime(TRUE) - $start, 3);
 
 
-$debugger( "\nDONE: $elapsed\n");
+$debugger( "DONE: $elapsed");
+print "\n";
