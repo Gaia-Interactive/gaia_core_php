@@ -21,8 +21,6 @@ try {
     DB\Connection::load( array(
     'test'=> function () {
         $db = new Gaia\DB\Driver\PDO( 'pgsql:host=localhost;port=5432;dbname=test');
-        $db->setAttribute(\PDO::ATTR_STATEMENT_CLASS, array('Gaia\DB\Driver\PDOStatement', array($db)));
-        $db->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_SILENT );
         return $db;
     }
     ) );
