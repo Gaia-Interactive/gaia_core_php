@@ -1,5 +1,6 @@
 <?php
 namespace Gaia\DB\Driver;
+use Gaia\DB\Connection;
 
 class PDO extends \PDO implements \Gaia\DB\Iface {
 
@@ -75,6 +76,7 @@ class PDO extends \PDO implements \Gaia\DB\Iface {
     public function rollback(){
         if( ! $this->txn ) return parent::rollback(); 
         if( $this->lock ) return TRUE;
+        Connection::remove( $this );
         $rs = parent::rollback();
         $this->lock = TRUE;
         return $rs;
