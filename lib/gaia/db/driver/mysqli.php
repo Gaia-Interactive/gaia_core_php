@@ -1,5 +1,6 @@
 <?php
 namespace Gaia\DB\Driver;
+use Gaia\DB\Connection;
 
 class MySQLi extends \MySQLi implements \Gaia\DB\Iface {
     
@@ -69,7 +70,7 @@ class MySQLi extends \MySQLi implements \Gaia\DB\Iface {
         if( ! $this->txn ) return parent::rollback(); 
         if( $this->lock ) return TRUE;
         $rs = parent::rollback();
-        parent::close();
+        $this->close();
         $this->lock = TRUE;
         return $rs;
     }
