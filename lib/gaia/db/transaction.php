@@ -10,6 +10,8 @@ class Transaction
     protected static $rollback_callbacks = array();
     
     public static function add( Iface $obj ){
+        $hash = spl_object_hash($obj);
+        if( isset( self::$tran[ $hash ] ) ) return $obj;
         self::claimStart();
         if( ! $obj->begin( function (){ Transaction::block(); }) ) {
             return FALSE;
@@ -22,17 +24,9 @@ class Transaction
     }
     
     public static function instance( $name ){
-        if (isset( self::$tran[$name] ) ) return self::$tran[$name];
-        self::claimStart();
         $obj = Connection::instance( $name );
-        if( ! $obj instanceof Iface ){
-            throw new Exception('invalid object', $obj );
-        }
-        Connection::remove( $name );
-        if( ! $obj->begin( function (){ Transaction::block(); }) ) {
-            return FALSE;
-        }
-        return self::$tran[$name] = $obj;
+        self::add( $obj );
+        return $obj;
     }
     
     public static function block(){
