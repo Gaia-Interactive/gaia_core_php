@@ -1,5 +1,6 @@
 <?php
 namespace Gaia\DB\Driver;
+use Gaia\DB\Connection;
 
 class CI implements \Gaia\DB\Iface {
     
@@ -68,7 +69,7 @@ class CI implements \Gaia\DB\Iface {
         if( ! $this->txn ) return $this->core->trans_rollback(); 
         if( $this->lock ) return TRUE;
         $rs = $this->core->trans_rollback();
-        $this->core->close();
+        $this->close();
         $this->lock = TRUE;
         return $rs;
     }
