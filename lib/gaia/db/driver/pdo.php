@@ -1,6 +1,7 @@
 <?php
 namespace Gaia\DB\Driver;
 use Gaia\DB\Connection;
+use Gaia\DB\Transaction;
 
 class PDO extends \PDO implements \Gaia\DB\Iface {
 
@@ -39,7 +40,7 @@ class PDO extends \PDO implements \Gaia\DB\Iface {
         $res = call_user_func_array( array('\PDO', 'query'), $args);
         if( $res ) return $res;
         if( $this->txn ) {
-            if( is_callable( $this->txn ) ) call_user_func( $this->txn, $this );
+            Transaction::block();
             $this->lock = TRUE;
         }
         return $res;
@@ -58,24 +59,29 @@ class PDO extends \PDO implements \Gaia\DB\Iface {
         $res = parent::exec( $query );
         if( $res ) return $res;
         if( $this->txn ) {
-            if( is_callable( $this->txn ) ) call_user_func( $this->txn, $this );
+            Transaction::block();
             $this->lock = TRUE;
         }
         return $res;
     }
     
-    public function begin( $txn = FALSE ){
-        if( $this->lock ) return FALSE;
-        $this->txn = $txn;
-        return parent::beginTransaction();
+    public function begin( $auth = NULL ){
+        return $this->beginTransaction( $auth );
     }
     
-    public function beginTransaction(){
-        if( $this->lock ) return FALSE;
-        return parent::beginTransaction();
+    public function beginTransaction($auth = NULL){
+        if( $auth == Transaction::SIGNATURE ){
+            if( $this->lock ) return FALSE;
+            $this->txn = TRUE;
+            return parent::beginTransaction();
+        }
+        Transaction::start();
+        if( ! Transaction::add($this) ) return FALSE;
+        return TRUE;
     }
     
-    public function rollback(){
+    public function rollback( $auth = NULL ){
+        if( $auth != Transaction::SIGNATURE ) return Transaction::rollback();
         if( ! $this->txn ) return parent::rollback(); 
         if( $this->lock ) return TRUE;
         Connection::remove( $this );
@@ -84,7 +90,8 @@ class PDO extends \PDO implements \Gaia\DB\Iface {
         return $rs;
     }
     
-    public function commit(){
+    public function commit($auth = NULL ){
+        if( $auth != Transaction::SIGNATURE ) return Transaction::commit();
         if( ! $this->txn ) return parent::commit(); 
         if( $this->lock ) return FALSE;
         return parent::commit();
