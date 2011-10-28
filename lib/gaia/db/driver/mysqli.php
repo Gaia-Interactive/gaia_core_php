@@ -1,7 +1,6 @@
 <?php
 namespace Gaia\DB\Driver;
 use Gaia\DB\Connection;
-use Gaia\DB\Transaction;
 
 class MySQLi extends \MySQLi implements \Gaia\DB\Iface {
     
@@ -41,7 +40,7 @@ class MySQLi extends \MySQLi implements \Gaia\DB\Iface {
         $res = parent::real_query( $query );
         if( $res ) return $res;
         if( $this->txn ) {
-            Transaction::block();
+            if( is_callable( $this->txn ) ) call_user_func( $this->txn, $this );
             $this->lock = TRUE;
         }
         return $res;
@@ -61,19 +60,13 @@ class MySQLi extends \MySQLi implements \Gaia\DB\Iface {
     }
     
     
-    public function begin( $auth = NULL ){
-        if( $auth == Transaction::SIGNATURE){
-            if( $this->lock ) return FALSE;
-            $this->txn = TRUE;
-            return $this->query('BEGIN WORK');
-        }
-        Transaction::start();
-        if( ! Transaction::add($this) ) return FALSE;
-        return TRUE;
+    public function begin( $txn = FALSE ){
+        if( $this->lock ) return FALSE;
+        $this->txn = $txn;
+        return $this->query('BEGIN WORK');
     }
     
-    public function rollback($auth = NULL){
-        if( $auth != Transaction::SIGNATURE) return Transaction::rollback();
+    public function rollback(){
         if( ! $this->txn ) return parent::rollback(); 
         if( $this->lock ) return TRUE;
         $rs = parent::rollback();
@@ -82,8 +75,7 @@ class MySQLi extends \MySQLi implements \Gaia\DB\Iface {
         return $rs;
     }
     
-    public function commit($auth = NULL){
-        if( $auth != Transaction::SIGNATURE) return Transaction::commit();
+    public function commit(){
         if( ! $this->txn ) return parent::commit(); 
         if( $this->lock ) return FALSE;
         $res = parent::commit();
