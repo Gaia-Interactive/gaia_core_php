@@ -9,17 +9,17 @@ class Callback implements IFace {
         if( is_array( $callbacks ) ) $this->callbacks = $callbacks;
     }
     
-    public function begin(){
+    public function begin($auth = NULL){
         $args = func_get_args();
         return $this->__call( __FUNCTION__, $args );
     }
     
-    public function rollback(){
+    public function rollback($auth = NULL){
         $args = func_get_args();
         return $this->__call( __FUNCTION__, $args );
     }
     
-    public function commit(){
+    public function commit($auth = NULL){
         $args = func_get_args();
         return $this->__call( __FUNCTION__, $args );
     }
