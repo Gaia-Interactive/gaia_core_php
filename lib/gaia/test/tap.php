@@ -52,8 +52,7 @@ class Tap {
     
     public static function debug( $var, $comment = NULL ){
        if( $comment ) echo "#  " . $comment . "\n# ----\n";
-       if( is_object( $var ) && method_exists($var, '__toString') ) $var = $var->__toString();
-       echo "#  " . str_replace("\n", "\n#  ",print_r( $var, TRUE ) ) . "\n#\n";
+       echo "#  " . str_replace("\n", "\n#  ",self::stringify( $var) ) . "\n#\n";
     }
     
     public static function is($have, $want, $desc = '') {
@@ -193,8 +192,8 @@ class Tap {
             $call = $caller['1'];
         
             if (($have != null) || ($want != null)) {
-              if( is_array( $have ) ) $have = print_r( $have, TRUE);
-              if( is_array( $want ) ) $want = print_r( $want, TRUE);
+              $have = self::stringify($have);
+              $want = self::stringify($want);
               self::diag(
                   sprintf(" Failed%stest '%s'\n in %s at line %d\n have: %s\n  want: %s",
                       $todo ? ' TODO ' : ' ',
@@ -230,6 +229,13 @@ class Tap {
         if (!self::$planned) {
             printf("1..%d\n", self::$run);
         }
+    }
+
+    public static function stringify( $var ){
+        if( is_bool( $var ) ) return '(bool) ' . ($var ? 'true' : 'false');
+        if( is_scalar( $var ) ) return $var;
+        if( is_object( $var ) && method_exists($var, '__toString') ) return $var->__toString();
+        return print_r( $var, TRUE);
     }
 }
 
