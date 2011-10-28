@@ -97,9 +97,8 @@ $query = $db->format_query('%f', array(1.545,2.2,3));
 Tap::is($query, '1.545, 2.2, 3', 'format query handles arrays of floats');
 
 Tap::is($db->begin(), FALSE, 'begin returns false if no callback specified');
-Tap::is($db->commit(), FALSE, 'commit returns false if no callback specified');
 Tap::is($db->rollback(), FALSE, 'rollback returns false if no callback specified');
-
+Tap::is($db->commit(), FALSE, 'commit returns false if no callback specified');
 $query = $db->format_query('test %%s ?, (?,?)', array(1, 2), 3, 4);
 Tap::is($query, "test %s '1', '2', ('3','4')", 'format query question mark as string');
 
