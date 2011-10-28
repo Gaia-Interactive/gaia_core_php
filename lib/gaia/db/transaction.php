@@ -31,20 +31,23 @@ class Transaction
     }
     
     public static function block(){
+        $status = TRUE;
+        if( ! self::$tran  ) return FALSE;
         foreach( self::$tran as $obj ){
-            $obj->rollback(self::SIGNATURE);
+            if( ! $obj->rollback(self::SIGNATURE) ) $status = FALSE;
         }
         foreach( self::$rollback_callbacks as $info ){
             self::triggerCallback( $info['cb'], $info['params'] );
         }
         self::$commit_callbacks = array();
         self::$rollback_callbacks = array();
+        return $status;
     }
     
     public static function rollback(){
-        self::block();
+        $status = self::block();
         self::reset();
-        return true;
+        return $status;
     }
 
     public static function inProgress() {
