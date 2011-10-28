@@ -3,7 +3,7 @@ namespace Gaia\DB\Callback;
 use Gaia\DB\Callback;
 
 class MySQLi extends Callback implements \Gaia\DB\Iface {
-    
+    protected $mysqli;
     public function __construct(){
         $args = func_get_args();
         for( $i = 0; $i < 6; $i++) {
@@ -14,6 +14,7 @@ class MySQLi extends Callback implements \Gaia\DB\Iface {
         } else {
             $mysqli = new \Mysqli( $args[0], $args[1], $args[2], $args[3], $args[4], $args[5]);
         }
+        $this->mysqli = $mysqli;
         
         $callbacks = array();
         $wrapper = $this;
@@ -78,5 +79,51 @@ class MySQLi extends Callback implements \Gaia\DB\Iface {
         };
                 
         parent::__construct( $callbacks );
+    }
+    
+    public function query( $query, $mode = MYSQLI_STORE_RESULT ){
+        if( $this->lock ) return FALSE;
+        $res = $this->mysqli->query( $query, $mode );
+        if( $res ) return $res;
+        if( $this->txn ) {
+            Transaction::block();
+            $this->lock = TRUE;
+        }
+        return $res;
+    }
+    
+    public function multi_query( $query ){
+        if( $this->lock ) return FALSE;
+        $res = $this->mysqli->multi_query( $query );
+        if( $res ) return $res;
+        if( $this->txn ) {
+            Transaction::block();
+            $this->lock = TRUE;
+        }
+        return $res;
+    }
+    
+    public function real_query( $query ){
+        if( $this->lock ) return FALSE;
+        $res = $this->mysqli->real_query( $query );
+        if( $res ) return $res;
+        if( $this->txn ) {
+            Transaction::block();
+            $this->lock = TRUE;
+        }
+        return $res;
+    }
+    
+    public function close(){
+        Connection::remove( $this );
+        if( $this->lock ) return FALSE;
+        $rs = $this->mysqli->close();
+        $this->lock = TRUE;
+        return $rs;
+    }
+    
+    public function prepare($query){
+        trigger_error('unsupported method ' . __CLASS__ . '::' . __FUNCTION__, E_USER_ERROR);
+        exit;
     }
 }
