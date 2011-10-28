@@ -17,6 +17,10 @@ if( ! function_exists('DB') ){
 	Tap::plan('skip_all', 'CodeIgniter database library not loaded');
 }
 
+if( ! @fsockopen('127.0.0.1', '3306')) {
+    Tap::plan('skip_all', 'mysql-server not running on localhost');
+}
+
 try {
     DB\Connection::load( array(
         'test'=> function(){

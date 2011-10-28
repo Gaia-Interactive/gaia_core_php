@@ -1,6 +1,7 @@
 <?php
 namespace Gaia\DB\Driver;
 use Gaia\DB\Connection;
+use Gaia\DB\Transaction;
 
 class CI implements \Gaia\DB\Iface {
     
@@ -26,7 +27,7 @@ class CI implements \Gaia\DB\Iface {
         $res = $this->core->query( $sql, $binds, $return_object );
         if( $res ) return $res;
         if( $this->txn ) {
-            if( is_callable( $this->txn ) ) call_user_func( $this->txn, $this );
+            Transaction::block();
             $this->lock = TRUE;
         }
         return $res;
@@ -37,7 +38,7 @@ class CI implements \Gaia\DB\Iface {
         $res = $this->core->simple_query( $query );
         if( $res ) return $res;
         if( $this->txn ) {
-            if( is_callable( $this->txn ) ) call_user_func( $this->txn, $this );
+            Transaction::block();
             $this->lock = TRUE;
         }
         return $res;
@@ -51,21 +52,28 @@ class CI implements \Gaia\DB\Iface {
         return $rs;
     }
     
-    public function begin( $txn = FALSE ){
-        return $this->trans_start();
+    public function begin( $auth = NULL ){
+        return $this->trans_start($auth);
     }
     
-    public function trans_start(){
-        if( $this->lock ) return FALSE;
-        $this->txn = $txn;
-        return $this->core->trans_start();
+    public function trans_start($auth = NULL){
+        if( $auth == Transaction::SIGNATURE ) {
+            if( $this->lock ) return FALSE;
+            $this->txn = TRUE;
+            $this->core->trans_start();
+            return TRUE;
+        }
+        Transaction::start();
+        if( ! Transaction::add($this) ) return FALSE;
+        return TRUE;
     }
     
-    public function rollback(){
-        return $this->trans_rollback();
+    public function rollback($auth = NULL){
+        return $this->trans_rollback($auth);
     }
     
-    public function trans_rollback(){
+    public function trans_rollback($auth = NULL){
+        if( $auth != Transaction::SIGNATURE ) return Transaction::rollback();
         if( ! $this->txn ) return $this->core->trans_rollback(); 
         if( $this->lock ) return TRUE;
         $rs = $this->core->trans_rollback();
@@ -74,11 +82,12 @@ class CI implements \Gaia\DB\Iface {
         return $rs;
     }
     
-    public function commit(){
-        return $this->trans_complete();
+    public function commit($auth=NULL){
+        return $this->trans_complete($auth);
     }
     
-    public function trans_complete(){
+    public function trans_complete($auth = NULL){
+        if( $auth != Transaction::SIGNATURE ) return Transaction::commit();
         if( ! $this->txn ) return $this->core->trans_complete(); 
         if( $this->lock ) return FALSE;
         $res =  $this->core->trans_complete();
