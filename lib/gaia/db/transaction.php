@@ -8,12 +8,13 @@ class Transaction
     protected static $depth = 0;
     protected static $commit_callbacks = array();
     protected static $rollback_callbacks = array();
+    const SIGNATURE = '__TXN__';
     
     public static function add( Iface $obj ){
         $hash = spl_object_hash($obj);
         if( isset( self::$tran[ $hash ] ) ) return $obj;
         self::claimStart();
-        if( ! $obj->begin( function (){ Transaction::block(); }) ) {
+        if( ! $obj->begin(self::SIGNATURE) ) {
             return FALSE;
         }
         return self::$tran[spl_object_hash($obj)] = $obj;
@@ -31,7 +32,7 @@ class Transaction
     
     public static function block(){
         foreach( self::$tran as $obj ){
-            $obj->rollback();
+            $obj->rollback(self::SIGNATURE);
         }
         foreach( self::$rollback_callbacks as $info ){
             self::triggerCallback( $info['cb'], $info['params'] );
@@ -60,7 +61,7 @@ class Transaction
         $status = false;
         foreach( self::$tran  as $k => $obj )
         {
-            $status = $obj->commit();
+            $status = $obj->commit(self::SIGNATURE);
             if( ! $status ){
                 self::rollback();
                 return FALSE;
