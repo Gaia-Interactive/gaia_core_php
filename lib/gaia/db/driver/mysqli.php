@@ -19,7 +19,7 @@ class MySQLi extends \MySQLi implements \Gaia\DB\Iface {
         $res = parent::query( $query, $mode );
         if( $res ) return $res;
         if( $this->txn ) {
-            if( is_callable( $this->txn ) ) call_user_func( $this->txn, $this );
+            Transaction::block();
             $this->lock = TRUE;
         }
         return $res;
@@ -30,7 +30,7 @@ class MySQLi extends \MySQLi implements \Gaia\DB\Iface {
         $res = parent::multi_query( $query );
         if( $res ) return $res;
         if( $this->txn ) {
-            if( is_callable( $this->txn ) ) call_user_func( $this->txn, $this );
+            Transaction::block();
             $this->lock = TRUE;
         }
         return $res;
