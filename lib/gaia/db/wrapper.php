@@ -10,16 +10,16 @@ class Wrapper implements IFace {
         $this->core = $core;
     }
     
-    public function begin(){
-        return $this->core->begin();
+    public function begin($auth = NULL){
+        return $this->core->begin($auth = NULL);
     }
     
-    public function rollback(){
-        return $this->core->rollback();
+    public function rollback($auth = NULL){
+        return $this->core->rollback($auth = NULL);
     }
     
-    public function commit(){
-        return $this->core->commit();
+    public function commit($auth = NULL){
+        return $this->core->commit($auth = NULL);
     }
     
     public function execute($query){
