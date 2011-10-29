@@ -87,9 +87,10 @@ class CookieJar extends Wrap implements Iface {
         if( ! $this->ob ) return;
         $this->ob = FALSE;
         if( headers_sent() ) throw new Exception('headers sent, could not store');
-        $v = $this->config->serializer->serialize($this->all());
-        $key = $this->config->name;
+        $c = $this->config;
+        $v = $c->serializer->serialize($this->core->all());
         if( sha1( $v ) == $this->checksum ) return;
+        $key = $c->name;
         if( $v !== NULL) {
             setcookie($key, $_COOKIE[ $key ] = $v, $c->ttl, $c->path, $c->domain, $c->secure, $c->httponly);
         } else {
