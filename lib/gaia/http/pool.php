@@ -35,9 +35,9 @@ class Pool {
 	
 	public function __destruct(){
 		foreach ($this->requests as $i => $http){
+			unset( $this->requests[ $i ] );
 		    if( ! $http->handle ) continue;
 			curl_multi_remove_handle($this->handle, $http->handle);
-			unset( $this->requests[ $i ] );
 		}
         curl_multi_close($this->handle);
 	}
@@ -59,9 +59,10 @@ class Pool {
     * add a new request to the pool.
     */
     public function add( Request $request, array $opts = array() ){
-        $request->build($opts);
+        $ch = $request->build($opts);
         $this->requests[(int)$request->handle] = $request;
         curl_multi_add_handle($this->handle, $request->handle);
+        return $request;
     }
     
     /**
@@ -108,10 +109,13 @@ class Pool {
                 if( !  isset($info['handle']) ) continue;
                 if( ! isset($this->requests[(int)$info['handle']]) ) continue;
                 $curl_data = curl_multi_getcontent($info['handle']);
+                $curl_info = curl_getinfo($info['handle']);
+                if( ! is_array( $curl_info ) ) $curl_info = array();
+                $curl_info['response'] = $curl_data;
                 curl_multi_remove_handle($this->handle, $info['handle']);
                 $request = $this->requests[ (int) $info['handle'] ];
                 unset( $this->requests[ (int) $info['handle'] ] );
-                $request->handle( $curl_data );
+                $request->handle( $curl_info );
                 $this->handle( $request );
             }
             while($messages_in_queue > 0);

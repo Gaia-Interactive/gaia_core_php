@@ -27,7 +27,11 @@ class Request extends Container implements \Iterator {
     */
     public function exec( array $opts = array() ){
         $ch = $this->build( $opts );
-        return $this->handle( curl_exec($ch) );
+        $data = curl_exec( $ch );
+        $info = curl_getinfo( $ch );
+        if( ! is_array( $info ) ) $info = array();
+        $info['response'] = $data;
+        return $this->handle( $info );
     }
 
     
@@ -89,12 +93,10 @@ class Request extends Container implements \Iterator {
    /**
     * Handle the response ... internal method only. Used by the Pool class.
     */
-    public function handle( $curl_data ){  
-        $curl_info = curl_getinfo( $this->handle );
-        if( ! is_array( $curl_info ) ) $curl_info = array();
-        if( ! isset( $curl_info['http_code'] ) ) $curl_info['http_code'] = 0;
-        if( ! isset( $curl_info['header_size'] ) ) $curl_info['header_size'] = 0;
-        $response_header =  substr( $curl_data, 0, $curl_info['header_size'] );
+    public function handle( array $info ){  
+        if( ! isset( $info['http_code'] ) ) $info['http_code'] = 0;
+        if( ! isset( $info['header_size'] ) ) $info['header_size'] = 0;
+        $response_header =  substr( $info['response'], 0, $info['header_size'] );
         $header_lines = explode("\r\n", $response_header);
         $headers = array();
         foreach( $header_lines as $line ){
@@ -104,11 +106,11 @@ class Request extends Container implements \Iterator {
             $v = trim( $v );
             $headers[ $k ] = $v;
         }
-        $body = substr( $curl_data, $curl_info['header_size']);
-        $curl_info['headers'] = new \Gaia\Container($headers);
-        $curl_info['response_header'] = $response_header;
-        $curl_info['body'] = $body;
-        $this->response = new \Gaia\Container( $curl_info );
+        $info['body'] = substr( $info['response'], $info['header_size']);
+        unset( $info['response'] );
+        $info['headers'] = new \Gaia\Container($headers);
+        $info['response_header'] = $response_header;
+        $this->response = new \Gaia\Container( $info );
         return $this->response;
     }
     
