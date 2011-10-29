@@ -18,7 +18,10 @@ class CookieJar extends Wrap implements Iface {
         $config = $config instanceof Iface ? $config : new KVP( $config );
         if( ! isset( $config->name ) ) $config->name = md5(get_class( $this ));
         if( ! isset( $config->path ) ) $config->path = '/';
-        if( ! $config->serializer instanceof Serialize\Iface ) $config->serializer = new Serialize\PHP();
+        if( ! $config->serializer instanceof Serialize\Iface ){
+            if( ! $config->secret ) throw new Exception('no secret specified', $config);
+            $config->serializer = new Serialize\SignBase64($config->secret);
+        }
         $this->config = $config;
         $key = $config->name;
         $v = isset( $_COOKIE[ $key ] ) ? $_COOKIE[ $key ] : NULL;
@@ -87,10 +90,9 @@ class CookieJar extends Wrap implements Iface {
         if( ! $this->ob ) return;
         $this->ob = FALSE;
         if( headers_sent() ) throw new Exception('headers sent, could not store');
-        $c = $this->config;
-        $v = $c->serializer->serialize($this->core->all());
+        $v = $this->config->serializer->serialize($this->all());
+        $key = $this->config->name;
         if( sha1( $v ) == $this->checksum ) return;
-        $key = $c->name;
         if( $v !== NULL) {
             setcookie($key, $_COOKIE[ $key ] = $v, $c->ttl, $c->path, $c->domain, $c->secure, $c->httponly);
         } else {
