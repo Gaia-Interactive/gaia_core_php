@@ -20,6 +20,8 @@ $response = $request->exec(
     array(
     CURLOPT_CONNECTTIMEOUT=>5, 
     CURLOPT_TIMEOUT=>10, 
+    CURLOPT_SSL_VERIFYHOST => 0,
+    CURLOPT_SSL_VERIFYPEER => 0,
     CURLOPT_HTTPHEADER => array('Connection: Keep-Alive','Keep-Alive: 300')));
 $elapsed = number_format( microtime(TRUE) - $start, 5);
 Tap::is( $response->http_code, '200', 'got back a 200 response on an SSL request');
