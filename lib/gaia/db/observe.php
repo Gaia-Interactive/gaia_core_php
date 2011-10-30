@@ -11,7 +11,7 @@ class Observe implements IFace {
         if( $callbacks) $this->callbacks = $callbacks;
     }
     
-    public function begin($auth = NULL){
+    public function start($auth = NULL){
         $args = func_get_args();
         return $this->__call( __FUNCTION__, $args );
     }
