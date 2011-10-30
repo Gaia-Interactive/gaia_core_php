@@ -16,7 +16,7 @@ class Callback implements IFace {
         }
     }
     
-    public function begin($auth = NULL){
+    public function start($auth = NULL){
         $args = func_get_args();        
         if( $auth == Transaction::SIGNATURE){
             if( $this->lock ) return FALSE;

@@ -14,7 +14,7 @@ class Transaction
         $hash = spl_object_hash($obj);
         if( isset( self::$tran[ $hash ] ) ) return $obj;
         self::claimStart();
-        if( ! $obj->begin(self::SIGNATURE) ) {
+        if( ! $obj->start(self::SIGNATURE) ) {
             return FALSE;
         }
         return self::$tran[spl_object_hash($obj)] = $obj;

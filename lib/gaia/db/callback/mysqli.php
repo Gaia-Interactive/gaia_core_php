@@ -57,7 +57,7 @@ class MySQLi extends Callback implements \Gaia\DB\Iface {
             return $mysqli->query( $format_args( $query, $args ) );
         };
         
-        $callbacks['begin'] = function () use ( $mysqli ){
+        $callbacks['start'] = function () use ( $mysqli ){
             return $mysqli->autocommit(FALSE);
         };
         

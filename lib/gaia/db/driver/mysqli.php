@@ -61,7 +61,7 @@ class MySQLi extends \MySQLi implements \Gaia\DB\Iface {
     }
     
     
-    public function begin( $auth = NULL ){
+    public function start( $auth = NULL ){
         if( $auth == Transaction::SIGNATURE){
             if( $this->lock ) return FALSE;
             $this->txn = TRUE;
@@ -73,7 +73,7 @@ class MySQLi extends \MySQLi implements \Gaia\DB\Iface {
     }
     
     public function autocommit($mode){
-        return ( $mode ) ? $this->commit() : $this->begin();
+        return ( $mode ) ? $this->commit() : $this->start();
     }
     
     public function rollback($auth = NULL){
