@@ -65,7 +65,7 @@ class PDO extends \PDO implements \Gaia\DB\Iface {
         return $res;
     }
     
-    public function begin( $auth = NULL ){
+    public function start( $auth = NULL ){
         return $this->beginTransaction( $auth );
     }
     
