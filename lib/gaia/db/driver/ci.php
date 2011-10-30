@@ -52,7 +52,7 @@ class CI implements \Gaia\DB\Iface {
         return $rs;
     }
     
-    public function begin( $auth = NULL ){
+    public function start( $auth = NULL ){
         return $this->trans_start($auth);
     }
     
