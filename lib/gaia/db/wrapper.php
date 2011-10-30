@@ -10,8 +10,8 @@ class Wrapper implements IFace {
         $this->core = $core;
     }
     
-    public function begin($auth = NULL){
-        return $this->core->begin($auth = NULL);
+    public function start($auth = NULL){
+        return $this->core->start($auth = NULL);
     }
     
     public function rollback($auth = NULL){
