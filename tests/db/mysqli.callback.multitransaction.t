@@ -38,8 +38,8 @@ $row = $rs->fetch_assoc();
 $id2= $row['id'];
 
 Tap::isnt( $id1, $id2, 'got back connection ids from each and they arent the same');
-Tap::ok($conn1->begin(), 'started a transaction on conn1');
-Tap::ok($conn2->begin(), 'started a transaction on conn2');
+Tap::ok($conn1->start(), 'started a transaction on conn1');
+Tap::ok($conn2->start(), 'started a transaction on conn2');
 
 $rs = $conn1->execute("insert into $table values (1)");
 Tap::ok( $rs, 'inserted a row into test table from conn1');
@@ -64,8 +64,8 @@ Transaction::reset();
 
 $conn1 = $newconn();
 $conn2 = $newconn();
-Tap::ok($conn1->begin(), 'started a transaction on conn1');
-Tap::ok($conn2->begin(), 'started a transaction on conn2');
+Tap::ok($conn1->start(), 'started a transaction on conn1');
+Tap::ok($conn2->start(), 'started a transaction on conn2');
 
 $rs = $conn1->execute("insert into $table values (1)");
 Tap::ok( $rs, 'inserted a row into test table from conn1');
@@ -92,8 +92,8 @@ Tap::ok(Transaction::start(), 'started a transaction at the global level');
 
 $conn1 = $newconn();
 $conn2 = $newconn();
-Tap::ok($conn1->begin(), 'started a transaction on conn1');
-Tap::ok($conn2->begin(), 'started a transaction on conn2');
+Tap::ok($conn1->start(), 'started a transaction on conn1');
+Tap::ok($conn2->start(), 'started a transaction on conn2');
 
 $rs = $conn1->execute("insert into $table values (3)");
 Tap::ok( $rs, 'inserted a row into test table from conn1');
