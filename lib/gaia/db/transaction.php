@@ -50,8 +50,12 @@ class Transaction
         return $status;
     }
 
+    public static function started() {
+    	return ( self::$depth != 0 &&  ! empty(self::$tran) ) ? TRUE : FALSE;
+    }
+    
     public static function inProgress() {
-    	return (empty(self::$tran) || self::$depth == 0 ) ? FALSE : TRUE;
+    	return self::started();
     }
 
     public static function commit(){
