@@ -1,6 +1,6 @@
 <?php
 namespace Gaia\DB\Driver;
-
+use Gaia\DB\Transaction;
 class PDOStatement extends \PDOStatement {
 
     protected function __construct( PDO $connection){
