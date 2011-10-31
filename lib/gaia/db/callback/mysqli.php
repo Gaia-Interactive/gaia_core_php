@@ -4,7 +4,6 @@ use Gaia\DB\Callback;
 use Gaia\DB\Transaction;
 
 class MySQLi extends Callback implements \Gaia\DB\Iface {
-    protected $mysqli;
     public function __construct(){
         $args = func_get_args();
         for( $i = 0; $i < 6; $i++) {
@@ -14,9 +13,7 @@ class MySQLi extends Callback implements \Gaia\DB\Iface {
             $mysqli = $args[0];
         } else {
             $mysqli = new \Mysqli( $args[0], $args[1], $args[2], $args[3], $args[4], $args[5]);
-        }
-        $this->mysqli = $mysqli;
-        
+        }        
         $callbacks = array();
         $wrapper = $this;
         $callbacks['__tostring'] = function() use ( $mysqli ) {
