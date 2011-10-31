@@ -1,6 +1,6 @@
 <?php
 namespace Gaia\Souk;
-use Gaia\Cache;
+use Gaia\Store;
 use Gaia\DB\Transaction;
 
 /**
@@ -32,7 +32,7 @@ class Cacher extends Passthru {
     
     protected $cacher;
     
-    public function __construct( Iface $core, Cache\Iface $cacher ){
+    public function __construct( Iface $core, Store\Iface $cacher ){
         parent::__construct( $core );
         $this->cacher = $cacher;
     }
@@ -157,7 +157,7 @@ class Cacher extends Passthru {
     */
     protected function cache($namespace = '' ){
         $app = $this->app();
-        return new Cache\Prefix($this->cacher,  'souk/' . $app . '/' . $namespace );
+        return new Store\Prefix($this->cacher,  'souk/' . $app . '/' . $namespace );
     }
     
     /**

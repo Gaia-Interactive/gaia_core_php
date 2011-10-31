@@ -47,18 +47,6 @@ class Passthru implements Iface {
     public function pending( $age = 0 ){
         return $this->core->pending( $age );
     }
-    
-    protected function start(){
-
-    }
-    
-    protected function complete(){
-
-    }
-    
-    protected function rollback(){
-
-    }
 
     public function enableProxyBid(){
         return $this->core->enableProxyBid();

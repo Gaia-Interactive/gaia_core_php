@@ -100,7 +100,7 @@ class Util {
     * returns the current time.
     */
     public static function now(){
-        return time();
+        return \Gaia\Time::now();
     }
     
    /**
@@ -190,6 +190,10 @@ class Util {
         $listing->proxybid = 0;
 
         return $listing;
+    }
+    
+    public static function dateshard(){
+        return new \Gaia\Shard\Date( array('by'=>'week', 'cutoff'=>'21') );
     }
 }
 

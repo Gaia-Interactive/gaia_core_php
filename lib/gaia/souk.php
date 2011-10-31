@@ -8,7 +8,7 @@ use Gaia\DB\Transaction;
  * @copyright 2003-present GAIA Interactive, Inc.
  * @license private/license/GAIAONLINE.txt
  */
-class Souk implements Souk\Interface {
+class Souk implements Souk\Iface {
     
    /**
     * @string   the application id. must be lowercase alphanumeric (underscore okay)
@@ -78,7 +78,7 @@ class Souk implements Souk\Interface {
         // wrap in try catch so we can handle db transactions
         try {
             // create a transaction if we don't have one already.
-            $this->start();
+            Transaction::start();
             
             // validate the listing
             $listing = Souk\Util::validateListing( $l );
@@ -91,22 +91,11 @@ class Souk implements Souk\Interface {
                 throw new Exception('seller invalid', $listing->seller);
             }
             
-            // grab all the fields passed in that don't map to pre-defined fields.
-            $attributes = array();
-            foreach( array_diff( $listing->keys(), Souk\Util::fields() ) as $k ){
-                if( $k == 'id' ) continue;
-                $attributes[ $k ] = $listing->$k;
-            }
             // write the listing into the db.
             $this->createListing( $listing );
             
-            // serialize the attributes that are free-form and store them in the attributes table.
-            if( count( $attributes )  > 0 ){
-                $this->createAttributes( $listing->id, $attributes );
-            }
-            
             // commit transaction if it was created internally.
-            $this->complete();
+            Transaction::commit();
             
             // all done.
             return $listing;
@@ -114,7 +103,7 @@ class Souk implements Souk\Interface {
         // something bad happened.
         } catch( Exception $e ){
             // roll back the transaction.
-            $this->rollback();
+            Transaction::rollback();
             
             // wrap the exception in our own exception so we can control the message.
             $e = new Exception('cannot auction: ' . $e->getMessage(), $e->__toString() );
@@ -132,7 +121,7 @@ class Souk implements Souk\Interface {
     */
     public function close( $id, array $data = NULL ){
         // create a transaction internally if one doesn't exist yet
-        $this->start();
+        Transaction::start();
         try {
             // grab the listing within the transaction.
             $listing = $this->get( $id, $locked = TRUE);
@@ -184,7 +173,7 @@ class Souk implements Souk\Interface {
             }
             
             // if we created the transaction internally, commit it.
-            $this->complete();
+            Transaction::commit();
             
             // all done.
             return $listing;
@@ -192,7 +181,7 @@ class Souk implements Souk\Interface {
         // looks like we hit a problem ...
         } catch( Exception $e ){
             // roll back any db transaction stuff
-            $this->rollback();
+            Transaction::rollback();
             
             // toss the exception up the chain.
             throw $e;
@@ -206,7 +195,7 @@ class Souk implements Souk\Interface {
     */
     public function buy($id, array $data = NULL ){
         // create an internal transaction if one hasn't been passed in
-        $this->start();
+        Transaction::start();
         try {
             // get a row lock on the listing.
             $listing = $this->get( $id, TRUE);
@@ -256,7 +245,10 @@ class Souk implements Souk\Interface {
             
             // instantiate the listing dao and update the row with buyer information.
             $db = Transaction::instance('souk');
-            $sql = "update table_$shard set buyer = %i. touch = %i, closed = %i, pricesort = NULL WHERE rowid = %i";
+            
+            $table = 'souk_' . $app . '_' . $shard;
+            
+            $sql = "UPDATE $table SET `buyer` = %i, `touch` = %i, `closed` = %i, `pricesort` = NULL WHERE `rowid` = %i";
             $rs = $db->query($sql, $listing->buyer = $buyer, $listing->touch = $ts,  $listing->closed = 1, $row_id);
             if( ! $rs ) throw new Exception('database error', $db );
             
@@ -264,7 +256,7 @@ class Souk implements Souk\Interface {
             if( $db->affected_rows < 1 ) throw new Exception('failed', $db );
             
             // if we created the transaction internally, commit it.
-            $this->complete();
+            Transaction::commit();
             
             // done.
             return $listing;
@@ -273,7 +265,7 @@ class Souk implements Souk\Interface {
         } catch( Exception $e ){
             // revert any transaction stuff.
             // (detach an internal transaction if there is one)
-            $this->rollback();
+            Transaction::rollback();
             
             // toss an exception.
             throw $e;
@@ -289,7 +281,7 @@ class Souk implements Souk\Interface {
     */
     public function bid( $id, $bid, array $data = NULL ){
         // create an internal transaction if no transaction has been passed in.
-        $this->start();
+        Transaction::start();
         try {
             // we assume the current user is always the bidder
             $bidder = $this->user();
@@ -381,16 +373,21 @@ class Souk implements Souk\Interface {
             list( $shard, $row_id ) = Souk\Util::parseId( $id );
             
             // update the listing with the bidder's info. 
-            $db = Transaction::instance('souk');
+            $db = Connection::instance('souk');
+            $db->begin();
+            
+            // create the table name
+            $table = '';
+            
             $sql = "UPDATE $table SET bid = %i, proxybid = %i, pricesort = %i, bidder = %i, touch = %i, bidcount = %i WHERE row_id = %i";
-            $rs = $db->query( $sql,
+            $rs = $db->execute( $sql,
                     $listing->bid, 
                     $listing->proxybid, 
                     $this->calcPriceSort( $listing->bid, $listing->quantity ),
                     $listing->bidder,
                     $listing->touch = $ts,
                     $listing->bidcount,
-                    $row_id,
+                    $row_id
                     );
             
             // if the query failed, blow up.
@@ -399,12 +396,12 @@ class Souk implements Souk\Interface {
             }
             
             // should have affected 1 row. if not, blow up.
-            if( $rs->affected_rows < 1 ) {
+            if( $db->affected_rows < 1 ) {
                 throw new Exception('failed', $rs );
             }
             
             // commit the transaction and remove it if it was created internally.
-            $this->complete();
+            $db->commit();
             
             // done.
             return $listing;
@@ -413,7 +410,7 @@ class Souk implements Souk\Interface {
         } catch( Exception $e ){
             // revert the transaction ...
             // if it was created internally, remove it.
-            $this->rollback();
+            $db->rollback();
             
             // toss the exception again.
             throw $e;
@@ -552,6 +549,7 @@ class Souk implements Souk\Interface {
     * @return array
     */
     public function search( $options ){
+    /*
         // standardize the search options. makes it easer to manipulate.
         $options = Souk\Util::searchOptions( $options );
         
@@ -637,7 +635,7 @@ class Souk implements Souk\Interface {
         
         // start looping throw the shards and querying.
         $ids = array();
-        do {
+        foreach( Souk\Util::dateshard() as $shard ){
             // run the query
             $rs = $dao->execute();
             //print_r( $rs );
@@ -700,6 +698,7 @@ class Souk implements Souk\Interface {
         // a little bit inefficient, but it is just a list of numbers, and we are gonna
         // cache it for a long time in the caching layer.
         return array_values( array_slice( $ids, 0, Souk\Util::SEARCH_LIMIT) );
+        */
     }
     
     /**
@@ -709,28 +708,20 @@ class Souk implements Souk\Interface {
     */
     public function pending( $age = 0 ){
         $ts = Souk\Util::now() - $age;
-        
-        $dao = Souk\Util::dao('listing');
-        $dao->resolveApp( $this->app() );
-        $dao->select('row_id');
-        $dao->byClosed(0);
-        $dao->affixTimestamp( $ts );
-        $dao->andCompareExpires('<', $ts );
-        $dao->order('expires asc');
         $stack = array();
-        do {
-            $dao->select(sprintf("CONCAT('%s', LPAD(`row_id`, 11, '0') ) as `id`", $dao->dateshard() ) );
-            $rs = $dao->execute();
-            //print_r( $rs );
-            if( ! $rs->isSuccess() ) {
-                config()->set('mysql_overflow_limit', $overflow_limit);
-                throw new Exception('database error', $rs );
+        $db = Connection::get('souk');
+        $app = $this->app();
+        $list = array();
+        foreach( Souk\Util::dateshard() as $shard ){
+            $table = 'souk_' . $app . '_' . $shard;
+            $rs = $db->execute("SELECT row_id FROM $table WHERE closed = 0 AND expires < ? ORDER BY expires ASC", $ts );
+            if( ! $rs ) {
+                throw new Exception('database error', $db );
             }
-            $stack[ $dao->dateshard() ] = $rs;
+            while( $row = $rs->fetch_assoc() ) $list[] = Souk\Util::composeId( $shard, $row['row_id'] );
             
-        } while( $dao->nextTable() );
-        ksort( $stack );
-        return new MultiQueryResult( $stack );
+        }
+        return $list;
     }
     
     /************************       PROTECTED METHODS BELOW      **********************************/
@@ -742,55 +733,47 @@ class Souk implements Souk\Interface {
     * does the raw heavy lifting of assigning all the values to the dao and running the query.
     */
     protected function createListing( Souk\Listing $listing ){
-        $dao = Souk\Util::dao('listing.insert');
-        $dao->resolveApp( $this->app() );
-        $tran = $this->transaction();
-        if( $tran ) $tran->attach( $dao );
-        $dao->setSeller( $listing->seller );
-        $dao->setCreated( $listing->created );
-        $dao->setExpires( $listing->expires );
-        $dao->setClosed($listing->closed );
-        $dao->setBuyer($listing->buyer );
-        $dao->setBidder($listing->bidder );
-        $dao->setBidcount( $listing->bidcount );
-        $dao->setTouch($listing->touch );
-        $dao->affixTimestamp( $listing->expires );
-        $dao->setPrice( $listing->price );
-        $dao->setPriceSort( $this->calcPriceSort( $listing->price, $listing->quantity ) );
-        $dao->setItemId( $listing->item_id );
-        $dao->setBid( $listing->bid );
-        $dao->setStep( $listing->step );
-        $dao->setReserve( $listing->reserve );
-        $dao->setQuantity( $listing->quantity );
-        $rs = $dao->execute();
-        if( ! $rs->isSuccess() ) {
-            throw new Exception('database error', $rs );
+
+        // grab all the fields passed in that don't map to pre-defined fields.
+        $attributes = array();
+        foreach( array_diff( $listing->keys(), Souk\Util::fields() ) as $k ){
+            if( $k == 'id' ) continue;
+            $attributes[ $k ] = $listing->$k;
         }
-        $listing->id = Souk\Util::composeId( $shard = $dao->dateshard(), $row_id = $rs->insertId());
-    }
-    
-    /**
-    * any dynamic attributes assigned to the listing have to be serialized and stored in the 
-    * attributes table. we keep it separate to make the main table faster, all ints.
-    * that makes it more efficient to sort, and update.
-    * attributes are written in once when the auction is created and then pretty much never touched
-    * again, so it makes sense to put them in their own table.
-    */
-    protected function createAttributes( $id, array $attributes ){
-        $tran = $this->transaction();
-        list( $shard, $row_id ) = Souk\Util::parseId( $id );
-        $dao = Souk\Util::dao('attributes.insert');
-        $dao->resolveApp( $this->app() );
-        $tran = $this->transaction();
-        if( $tran ) $tran->attach( $dao );
-        $dao->setTableSuffix( $shard );
-        $dao->setRowId( $row_id );
-        $dao->setAttributes( json_encode($attributes) );
-        $dao->handleCollision();
-        $rs = $dao->execute();
-        if( ! $rs->isSuccess() ) {
-            throw new Exception('database error', $rs );
+        
+        $shard = Souk\Util::dateshard()->shard();
+        
+        $app = $this->app();
+        
+        
+        $table = 'souk_' . $app . '_' . $shard;
+        
+        $sql = "INSERT INTO $table
+        (seller, created, expires, closed, buyer, bidder, bidcount, touch, price, pricesort, item_id, bid, step, reserve, quantity, attributes) 
+        VALUES 
+        (%i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %s)";
+        $rs = $db->execute($sql,
+                $listing->seller,
+                $listing->created,
+                $listing->expires,
+                $listing->closed,
+                $listing->buyer,
+                $listing->bidder,
+                $listing->bidcount,
+                $listing->touch,
+                $listing->price,
+                $this->calcPriceSort( $listing->price, $listing->quantity ),
+                $listing->item_id,
+                $listing->bid,
+                $listing->step,
+                $listing->reserve,
+                $listing->quantity,
+                json_encode($attributes)
+                );
+        if( ! $rs ) {
+            throw new Exception('database error', $db );
         }
+        $listing->id = Souk\Util::composeId( $shard,  $db->insert_id);
     }
     
    /**
@@ -809,27 +792,6 @@ class Souk implements Souk\Interface {
     */
     public function enableProxyBid(){
         return TRUE; //config( $this->app() )->get( 'souk-proxybid' ) ? TRUE : FALSE;
-    }
-    
-   /**
-    * start a transaction. become the owner of the trasaction if no one else has claimed it.
-    */
-    protected function start(){
-        Transaction::start();
-    }
-    
-    /**
-    * complete a trasaction. commit it if we are the owner.
-    */
-    protected function complete(){
-        return Transaction::commit();
-    }
-    
-   /**
-    * rollback the transaction.
-    */
-    protected function rollback(){
-        return Transaction::rollback();
     }
 }
 
