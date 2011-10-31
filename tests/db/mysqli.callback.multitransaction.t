@@ -13,7 +13,7 @@ if( ! @fsockopen('127.0.0.1', '3306')) {
     Tap::plan('skip_all', 'mysql-server not running on localhost');
 }
 
-Tap::plan(28);
+Tap::plan(29);
 $table = 'test_' . time() . '_' . mt_rand(10000, 99999);
 
 $newconn = function(){ 
@@ -71,7 +71,7 @@ $rs = $conn1->execute("insert into $table values (1)");
 Tap::ok( $rs, 'inserted a row into test table from conn1');
 //if( ! $rs ) Tap::debug( $conn1 );
 
-$rs = $conn2->execute("insert into $table values(2)");
+$rs = $conn2->query("insert into $table values(2)");
 Tap::ok( $rs, 'inserted a row into test table from conn2');
 //if( ! $rs ) Tap::debug( $conn2 );
 
@@ -112,6 +112,9 @@ Tap::ok( Transaction::rollback(), 'rolled back the transaction at the global lev
 Tap::ok($dbmain->execute("select id from $table"), 'selected all rows from the table');
 $ct = $dbmain->affected_rows;
 Tap::is($ct, 2, '2 rows in the table, new rows rolled back');
+
+$rs = $conn1->execute("select id from $table");
+Tap::is( $rs, FALSE, 'after rolling back, new queries fail on rolled back db object');
 
 
 $dbmain->execute("drop table $table");
