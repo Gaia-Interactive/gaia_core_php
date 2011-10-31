@@ -1,6 +1,7 @@
 <?php
 namespace Gaia\DB\Callback;
 use Gaia\DB\Callback;
+use Gaia\DB\Transaction;
 
 class MySQLi extends Callback implements \Gaia\DB\Iface {
     protected $mysqli;
@@ -61,6 +62,11 @@ class MySQLi extends Callback implements \Gaia\DB\Iface {
             return $mysqli->autocommit(FALSE);
         };
         
+        $callbacks['autocommit'] = function ($mode) use ( $wrapper ){
+            return ( $mode ) ? $wrapper->commit() : $wrapper->start();
+        };
+        
+        
         
         $callbacks['rollback'] = function () use ( $mysqli ){
             return $mysqli->rollback();
@@ -70,6 +76,19 @@ class MySQLi extends Callback implements \Gaia\DB\Iface {
             return $mysqli->commit();
         };
         
+        $callbacks['prepare'] = function($query){
+            trigger_error('unsupported method ' . __CLASS__ . '::' . __FUNCTION__, E_USER_ERROR);
+            exit;
+        };
+        
+        $callbacks['close'] = function() use ( $mysqli, $wrapper ) {
+            Connection::remove( $wrapper );
+            if( $wrapper->lock ) return FALSE;
+            $rs = $mysqli->close();
+            $wrapper->lock = TRUE;
+            return $rs;
+        };
+        
         $callbacks['__get'] = function ($k) use ( $mysqli ){
             return $mysqli->$k;
         };
@@ -77,53 +96,41 @@ class MySQLi extends Callback implements \Gaia\DB\Iface {
         $callbacks['__call'] = function ($method, array $args ) use ( $mysqli ){
             return call_user_func_array( array( $mysqli, $method ), $args );
         };
+        
+        $callbacks['query'] = function ( $query, $mode = MYSQLI_STORE_RESULT ) use ($mysqli, $wrapper){
+            if( $wrapper->lock ) return FALSE;
+            $res = $mysqli->query( $query, $mode );
+            if( $res ) return $res;
+            if( $wrapper->txn ) {
+                Transaction::block();
+                $wrapper->lock = TRUE;
+            }
+            return $res;
+        };
+        
+        $callbacks['multi_query'] = function ( $query ) use ($mysqli, $wrapper) {
+            if( $wrapper->lock ) return FALSE;
+            $res = $mysqli->multi_query( $query );
+            if( $res ) return $res;
+            if( $wrapper->txn ) {
+                Transaction::block();
+                $wrapper->lock = TRUE;
+            }
+            return $res;
+        };
+        
+        $callbacks['real_query'] = function( $query ) use ($mysqli, $wrapper ){
+            if( $wrapper->lock ) return FALSE;
+            $res = $mysqli->real_query( $query );
+            if( $res ) return $res;
+            if( $wrapper->txn ) {
+                Transaction::block();
+                $wrapper->lock = TRUE;
+            }
+            return $res;
+        };
                 
         parent::__construct( $callbacks );
     }
-    
-    public function query( $query, $mode = MYSQLI_STORE_RESULT ){
-        if( $this->lock ) return FALSE;
-        $res = $this->mysqli->query( $query, $mode );
-        if( $res ) return $res;
-        if( $this->txn ) {
-            Transaction::block();
-            $this->lock = TRUE;
-        }
-        return $res;
-    }
-    
-    public function multi_query( $query ){
-        if( $this->lock ) return FALSE;
-        $res = $this->mysqli->multi_query( $query );
-        if( $res ) return $res;
-        if( $this->txn ) {
-            Transaction::block();
-            $this->lock = TRUE;
-        }
-        return $res;
-    }
-    
-    public function real_query( $query ){
-        if( $this->lock ) return FALSE;
-        $res = $this->mysqli->real_query( $query );
-        if( $res ) return $res;
-        if( $this->txn ) {
-            Transaction::block();
-            $this->lock = TRUE;
-        }
-        return $res;
-    }
-    
-    public function close(){
-        Connection::remove( $this );
-        if( $this->lock ) return FALSE;
-        $rs = $this->mysqli->close();
-        $this->lock = TRUE;
-        return $rs;
-    }
-    
-    public function prepare($query){
-        trigger_error('unsupported method ' . __CLASS__ . '::' . __FUNCTION__, E_USER_ERROR);
-        exit;
-    }
+
 }
