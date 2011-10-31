@@ -3,6 +3,7 @@
 include_once __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\DB;
+use \Gaia\DB\Transaction;
 
 if( ! class_exists('\PDO') ){
     Tap::plan('skip_all', 'php-pdo not installed');
@@ -27,7 +28,7 @@ try {
 } catch( Exception $e ){
     Tap::plan('skip_all', $e->__toString());
 }
-Tap::plan(12);
+Tap::plan(17);
 Tap::ok( DB\Connection::instance('test') === $db, 'db instance returns same object we instantiated at first');
 
 $rs = $db->execute('SELECT %s as foo, %s as bar', 'dummy\'', 'rummy');
@@ -68,5 +69,18 @@ try {
 }
 
 Tap::like($err, '/database error/i', 'When a bad query is run using execute() the except wrapper tosses an exception');
+
+$stmt = $db->prepare('SELECT ? as test');
+Tap::isa( $stmt, 'Gaia\DB\Driver\PDOStatement', 'prepared statement is gaia wrapper for pdo statements');
+Tap::ok( $stmt->execute(array('t1') ), 'prepared statement runs ok');
+Tap::is( $stmt->fetch(PDO::FETCH_ASSOC), array('test'=>'t1'), 'prepared statement returns result');
+Transaction::start();
+$db->start();
+Transaction::rollback();
+$stmt = $db->prepare('SELECT ? as test');
+Tap::is( $stmt->execute(array('t1') ), FALSE, 'prepared statement returns false when transaction rollback happens');
+Tap::is( $stmt->fetch(PDO::FETCH_ASSOC), FALSE, 'prepared statement returns no result when locked');
+
+//Tap::debug( $rs );
 
 
