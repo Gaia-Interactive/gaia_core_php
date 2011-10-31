@@ -40,7 +40,7 @@ class Storage {
                         break;
             
             case 'Gaia\DB\Driver\PDO': 
-                        switch( $db->driver() ){
+                        switch( $db->getAttribute(\PDO::ATTR_DRIVER_NAME) ){
                             case 'mysql': 
                                 $driver = 'MyPDO';
                                 break;
