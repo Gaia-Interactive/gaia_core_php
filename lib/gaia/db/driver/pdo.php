@@ -8,24 +8,14 @@ class PDO extends \PDO implements \Gaia\DB\Iface {
 
     protected $lock = FALSE;
     protected $txn = FALSE;
-    protected $dsn;
     
     public function __construct( $dsn ){
         $args = func_get_args();
         call_user_func_array( array('\PDO', '__construct'), $args );
         $this->setAttribute(\PDO::ATTR_STATEMENT_CLASS, array('Gaia\DB\Driver\PDOStatement', array($this)));
         $this->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_SILENT );
-        $this->dsn = $dsn;
     }
-    
-    public function driver(){
-        return $this->getAttribute(\PDO::ATTR_DRIVER_NAME);
-    }
-    
-    public function dsn(){
-        return $this->dsn;
-    }
-        
+     
     public function execute( $query /*, ... */ ){
         $args = func_get_args();
         array_shift($args);
