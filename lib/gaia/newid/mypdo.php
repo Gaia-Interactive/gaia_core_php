@@ -12,14 +12,10 @@ class MyPDO extends MySQL implements Iface {
             exit;
         }
         parent::__construct( $app, $db, $cache );
-        if( method_exists($this->db, 'dsn') ){
-            $this->dbinfo = $this->db->dsn();
-        } else {
-            $driver = $this->db->getAttribute(\PDO::ATTR_DRIVER_NAME);
-            $conn =  $this->db->getAttribute(\PDO::ATTR_CONNECTION_STATUS);
-            $version = $this->db->getAttribute(\PDO::ATTR_SERVER_VERSION);
-            $this->dbinfo = $driver . ':' . $conn . ' version ' . $version;
-        }
+        $driver = $this->db->getAttribute(\PDO::ATTR_DRIVER_NAME);
+        $conn =  $this->db->getAttribute(\PDO::ATTR_CONNECTION_STATUS);
+        $version = $this->db->getAttribute(\PDO::ATTR_SERVER_VERSION);
+        $this->dbinfo = $driver . ':' . $conn . ' version ' . $version;
     }
 
     protected function fetch_assoc( $rs ){
