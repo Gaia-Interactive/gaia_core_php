@@ -47,7 +47,7 @@ $config->setBuilder( function($job, array & $opts ) use ($nonce) {
 });
 
 $config->setHandler( function($job, $response ) use ($runner, $debugger) {
-    if( $response->headers->{'X-JOB-STATUS'} == 'complete') $job->flag = 1;
+    //if( $response->headers->{'X-JOB-STATUS'} == 'complete') $job->flag = 1;
     if( $job->task == 'register'){
         Job::config()->registering = FALSE;
         $res = json_decode($response->body, TRUE);
@@ -57,7 +57,6 @@ $config->setHandler( function($job, $response ) use ($runner, $debugger) {
             if( $existing_conns ){
                 $checksum = json_encode( $existing_conns );
                 if($checksum != json_encode( $res['connections'] ) ){
-                    var_dump( "checksum doesnt match: $checksum");
                     $runner->shutdown();
                     Job::config()->setConnections( $res['connections'] );
                     $runner->process();
