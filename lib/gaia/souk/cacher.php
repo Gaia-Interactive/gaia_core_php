@@ -141,7 +141,7 @@ class Cacher extends Passthru {
    /**
     * write the record into the cache.
     */
-    protected function writeToCache(Stockpile_Listing $listing ){
+    protected function writeToCache(Listing $listing ){
         $cache = $this->cache();
         $timeout = $this->cacheTimeout();
         $cache->set( $listing->id, $listing, 0, $timeout );

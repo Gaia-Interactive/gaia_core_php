@@ -18,7 +18,6 @@ interface Iface {
     public function fetch( array $ids, $lock = FALSE);
     public function search( $options );
     public function pending( $age = 0 );
-    public function enableProxyBid();
 }
 
 // EOC

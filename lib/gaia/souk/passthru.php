@@ -1,5 +1,6 @@
 <?php
 namespace Gaia\Souk;
+use Gaia\Exception;
 
 /**
  * @package GAIAONLINE
@@ -20,9 +21,6 @@ class Passthru implements Iface {
     public function user(){
         return $this->core->user();
     }
-    public function transaction(){
-        return $this->core->transaction();
-    }
     public function auction( $l, array $data = NULL ){
         return $this->core->auction( $l, $data );
     }
@@ -36,7 +34,12 @@ class Passthru implements Iface {
         return $this->core->bid( $id, $bid, $data );
     }
     public function get( $id, $lock = FALSE ){
-        return Souk::get( $id, $lock );
+        $res = $this->fetch( array( $id ), $lock );
+        if( ! isset( $res[ $id ] ) ) {
+            if( $lock ) throw new Exception('not found');
+            return NULL;
+        }
+        return $res[ $id ];
     }
     public function fetch( array $ids, $lock = FALSE){
         return $this->core->fetch( $ids, $lock );
@@ -46,10 +49,6 @@ class Passthru implements Iface {
     }
     public function pending( $age = 0 ){
         return $this->core->pending( $age );
-    }
-
-    public function enableProxyBid(){
-        return $this->core->enableProxyBid();
     }
 
 }

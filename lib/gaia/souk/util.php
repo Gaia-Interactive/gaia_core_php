@@ -195,6 +195,14 @@ class Util {
     public static function dateshard(){
         return new \Gaia\Shard\Date( array('by'=>'week', 'cutoff'=>'21') );
     }
+    
+   /**
+    * we store a number in the db based on the price divided by the number of units, so that we 
+    * can to s fair price-per-unit comparison of listings when sorting the result set.
+    */
+    public static function calcPriceSort( $price, $quantity ){
+        return $price > 0 && $quantity > 0 ? ceil( $price / $quantity ) : 0;
+    }
 }
 
 // EOC

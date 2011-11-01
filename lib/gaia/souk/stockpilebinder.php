@@ -6,7 +6,7 @@ use Gaia\Stockpile;
 * This class is just for demonstration purposes. You need to write your own
 * class to bind stockpile and souk together in your application.
 */
-class StockpileBinder implements Iface  {
+class StockpileBinder implements StockpileBinder_Iface  {
     protected $item_app;
     protected $currency_app;
     protected $currency_id;

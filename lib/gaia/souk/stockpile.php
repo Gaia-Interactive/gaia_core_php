@@ -1,6 +1,8 @@
 <?php
 namespace Gaia\Souk;
-use Gaia\Stockpile;
+use Gaia\DB\Transaction;
+use Gaia\Exception;
+
 
 /**
  * Stockpile adapter for souk.
@@ -16,7 +18,7 @@ class Stockpile extends Passthru {
     * attach the core object and the binder, which connects stockpile data to souk.
     * This binder object should remain consistent throughout your application.
     */
-    public function __construct( Stockpile\Iface $core, StockpileBinder_Iface $binder ){
+    public function __construct( Iface $core, StockpileBinder_Iface $binder ){
         parent::__construct( $core );
         $this->binder = $binder;
     }
@@ -31,7 +33,7 @@ class Stockpile extends Passthru {
         // if need be.
         try {
             // kick off a transaction. if there isn't one attached, create one.
-            $this->start();
+            Transaction::start();
             
             // convert the data coming in, probably an array,into a Listing.
             $listing = Util::listing( $l );
@@ -46,7 +48,7 @@ class Stockpile extends Passthru {
             $seller = $this->itemAccount( $listing->seller );
             
             // also need their escrow account
-            $escrow = $this->itemEscrow( $seller );
+            $escrow = $this->itemEscrow( $listing->seller );
             
             // bind them together in a stockpile transfer object so we can move items from 
             // their inventory into escrow. Prevents the seller from trading away the items while
@@ -57,7 +59,7 @@ class Stockpile extends Passthru {
             // if an integer or some other value was passed in for quantity, convert it into
             // the appropriate stockpile_quantity so we are sure we are vending the proper
             // serials.
-            if( $seller->coreType() == 'serial' && ! $listing->quantity instanceof Stockpile_Quantity ){
+            if( $seller->coreType() == 'serial' && ! $listing->quantity instanceof \Gaia\Stockpile\Quantity ){
                 $listing->quantity = $seller->get( $listing->item_id )->grab( $listing->quantity );
             }
             
@@ -67,7 +69,7 @@ class Stockpile extends Passthru {
             // now, we need to prep the quantity so that it can be stored in the listing in 
             // the database. we assign an export of the object to the stockpile_quantity attribute of the listing
             // that way when we deserialize it back out, we can reconstruct the object.
-            if( $listing->quantity instanceof Stockpile_Quantity ) {
+            if( $listing->quantity instanceof \Gaia\Stockpile\Quantity ) {
                 $listing->stockpile_quantity = $listing->quantity->export();
             }
             
@@ -78,13 +80,13 @@ class Stockpile extends Passthru {
             $listing = $this->prepListing( $this->core->auction( $listing ) );
             
             // commit the transaction, if we created it internally.
-            $this->complete();
+            Transaction::commit();
             
             // all done.
             return  $listing;
         } catch( Exception $e ){
             // ewww, something nasty happened. revert the transaction.
-            $this->rollback();
+            Transaction::rollback();
             
             // toss the exception again up the chain.
             throw $e;
@@ -98,10 +100,11 @@ class Stockpile extends Passthru {
     * and if so, we take their bid max plus the bid increment as our new bid ... with our bid max.
     */
     function bid( $id, $bid, array $data = NULL ){
+        $d = new \Gaia\Store\KVP( $data );
         // wrapped in try/catch so we can manage transactions.
         try {
             // kick off a transaction if we aren't attached to one already.
-            $this->start();
+            Transaction::start();
             
             // send the bid off to the core object for the first step of the process.
             $listing = $this->prepListing( $this->core->bid( $id, $bid, $data ) );
@@ -110,13 +113,13 @@ class Stockpile extends Passthru {
             $prior = $listing->priorstate();
             
             // if there was a previous bid, take their bid out of escrow and refund it.
-            if( $prior  && ( ! $this->enableProxyBid() || $prior->proxybid != $listing->proxybid ) ){
+            if( $prior  && ( ! $d->enable_proxy || $prior->proxybid != $listing->proxybid ) ){
                 $this->cancelBid( $listing->priorstate(), $data );
             }
 
             // if the bid actually changed hands, go ahead and escrow funds for the bidder.
              // so that the bidder can actually pay for what they bid when the time comes.
-            if( ! $this->enableProxyBid() || ! $prior || $prior->proxybid != $listing->proxybid ){
+            if( ! $d->enable_proxy || ! $prior || $prior->proxybid != $listing->proxybid ){
             
                 // set up a transfer object between the currency account and the currency escrow.
                 $bidder = $this->transfer(   $this->currencyAccount($listing->bidder ), 
@@ -126,14 +129,14 @@ class Stockpile extends Passthru {
                 $bidder->subtract( $this->currencyId(), $bid, $this->prepData( $data, $listing, 'bid') );
             }
             // commit the transaction if we started it.
-            $this->complete();
+            Transaction::commit();
             
             // all done. 
             return $listing;
             
         } catch( Exception $e ){
             // evil! revert the transaction.
-            $this->rollback();
+            Transaction::rollback();
             
             // toss the exception again up the chain.
             throw $e;
@@ -150,7 +153,7 @@ class Stockpile extends Passthru {
         // wrap in try/ catch so we can manage the transaction
         try {
             // kick off a transaction if none is attached yet.
-            $this->start();
+            Transaction::start();
             
             // run the core logic first. buy the listing. if it fails, we are the first to know.
             $listing = $this->prepListing( $this->core->buy( $id, $data ) );
@@ -159,7 +162,7 @@ class Stockpile extends Passthru {
             
             // refund any funds that were escrowed in a previous bid.
             // if this is a buy-only listing, this will do nothing.
-            if( $prior  && ( ! $this->enableProxyBid() || $prior->proxybid != $listing->proxybid ) ){
+            if( $prior  && ( ! $prior->proxybid || $prior->proxybid != $listing->proxybid ) ){
                 $this->cancelBid( $listing->priorstate(), $data );
             }
             // now that we were able to claim the listing, lets pay for it right away.
@@ -175,13 +178,13 @@ class Stockpile extends Passthru {
             $v = $buyer->add( $listing->item_id, $listing->quantity, $this->prepData($data, $listing, 'buy') );
             
             // commit the transaction if we created it.
-            $this->complete();
+            Transaction::commit();
             
             // all done!
             return $listing;
         } catch( Exception $e ){
             // epic fail. revert the transaction
-            $this->rollback();
+            Transaction::rollback();
             
             // toss the exception again.
             throw $e;
@@ -196,7 +199,7 @@ class Stockpile extends Passthru {
         // wrap in try catch so we can manage transactions.
         try {
             // kick off a transaction if not attached already.
-            $this->start();
+            Transaction::start();
             
             // do the core logic of closing the listing.
             $listing = $this->prepListing( $this->core->close( $id ) );
@@ -242,13 +245,13 @@ class Stockpile extends Passthru {
                 $this->cancelBid( $listing, $data );
             }
             // commit the transaction if we started one internally.
-            $this->complete();
+            Transaction::commit();
             
             // all done.
             return $listing;
         } catch( Exception $e ){
             // what happened? roll back the transaction
-            $this->rollback();
+            Transaction::rollback();
             
             // exception, get your freak on! Fly! be free!
             throw $e;
@@ -256,14 +259,14 @@ class Stockpile extends Passthru {
     }
     
    /***
-    * Convert any stockpile quantity items that were stored as an attribute under stockpile_quantity,
+    * Convert any stockpile quantity items that were stored as an attribute under stockpile\quantity,
     * and put it in as a quantity.
     */
     public function fetch( array $ids, $lock = FALSE ){
         // grab the listing from the core.
         $res = $this->core->fetch( $ids, $lock );
         
-        // before returning, translate the quantity object into a stockpile_quantity if needed.
+        // before returning, translate the quantity object into a stockpile\quantity if needed.
         foreach( $res as $listing ) $this->prepListing( $listing );
         
         // all done.
@@ -274,7 +277,7 @@ class Stockpile extends Passthru {
     * simple stockpile transfer factory method.
     */
     protected function transfer( $a, $b ){
-        return new Stockpile\Transfer( $a, $b );
+        return new \Gaia\Stockpile\Transfer( $a, $b );
     }
     
    /**
@@ -308,15 +311,15 @@ class Stockpile extends Passthru {
         $bidder = $this->transfer( $this->currencyAccount( $listing->bidder ), $this->currencyEscrow( $listing->bidder ) );
         
         // move the currency from escrow, back ot the bidder's currency account.
-        $bidder->add( $this->currencyId(), $this->enableProxyBid() ? $listing->proxybid : $listing->bid, $this->prepData($data, $listing, 'bid_cancel') );
+        $bidder->add( $this->currencyId(), $listing->proxybid ? $listing->proxybid : $listing->bid, $this->prepData($data, $listing, 'bid_cancel') );
     }
     
    /**
     * factory method for instantiating the user's stockpile inventory.
     */
     protected function itemAccount( $user_id ){
-        $stockpile = $this->binder->itemAccount( $user_id, $this->transaction() );
-        if( ! $stockpile instanceof Stockpile_Interface ) {
+        $stockpile = $this->binder->itemAccount( $user_id );
+        if( ! $stockpile instanceof \Gaia\Stockpile\Iface ) {
             throw new Exception('invalid stockpile object', $stockpile );
         }
         return $stockpile;
@@ -327,8 +330,8 @@ class Stockpile extends Passthru {
     * factory method for instantiating the user's stockpile currency account.
     */
     protected function currencyAccount( $user_id ){
-        $stockpile = $this->binder->currencyAccount( $user_id, $this->transaction() );
-        if( ! $stockpile instanceof Stockpile_Interface ) {
+        $stockpile = $this->binder->currencyAccount( $user_id );
+        if( ! $stockpile instanceof \Gaia\Stockpile\Iface ) {
             throw new Exception('invalid stockpile object', $stockpile );
         }
         return $stockpile;
@@ -352,8 +355,8 @@ class Stockpile extends Passthru {
     */
     protected function itemEscrow( $stockpile ){
         if( method_exists( $this->binder, 'itemEscrow') ){
-            $user_id = ( $stockpile instanceof Stockpile\Iface ) ? $stockpile->user() : $stockpile;
-            $stockpile = $this->binder->currencyEscrow( $user_id, $this->transaction() );
+            $user_id = ( $stockpile instanceof \Gaia\Stockpile\Iface ) ? $stockpile->user() : $stockpile;
+            $stockpile = $this->binder->currencyEscrow( $user_id );
             if( ! $stockpile instanceof Stockpile\Iface ) {
                 throw new Exception('invalid stockpile object', $stockpile );
             }
@@ -363,15 +366,15 @@ class Stockpile extends Passthru {
         
         switch( $stockpile->coreType() ) {
             case 'serial': 
-                    $class = 'stockpile_serial';
+                    $class = '\gaia\stockpile\serial';
                     break;
             
             case 'tally':
-                    $class = 'stockpile_tally';
+                    $class = '\gaia\stockpile\tally';
                     break;
             
             case 'serial-tally':
-                    $class = 'stockpile_hybrid';
+                    $class = '\gaia\stockpile\hybrid';
                     break;
             
             default:
@@ -387,23 +390,23 @@ class Stockpile extends Passthru {
     */
     protected function currencyEscrow( $stockpile ){
         if( method_exists( $this->binder, 'currencyEscrow') ){
-            $user_id = ( $stockpile instanceof Stockpile\Iface ) ? $stockpile->user() : $stockpile;
-            $stockpile = $this->binder->currencyEscrow( $user_id, $this->transaction() );
-            if( ! $stockpile instanceof Stockpile\Iface ) {
+            $user_id = ( $stockpile instanceof \Gaia\Stockpile\Iface ) ? $stockpile->user() : $stockpile;
+            $stockpile = $this->binder->currencyEscrow( $user_id );
+            if( ! $stockpile instanceof \Gaia\Stockpile\Iface ) {
                 throw new Exception('invalid stockpile object', $stockpile );
             }
             return $stockpile;
         }
-        if( ! $stockpile instanceof Stockpile\Iface ) $stockpile = $this->currencyAccount( $stockpile );
+        if( ! $stockpile instanceof \Gaia\Stockpile\Iface ) $stockpile = $this->currencyAccount( $stockpile );
         
         switch( $stockpile->coreType() ) {
             
             case 'tally':
-                    $class = 'stockpile_tally';
+                    $class = '\gaia\stockpile\tally';
                     break;
             
             case 'serial-tally':
-                    $class = 'stockpile_hybrid';
+                    $class = '\gaia\stockpile\hybrid';
                     break;
             
             default:
@@ -414,7 +417,7 @@ class Stockpile extends Passthru {
     }
     
    /**
-    * translate the simple array of data we store in the db in souk back into a Stockpile_Quantity object.
+    * translate the simple array of data we store in the db in souk back into a Stockpile\Quantity object.
     */
     protected function prepListing( Listing $listing ){
         $prior = $listing->priorstate();

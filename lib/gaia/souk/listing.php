@@ -28,7 +28,7 @@ class Listing {
         return $this->listing;
     }
     
-    public function setPriorState( Souk_Listing $listing ){
+    public function setPriorState( Listing $listing ){
         $this->prior = new self( $listing );
     }
     

@@ -1,6 +1,6 @@
 <?php
 namespace Gaia;
-use Souk\Exception;
+use Gaia\Exception;
 use Gaia\DB\Transaction;
 
 /**
@@ -24,9 +24,6 @@ class Souk implements Souk\Iface {
     * @param int                        user_id, optional
     */
     public function __construct( $app, $user_id = NULL){
-        // attach the transaction
-        $this->tran = $tran;
-        
         // validate the app
         if( ! Souk\Util::validateApp( $app ) ) {
             throw new Exception('invalid app', $app);
@@ -150,27 +147,7 @@ class Souk implements Souk\Iface {
             // mark the listing as closed.
             $listing->closed = '1';
             
-            // grab the shard and row id.
-            list( $shard, $row_id ) = Souk\Util::parseId( $listing->id );
-            
-            // update the listing.
-            $table = 'souk_' . $app . '_' . $shard;
-            $sql = "UPDATE $table SET buyer = %i, touch = %i, closed = 1, pricesort = NULL WHERE row_id = %i";
-            $db = Transaction::instance('souk');
-            $rs = $db->query($sql,
-                        $listing->buyer,
-                        $listing->touch,
-                        $row_id);
-            
-            // if the query fails, toss an exception.
-            if( ! $rs ) {
-                throw new Exception('database error', $db );
-            }
-            
-            // should have affected a row. if it didn't toss an exception.
-            if( $rs->affected_rows < 1 ) {
-                throw new Exception('failed', $rs );
-            }
+            $this->storage()->close( $listing );
             
             // if we created the transaction internally, commit it.
             Transaction::commit();
@@ -208,9 +185,6 @@ class Souk implements Souk\Iface {
             // need the current time to make sure it is a valid time to buy
             $ts = Souk\Util::now();
             
-            // extract shard and row id from the id
-            list( $shard, $row_id ) = Souk\Util::parseId( $id );
-            
             // we assume the current user is the buyer
             $buyer = $this->user();
             
@@ -243,17 +217,13 @@ class Souk implements Souk\Iface {
             // other wrapper layers can use this to make comparisons to what changed.
             $listing->setPriorState( $listing );
             
-            // instantiate the listing dao and update the row with buyer information.
-            $db = Transaction::instance('souk');
+            $listing->touch = $ts;
             
-            $table = 'souk_' . $app . '_' . $shard;
+            $listing->closed = 1;
             
-            $sql = "UPDATE $table SET `buyer` = %i, `touch` = %i, `closed` = %i, `pricesort` = NULL WHERE `rowid` = %i";
-            $rs = $db->query($sql, $listing->buyer = $buyer, $listing->touch = $ts,  $listing->closed = 1, $row_id);
-            if( ! $rs ) throw new Exception('database error', $db );
+            $listing->buyer = $buyer;
             
-            // should have affected 1 row. if it didn't something is wrong.
-            if( $db->affected_rows < 1 ) throw new Exception('failed', $db );
+            $this->storage()->buy( $listing );
             
             // if we created the transaction internally, commit it.
             Transaction::commit();
@@ -280,6 +250,9 @@ class Souk implements Souk\Iface {
     * the winning bidder pays the price of the second-highest bid plus the step
     */
     public function bid( $id, $bid, array $data = NULL ){
+        // normalize the data.
+        $data = new Store\KVP( $data );
+        
         // create an internal transaction if no transaction has been passed in.
         Transaction::start();
         try {
@@ -336,13 +309,17 @@ class Souk implements Souk\Iface {
             // if proxy bidding is enabled, this gets a little more complicated.
             // proxy bidding is where you bid the max you are willing to pay, but only pay
             // one step above the previous bidder's level.
+            // This is how ebay runs its auction site.
             // this means when you bid, we track your max amount you are willing to spend, but only
             // bid the minimum. When the next bid comes in, we automatically up your bid for you
             // until you go over your max amount and someone else takes the lead.
             // this approach makes the escrow system more efficient as well since it can excrow your
             // maximum amount all at once, and then refund when you get outbid or refund the difference 
             // if you get it for a lower bid.
-            if( $this->enableProxyBid() ){
+            
+
+    
+            if( $data->enable_proxy ){
                 // looks like the previous bidder got outbid.
                 // track their maximum amount, and set the bid based on one step above the previous bid.
                 if( $bid >= $listing->proxybid + $listing->step ){
@@ -369,48 +346,21 @@ class Souk implements Souk\Iface {
                 
             }
             
-            // extract shard and row id from the souk id.
-            list( $shard, $row_id ) = Souk\Util::parseId( $id );
+            $listing->touch = $ts;
             
-            // update the listing with the bidder's info. 
-            $db = Connection::instance('souk');
-            $db->begin();
+            $this->storage()->bid( $listing );
             
-            // create the table name
-            $table = '';
-            
-            $sql = "UPDATE $table SET bid = %i, proxybid = %i, pricesort = %i, bidder = %i, touch = %i, bidcount = %i WHERE row_id = %i";
-            $rs = $db->execute( $sql,
-                    $listing->bid, 
-                    $listing->proxybid, 
-                    $this->calcPriceSort( $listing->bid, $listing->quantity ),
-                    $listing->bidder,
-                    $listing->touch = $ts,
-                    $listing->bidcount,
-                    $row_id
-                    );
-            
-            // if the query failed, blow up.
-            if( ! $rs ) {
-                throw new Exception('database error', $db );
-            }
-            
-            // should have affected 1 row. if not, blow up.
-            if( $db->affected_rows < 1 ) {
-                throw new Exception('failed', $rs );
-            }
-            
-            // commit the transaction and remove it if it was created internally.
-            $db->commit();
+            Transaction::commit();
             
             // done.
             return $listing;
+            
             
         // something went wrong ...
         } catch( Exception $e ){
             // revert the transaction ...
             // if it was created internally, remove it.
-            $db->rollback();
+            Transaction::rollback();
             
             // toss the exception again.
             throw $e;
@@ -438,107 +388,7 @@ class Souk implements Souk\Iface {
     * @return array
     */
     public function fetch( array $ids, $lock = FALSE){
-        // stub out the result set so when we populate the data later, we will be 
-        // returning the rows in the correct order as requested.
-        // important when we do things like pass the list of ids from search into here,
-        // where the ordering of ids matters.
-        $result = array_fill_keys($ids, NULL);
-        
-        // we have to query by shard, which means we need to parse all the ids passed in
-        // and group them by shard.
-        $shardlist = array();
-        foreach( $ids as $id ){
-            list( $shard, $row_id ) = Souk\Util::parseId( $id );
-            if( ! isset( $shardlist[ $shard ] ) ) $shardlist[ $shard ] = array();
-            $shardlist[ $shard ][] = $row_id;
-        }
-        
-        // need the transaction object in case we are in the middle of one.
-        // this allows us to read data in a consistent transactional state.
-        $tran = $this->transaction();
-        
-        // loop through the ids grouped by shard
-        foreach( $shardlist as $shard => $row_ids ){
-            // instantiate the dao and tie it to the transaction if need be.
-            // query always by shard and row_id. this query is a primary key lookup 
-            // so it should always be very efficient.
-            $dao = Souk\Util::dao('listing');
-            $dao->resolveApp( $this->app() );
-            if( $tran ){
-                if( $lock || $tran->inProgress() ) $tran->attach( $dao );
-                if( $lock ) $dao->selectLock();
-            }
-            $dao->select('row_id, bid, proxybid, bidcount, item_id, quantity, price, step, created, expires, buyer, seller, bidder, reserve, closed, touch');
-            $dao->setTableSuffix( $shard );
-            $dao->byRowId( $row_ids );
-            $rs = $dao->execute();
-            
-            // blow up if the query failed.
-            if( ! $rs->isSuccess() ) {
-                throw new Exception('database error', $rs );
-            }
-            
-            // grab the rows returned and populate the result as Souk\listings.
-            $row_ids = array();
-            while(  $row = $rs->fetchrow(DB_ASSOC) ){
-                $row_id = $row_ids[] = $row['row_id'];
-                unset( $row['row_id'] );
-                $listing = Souk\Util::listing( $row );
-                $listing->id = Souk\Util::composeId( $shard, $row_id );
-                $result[ $listing->id ] = $listing;
-            }
-            $rs->freeresult();
-            
-            // did we get any rows back? if not, move on to the next shard.
-            if( count( $row_ids ) < 1 ) continue;
-            
-            // populate the listing with the serialized attributes that didn't map to any of
-            // the predefined columns in souk. in most cases this table will be empty, but
-            // we query it anyway to be sure.
-            // don't need a row lock on this table because we have one on the main listing table.
-            // since we always access these two tables in tandem, the prior row lock should 
-            // serialize the requests and work for both.
-            $dao = Souk\Util::dao('attributes');
-            $dao->resolveApp( $this->app() );
-            if( $tran && $tran->inProgress() ) $tran->attach( $dao );
-            $dao->select('row_id, attributes');
-            $dao->setTableSuffix( $shard );
-            $dao->byRowId( $row_ids );
-            $rs = $dao->execute();
-            
-            // blow up if we hit a query error.
-            if( ! $rs->isSuccess() ) {
-                throw new Exception('database error', $rs );
-            }
-            
-            // no rows? no problem, just skip it. that is expected.
-            if( $rs->affectedrows() < 1 ) continue;
-            
-            // someone stored attributes! merge them in.
-            // stored as json in the db. deserialize and layer on top of the listing object.
-            while( $row = $rs->fetchrow(DB_ASSOC) ){
-                $id = Souk\Util::composeId( $shard, $row['row_id'] );
-                if( ! isset( $result[ $id ] ) ) continue;
-                $attributes = json_decode($row['attributes'], TRUE);
-                if( !is_array( $attributes ) ) continue;
-                $listing = $result[ $id ];
-                foreach( $attributes as $k => $v ){
-                    if( $k == 'id' ) continue;
-                    $listing->$k = $v;
-                }
-            }
-            // free the query result.
-            $rs->freeresult();
-        }
-        
-        // remember how we populated with nulls at the beginning? 
-        // remove any that are still null, now that we are done.        
-        foreach( array_keys( $result, NULL, TRUE) as $k) {
-            unset( $result[ $k ] );
-        }
-        
-        // return the result.
-        return $result;
+        return $this->storage()->fetch( $ids, $lock );
     }
     
    /**
@@ -549,156 +399,10 @@ class Souk implements Souk\Iface {
     * @return array
     */
     public function search( $options ){
-    /*
         // standardize the search options. makes it easer to manipulate.
         $options = Souk\Util::searchOptions( $options );
         
-        // we query the listings table which is sharded by month.
-        // because it is sharded by month, we have to do a few more tricks
-        // to get the data-set we want.
-        // first, we try to narrow it down as much as possible by the criteria specified.
-        $dao = Souk\Util::dao('listing');
-        $dao->resolveApp( $this->app() );
-        $dao->select('row_id, pricesort, created, expires');
-        
-        // are we looking for auctions that are still in progress or already finished?
-        $dao->byClosed($options->closed ? 1 : 0);
-        
-        // if we have a specific item id we are looking for, query for that.
-        if( isset( $options->item_id ) ) $dao->andByItemId( $options->item_id );
-        
-        // do we know the seller?
-        if( isset( $options->seller ) ) $dao->andBySeller( $options->seller );
-        
-        // sometimes, rarely we are looking for an auction purchased by a specific buyer.
-        // obviously these auctions are already closed. should i sanity check the closed param?
-        if( isset( $options->buyer ) ) $dao->andByBuyer( $options->buyer );
-        
-        // we can narrow by the person who is currently the leading bidder. can't search by past
-        // bidders since that is more of a bid history search.
-        // haven't written that yet.
-        if( isset( $options->bidder ) ) $dao->andByBidder( $options->bidder );
-        
-        // are we looking for a bid-only auction?
-        if( $options->only == 'bid' ) $dao->andByPrice(0);
-        
-        // how about a buy-now only auction?
-        if( $options->only == 'buy' ) $dao->andByStep(0);
-        
-        // look for items only above a given price range.
-        if( $options->floor && ctype_digit( $options->floor ) ) $dao->andComparePriceSort('>=', $options->floor );
-        
-        // look for items only below a given price range.
-        if( $options->ceiling && ctype_digit( $options->ceiling )) $dao->andComparePriceSort('<=', $options->ceiling );
-        
-        // don't return more rows than the hard search limit imposed by souk.
-        // after more than about 1000 rows, more results become meaningless. who paginates through all of that?
-        // need them to somehow narrow their search more.
-        $dao->limit(Souk\Util::SEARCH_LIMIT);
-        
-        // how do we want the result set sorted?
-        $sort = $options->sort;
-        switch( $sort ){
-            case 'low_price':
-                $dao->order('pricesort ASC');
-                break;
-            case 'high_price':
-                $dao->order('pricesort DESC');
-                break;
-
-            case 'just_added':
-                $dao->order('created DESC');
-                break;
-                
-        
-            case 'expires_soon':
-                $dao->andCompareExpires('>', Souk\Util::now() );
-                $dao->order('expires ASC');
-                break;
-                
-            case 'expires_soon_delay':
-                $dao->andCompareExpires('>', Souk\Util::now() + Souk\UTIL::MIN_EXPIRE );
-                $dao->order('expires ASC');
-                break;
-                
-            default:
-                $key = $row['expires'] . '.' . $id;
-                break;
-        }
-        
-        // start with the shard a few weeks out from now, which is where the new listings are.
-        $dao->affixTimestamp(Souk\Util::now() + Souk\UTIL::MAX_EXPIRE);
-        
-        // if the auction is still active, we don't have to search the really old shards.
-        // stop at the shard for this month.
-        if( ! $options->closed ) $dao->overrideDateCutoff(1);
-        
-        // start looping throw the shards and querying.
-        $ids = array();
-        foreach( Souk\Util::dateshard() as $shard ){
-            // run the query
-            $rs = $dao->execute();
-            //print_r( $rs );
-            //print "\n" . $rs->statement();
-            
-            // if the query fails, blow up.
-            if( ! $rs->isSuccess() ) {
-                throw new Exception('database error', $rs );
-            }
-            
-            // extract the current shard from the dao.
-            $shard = $dao->dateShard();
-            
-            // pull out all the rows matched by the query.
-            // we are making the key of the id list contain the 
-            // value of what we sort by, so we can do a keysort later, and order the
-            // result in php since we have to span many shards.
-            while( $row = $rs->fetchrow(DB_ASSOC)){
-                $id = Souk\Util::composeId( $shard, $row['row_id'] );
-                switch( $sort ){
-                    case 'low_price':
-                    case 'high_price':
-                        $key = $row['pricesort'] . '.' . $id;
-                        break;
-
-                    case 'just_added':
-                        $key = $row['created'] . '.' . $id;
-                        break;
-                        
-                
-                    case 'expires_soon':
-                    case 'expires_soon_delay':
-                    default:
-
-                        $key = $row['expires'] . '.' . $id;
-                        break;
-                }
-                $ids[ $key ] = $id;
-                
-            }
-        } while( $dao->nextTable() );
-        
-        // now that we are all done fetching the rows, sort.
-        switch( $sort ){
-            case 'low_price':
-            case 'expires_soon':
-            case 'expires_soon_delay':
-                ksort( $ids, SORT_NUMERIC );
-                break;
-                
-            default:
-                krsort( $ids, SORT_NUMERIC );
-                break;
-        }
-        
-        // since we queried many shards we could potentially have quite a few more
-        // ids than the max limit. slice off only the top most rows.
-        // those are the ones we care about.
-        // we only need the other values so we can sort in php across all the shards.
-        // a little bit inefficient, but it is just a list of numbers, and we are gonna
-        // cache it for a long time in the caching layer.
-        return array_values( array_slice( $ids, 0, Souk\Util::SEARCH_LIMIT) );
-        */
+        return $this->storage()->search( $options );
     }
     
     /**
@@ -707,21 +411,7 @@ class Souk implements Souk\Iface {
     * @return mysql result set object from the dao.
     */
     public function pending( $age = 0 ){
-        $ts = Souk\Util::now() - $age;
-        $stack = array();
-        $db = Connection::get('souk');
-        $app = $this->app();
-        $list = array();
-        foreach( Souk\Util::dateshard() as $shard ){
-            $table = 'souk_' . $app . '_' . $shard;
-            $rs = $db->execute("SELECT row_id FROM $table WHERE closed = 0 AND expires < ? ORDER BY expires ASC", $ts );
-            if( ! $rs ) {
-                throw new Exception('database error', $db );
-            }
-            while( $row = $rs->fetch_assoc() ) $list[] = Souk\Util::composeId( $shard, $row['row_id'] );
-            
-        }
-        return $list;
+        return $this->storage()->pending( $age );
     }
     
     /************************       PROTECTED METHODS BELOW      **********************************/
@@ -733,65 +423,11 @@ class Souk implements Souk\Iface {
     * does the raw heavy lifting of assigning all the values to the dao and running the query.
     */
     protected function createListing( Souk\Listing $listing ){
-
-        // grab all the fields passed in that don't map to pre-defined fields.
-        $attributes = array();
-        foreach( array_diff( $listing->keys(), Souk\Util::fields() ) as $k ){
-            if( $k == 'id' ) continue;
-            $attributes[ $k ] = $listing->$k;
-        }
-        
-        $shard = Souk\Util::dateshard()->shard();
-        
-        $app = $this->app();
-        
-        
-        $table = 'souk_' . $app . '_' . $shard;
-        
-        $sql = "INSERT INTO $table
-        (seller, created, expires, closed, buyer, bidder, bidcount, touch, price, pricesort, item_id, bid, step, reserve, quantity, attributes) 
-        VALUES 
-        (%i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %s)";
-        $rs = $db->execute($sql,
-                $listing->seller,
-                $listing->created,
-                $listing->expires,
-                $listing->closed,
-                $listing->buyer,
-                $listing->bidder,
-                $listing->bidcount,
-                $listing->touch,
-                $listing->price,
-                $this->calcPriceSort( $listing->price, $listing->quantity ),
-                $listing->item_id,
-                $listing->bid,
-                $listing->step,
-                $listing->reserve,
-                $listing->quantity,
-                json_encode($attributes)
-                );
-        if( ! $rs ) {
-            throw new Exception('database error', $db );
-        }
-        $listing->id = Souk\Util::composeId( $shard,  $db->insert_id);
+        $this->storage()->createListing( $listing );
     }
     
-   /**
-    * we store a number in the db based on the price divided by the number of units, so that we 
-    * can to s fair price-per-unit comparison of listings when sorting the result set.
-    */
-    protected function calcPriceSort( $price, $quantity ){
-        return $price > 0 && $quantity > 0 ? ceil( $price / $quantity ) : 0;
-    }
-    
-    /**
-    * does this app allow proxy-bidding?
-    * if so, souk figures out what the lowest bid you can make for you and still remain the leader.
-    * This is how ebay runs its auction site.
-    * gaia's marketplace isnt that smart.
-    */
-    public function enableProxyBid(){
-        return TRUE; //config( $this->app() )->get( 'souk-proxybid' ) ? TRUE : FALSE;
+    protected function storage(){
+        return Souk\Storage::get( $this );
     }
 }
 
