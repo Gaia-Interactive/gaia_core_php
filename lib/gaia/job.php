@@ -241,8 +241,8 @@ class Job extends Request implements \Iterator {
         return $ch;
     }
     
-    public function handle( $curl_data ){
-        $response = parent::handle( $curl_data );
+    public function handle( array $info ){
+        $response = parent::handle( $info );
         $callback = self::config()->handler();
         if( $callback ) {
             call_user_func( $callback, $this, $response );
