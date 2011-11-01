@@ -37,7 +37,7 @@ class Cookie implements Iface {
             unset( $_COOKIE[ $key ] );
             setcookie($key, '', 0, $c->path, $c->domain, $c->secure, $c->httponly);
         }
-        return $v;
+        return TRUE;
     }
     
     public function delete( $k ){
@@ -71,8 +71,7 @@ class Cookie implements Iface {
     public function add( $k, $v ){
         $res = $this->get( $k );
         if( $res !== FALSE && $res !== NULL) return FALSE;
-        $res = $this->set( $k, $v );
-        return $res;
+        return $this->set( $k, $v );
     }
     
     public function replace( $k, $v ){
@@ -82,22 +81,27 @@ class Cookie implements Iface {
     
     public function increment( $k, $step = 1){
         $v = $this->get( $k );
-        if( $v === FALSE ) return FALSE;
+        if( $v === NULL ) return FALSE;
         $v = strval( $v );
         if( ! ctype_digit( $v ) ) return FALSE;
-        return $this->set( $k, bcadd( $v, $step ));
+        $v = bcadd( $v, $step );
+        if( ! $this->set( $k, $v ) ) return FALSE;
+        return $v;
     }
     
     public function decrement( $k, $step = 1){
         $v = $this->get( $k );
-        if( $v === FALSE ) return FALSE;
+        if( $v === NULL ) return FALSE;
         $v = strval( $v );
         if( ! ctype_digit( $v ) ) return FALSE;
-        return $this->set( $k, bcsub( $v, $step ));
+        $v = bcsub( $v, $step );
+        if( ! $this->set( $k, $v) ) return FALSE;
+        return $v;
     }
     
     public function __set( $k, $v ){
-        return $this->set( $k, $v );
+        if( ! $this->set( $k, $v ) ) return NULL;
+        return $v;
     }
     public function __get( $k ){
         return $this->get( $k );

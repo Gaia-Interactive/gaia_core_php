@@ -23,8 +23,7 @@ class Signed extends Wrap {
     }
     
     public function set( $k, $v ){
-        $this->core->set( $k, $this->s->serialize( $v ) );
-        return $v;
+        return $this->core->set( $k, $this->s->serialize( $v ) );
     }
 
     public function add( $k, $v, $expires = NULL ){
@@ -40,7 +39,9 @@ class Signed extends Wrap {
         if( $v === FALSE ) return FALSE;
         $v = strval( $v );
         if( ! ctype_digit( $v ) ) return FALSE;
-        return $this->set( $k, bcadd( $v, $step ));
+        $v = bcadd( $v, $step );
+        if( ! $this->set( $k, $v) ) return FALSE;
+        return $v;
     }
     
     public function decrement( $k, $step = 1){
@@ -48,6 +49,8 @@ class Signed extends Wrap {
         if( $v === FALSE ) return FALSE;
         $v = strval( $v );
         if( ! ctype_digit( $v ) ) return FALSE;
-        return $this->set( $k, bcsub( $v, $step ));
+        $v = bcsub( $v, $step );
+        if( ! $this->set( $k, $v) ) return FALSE;
+        return $v;
     }
 }

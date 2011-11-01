@@ -9,8 +9,10 @@ namespace Gaia\Store;
 // of redis available through the wrapper interface without breaking things.
 class Redis extends Serialize {
     
-    public function __construct( $redis = NULL ){
+    public function __construct( $redis = NULL, \Gaia\Serialize\Iface $s = NULL ){
         $this->core = $redis instanceof \Predis\Client ? $redis : new \Predis\Client( $redis );
+        if( ! $s ) $s = new \Gaia\Serialize\PHP;
+        $this->s = $s;
     }
 
     public function get( $request ){
