@@ -8,9 +8,14 @@ namespace Gaia\Store;
 // basic wrapper to make redis library conform to the cache interface.
 // todo: figure out ways to make some of the more elegant list and member set functionality 
 // of redis available through the wrapper interface without breaking things.
-class Serialize extends Wrap {
+class Serialize extends Wrap {    
+    protected $s;
     
-    const SERIALIZE_PREFIX = '#__PHP__:';
+    public function __construct( $core, \Gaia\Serialize\Iface $s = NULL ){
+        if( ! $s ) $s = new \Gaia\Serialize\PHP;
+        $this->s = $s;
+        parent::__construct( $core );
+    }
 
     public function get( $request ){
         if( is_scalar( $request ) ) {
@@ -39,15 +44,10 @@ class Serialize extends Wrap {
     }
     
     protected function serialize($v){
-        if( is_scalar( $v ) || is_numeric( $v ) ) return $v;
-        return self::SERIALIZE_PREFIX . serialize( $v );
+        return $this->s->serialize($v);
     }
     
     protected function unserialize( $v ){
-        if( $v === NULL || $v === FALSE ) return NULL;
-        if( ! is_scalar( $v ) ) return $v;
-        $len = strlen(self::SERIALIZE_PREFIX);
-        if( substr( $v, 0, $len) != self::SERIALIZE_PREFIX) return $v;
-        return unserialize(substr( $v, $len) );
+        return $this->s->unserialize($v);
     }
 }
