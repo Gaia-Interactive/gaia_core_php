@@ -45,16 +45,18 @@ class Shm implements Iface {
     
     public function increment( $k, $step = 1){
         $v = $this->get( $k );
-        if( $v === NULL ) $v = 0;
-        $v += $step;
-        return $this->set($k, $v );
+        if( $v === NULL ) return FALSE;
+        $v = strval( $v );
+        if( ! ctype_digit( $v ) ) return FALSE;
+        return $this->set( $k, bcadd( $v, $step ));
     }
     
     public function decrement( $k, $step = 1){
         $v = $this->get( $k );
-        if( $v === NULL ) $v = 0;
-        $v -= $step;
-        return $this->set($k, $v );
+        if( $v === NULL ) return FALSE;
+        $v = strval( $v );
+        if( ! ctype_digit( $v ) ) return FALSE;
+        return $this->set( $k, bcsub( $v, $step ));
     }
     
     public function delete( $k ){

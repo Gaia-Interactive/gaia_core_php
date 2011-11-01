@@ -19,7 +19,7 @@ class DBA implements Iface {
         } else {
             $file = $handle;
             if( ! file_exists( $file ) && ! touch( $file ) ) throw new Exception('invalid file');
-            $this->handle = dba_open( $file );
+            $this->handle = dba_open( $file, 'cd' );
             if( ! $this->handle ) throw new Exception('invalid handle');
         }
         
@@ -37,42 +37,45 @@ class DBA implements Iface {
             return $result;
         }
         $v = dba_fetch($request, $this->handle);
-        if( $v === NULL ) return NULL;
+        if( $v === NULL || $v === FALSE ) return NULL;
         return $this->s->unserialize($v);
     }
     
     public function set($k, $v ){
-        return dba_exists($k, $this->handle ) ? dba_replace( $k, $v, $this->handle ) : dba_insert( $k, $v, $this->handle );
+         return @dba_replace( $k, $this->s->serialize($v), $this->handle );
     }
     
     public function add( $k, $v ){
-        return dba_insert( $k, $this->serialize($v), $this->handle );
+        return @dba_insert( $k, $this->s->serialize($v), $this->handle );
     }
     
     public function replace( $k, $v ){
-        return dba_replace( $k, $this->serialize($v), $this->handle );
+        if( ! dba_exists($k, $this->handle ) ) return FALSE;
+        return $this->set( $k, $v );
     }
     
     public function increment( $k, $step = 1){
         $v = $this->get( $k );
-        if( $v === NULL ) $v = 0;
-        $v += $step;
-        return $this->set($k, $v );
+        if( $v === NULL ) return FALSE;
+        $v = strval( $v );
+        if( ! ctype_digit( $v ) ) return FALSE;
+        return $this->replace( $k, bcadd( $v, $step ));
     }
     
     public function decrement( $k, $step = 1){
         $v = $this->get( $k );
-        if( $v === NULL ) $v = 0;
-        $v -= $step;
-        return $this->set($k, $v );
+        if( $v === NULL ) return FALSE;
+        $v = strval( $v );
+        if( ! ctype_digit( $v ) ) return FALSE;
+        return $this->set( $k, bcsub( $v, $step ));
     }
     
     public function delete( $k ){
-        return dba_delete( $k,  $this->handle );
+        return @dba_delete( $k,  $this->handle );
     }
     
     public function flush(){
-        shm_remove( $this->id );
+        return FALSE;
     }
     
     public function ttlEnabled(){
