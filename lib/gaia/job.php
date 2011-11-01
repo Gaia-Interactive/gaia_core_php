@@ -142,9 +142,9 @@ class Job extends Request implements \Iterator {
         list( $server, $id ) = explode('-', $key, 2);
         if( ! $server ) throw new Exception('invalid id', $key );
         $conns = self::config()->connections();
-        if( ! isset( $conns[ $server ] ) ) throw new Exception('server not found', $key );;
+        if( ! isset( $conns[ $server ] ) ) throw new Exception('server not found', $key );
         $conn = $conns[ $server ];
-        $res = $conn->peek( new \Pheanstalk_Job($id, '') );
+        $res = $conn->peek( $id );
         if( ! $res ) throw new Exception('conn error', $conn );
         $job = new self( $res->getData() );
         if( ! $job->url ) {
@@ -152,7 +152,7 @@ class Job extends Request implements \Iterator {
             continue;
         }
         $job->id = $key;
-        return $res;
+        return $job;
     }
     
    /**
