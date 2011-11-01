@@ -2,10 +2,19 @@
 namespace Gaia\Serialize;
 
 class JSON implements Iface {
-    public function serialize( $v ){
-        return json_encode($v);
+
+    const SERIALIZE_PREFIX = '#__JSON__:';
+
+    public function serialize($v){
+        if( is_scalar( $v ) || is_numeric( $v ) ) return $v;
+        return self::SERIALIZE_PREFIX . json_encode( $v );
     }
+    
     public function unserialize( $v ){
-        return json_decode($v, TRUE);
+        if( $v === NULL ) return NULL;
+        if( ! is_scalar( $v ) ) return $v;
+        $len = strlen(self::SERIALIZE_PREFIX);
+        if( substr( $v, 0, $len) != self::SERIALIZE_PREFIX) return $v;
+        return json_decode(substr( $v, $len), TRUE );
     }
 }
