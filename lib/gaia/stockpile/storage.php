@@ -33,7 +33,7 @@ class Storage {
         return self::$autoschema;
      }
     protected static function loadDefault( Iface $stockpile, $name, $dsn ){
-        $db = $stockpile->inTran() ? Transaction::instance( $dsn ) : Connection::instance( $dsn );
+        $db = Connection::instance( $dsn );
         switch( get_class( $db ) ){
             case 'Gaia\DB\Driver\MySQLi': 
                         $classname = 'Gaia\Stockpile\Storage\MySQLi\\' . $name;

@@ -46,6 +46,7 @@ class Core implements Iface {
     }
     
     protected function execute( $query /*, .... */ ){
+        if( ! Transaction::atStart() ) Transaction::add( $this->db );
         $args = func_get_args();
         array_shift( $args );
         $rs = $this->db->query( $qs = $this->db->format_query_args( $query, $args ) );

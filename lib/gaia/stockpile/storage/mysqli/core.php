@@ -4,6 +4,7 @@ use \Gaia\DB\Driver\MySQLi;
 use \Gaia\Stockpile\Exception;
 use \Gaia\Stockpile\Storage\Iface;
 use \Gaia\Store;
+use \Gaia\DB\Transaction;
 
 class Core implements IFace {
     protected $db;
@@ -41,6 +42,7 @@ class Core implements IFace {
     }
     
     protected function execute( $query /*, .... */ ){
+        if( ! Transaction::atStart() ) Transaction::add( $this->db );
         $args = func_get_args();
         array_shift( $args );
         $rs = $this->db->query( $qs = $this->db->format_query_args( $query, $args ) );
