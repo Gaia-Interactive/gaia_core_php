@@ -21,6 +21,8 @@ DB\Connection::load( array(
             $pass = NULL, 
             $db = 'test', 
             '3306');
-            return $db;
+         $cb = array();
+         //$db = new DB\Observe( $db, $cb);
+         return $db;
     }
 ));

@@ -12,6 +12,7 @@ $souk = souk( $app, $seller_id);
 $listing = $souk->auction( array( 'price'=>10, 'bid'=>0, 'item_id'=>$item_id) );
 $read = $souk->get( $listing->id );
 Tap::is( $listing, $read, 'new auction is readable before transaction is committed, while in the transaction');
+print_r( Transaction::connections() );
 Transaction::rollback();
 
 $read = $souk->get( $listing->id );
