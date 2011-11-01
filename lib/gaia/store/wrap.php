@@ -65,7 +65,8 @@ class Wrap implements Iface {
     }
     
     public function __set( $k, $v ){
-        return $this->set( $k, $v );
+        if( ! $this->set( $k, $v ) ) return FALSE;
+        return $v;
     }
     public function __get( $k ){
         return $this->get( $k );
