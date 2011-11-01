@@ -1,5 +1,5 @@
 <?php
-include __DIR__ . '/../common.php';
+include __DIR__ . '/../../common.php';
 
 use Gaia\ShortCircuit\Router;
 use Gaia\ShortCircuit\Resolver;
@@ -28,5 +28,5 @@ $patterns = array(
     'index' =>'#^/$#',
 );
 
-Router::resolver( new PatternResolver( new Resolver(__DIR__ . '/../shortcircuit/app/'), $patterns));
+Router::resolver( new PatternResolver( new Resolver(__DIR__ . '/../../shortcircuit/app/'), $patterns));
 Router::run();
