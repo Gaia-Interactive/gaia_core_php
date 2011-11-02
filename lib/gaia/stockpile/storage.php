@@ -33,33 +33,27 @@ class Storage {
         return self::$autoschema;
      }
     protected static function loadDefault( Iface $stockpile, $name, $dsn ){
-        $db = $stockpile->inTran() ? Transaction::instance( $dsn ) : Connection::instance( $dsn );
-        switch( get_class( $db ) ){
-            case 'Gaia\DB\Driver\MySQLi': 
-                        $classname = 'Gaia\Stockpile\Storage\MySQLi\\' . $name;
-                        break;
-            
-            case 'Gaia\DB\Driver\PDO': 
-                        switch( $db->getAttribute(\PDO::ATTR_DRIVER_NAME) ){
-                            case 'mysql': 
-                                $driver = 'MyPDO';
-                                break;
-                            
-                            case 'sqlite':
-                                $driver = 'LitePDO';
-                                break;
-                            
-                            default:
-                                throw new Exception('invalid db driver', $db );
-
-                        }
-                        
-                        $classname = 'Gaia\Stockpile\Storage\\' . $driver . '\\' . $name;
-                        break;
-            default:
-                throw new Exception('invalid db driver', $db );
-
-
+        $db = Connection::instance( $dsn );
+        if( ! $db instanceof \Gaia\DB\Iface ) throw new Exception('invalid db driver', $db );
+        if( $db->isa('mysqli') ) {
+            $classname = 'Gaia\Stockpile\Storage\MySQLi\\' . $name;
+        } elseif( $db->isa('pdo') ){
+            switch( $db->getAttribute(\PDO::ATTR_DRIVER_NAME) ){
+                case 'mysql': 
+                    $driver = 'MyPDO';
+                    break;
+                
+                case 'sqlite':
+                    $driver = 'LitePDO';
+                    break;
+                
+                default:
+                    throw new Exception('invalid db driver', $db );
+    
+            }
+            $classname = 'Gaia\Stockpile\Storage\\' . $driver . '\\' . $name;
+        } else {
+            throw new Exception('invalid db driver', $db );
         }
         return new $classname( $db, $stockpile->app(), $stockpile->user(), $dsn . '.' . Connection::version() );
     }

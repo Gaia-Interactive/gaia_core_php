@@ -10,7 +10,9 @@ class Core implements Iface {
     protected $db;
     protected $app;
     protected $user_id;
-    public function __construct( PDO $db, $app, $user_id, $dsn){
+    public function __construct( \Gaia\DB\Iface $db, $app, $user_id, $dsn){
+        if( ! $db->isa('pdo') ) throw new Exception('invalid driver', $db );
+        if( $db->getAttribute(\PDO::ATTR_DRIVER_NAME) != 'sqlite') throw new Exception('invalid driver', $db );
         $this->db = $db;
         $this->app = $app;
         $this->user_id = $user_id;
@@ -46,6 +48,7 @@ class Core implements Iface {
     }
     
     protected function execute( $query /*, .... */ ){
+        if( ! Transaction::atStart() ) Transaction::add( $this->db );
         $args = func_get_args();
         array_shift( $args );
         $rs = $this->db->query( $qs = $this->db->format_query_args( $query, $args ) );

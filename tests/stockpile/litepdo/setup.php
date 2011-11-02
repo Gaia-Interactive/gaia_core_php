@@ -7,10 +7,11 @@ if( ! class_exists('\PDO') ){
     Tap::plan('skip_all', 'php-pdo not installed');
 }
 
+if( ! in_array( 'sqlite', PDO::getAvailableDrivers()) ){
+    Tap::plan('skip_all', 'this version of PDO does not support sqlite');
+}
+
 DB\Connection::load(array('test'=>function () {
-        $db = new DB\Driver\PDO( 'sqlite:/tmp/stockpile.db');
-        $db->setAttribute(\PDO::ATTR_STATEMENT_CLASS, array('Gaia\DB\Driver\PDOStatement', array($db)));
-        $db->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_SILENT );
-        return $db;
+        return new DB\Driver\PDO( 'sqlite:/tmp/stockpile.db');
     }
 ));

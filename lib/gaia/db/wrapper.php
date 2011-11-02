@@ -35,6 +35,12 @@ class Wrapper implements IFace {
         return $this->core->format_query_args( $query, $args );
     }
     
+    public function isa( $name ){
+        if( $this instanceof $name ) return TRUE;
+        if( method_exists( $this->core, 'isa') ) return $this->core->isa( $name );
+        return ( $this->core instanceof $name );
+    }
+    
     public function __get( $k ){
         return $this->core->$k;
     }
@@ -49,6 +55,10 @@ class Wrapper implements IFace {
     
     public function __call( $method, $args ){
         return call_user_func_array( array( $this->core, $method ), $args );
+    }
+    
+    public function __toString(){
+        return '{' . get_class( $this ) . '} ' . $this->core->__toString();
     }
 
 }
