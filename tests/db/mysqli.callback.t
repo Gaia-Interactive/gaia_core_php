@@ -29,7 +29,7 @@ try {
 } catch( Exception $e ){
     Tap::plan('skip_all', $e->__toString());
 }
-Tap::plan(12);
+Tap::plan(14);
 Tap::ok( DB\Connection::instance('test') === $db, 'db instance returns same object we instantiated at first');
 
 $rs = $db->execute('SELECT %s as foo, %s as bar', 'dummy\'', 'rummy');
@@ -74,3 +74,5 @@ try {
 Tap::like($err, '/database error/i', 'When a bad query is run using execute() the except wrapper tosses an exception');
 
 
+Tap::is( $db->isa('mysqli'), TRUE, 'isa returns true for mysqli');
+Tap::is( $db->isa('gaia\db\callback\mysqli'), TRUE, 'isa returns true for gaia\db\callback\mysqli');

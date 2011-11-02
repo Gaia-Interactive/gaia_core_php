@@ -112,6 +112,13 @@ class MySQLi extends \MySQLi implements \Gaia\DB\Iface {
             );
     }
     
+    public function isa( $name ){
+        if( $this instanceof $name ) return TRUE;
+        $name = strtolower( $name );
+        //if( strpos($name, 'mysqli') !== FALSE ) return TRUE;
+        return FALSE;
+    }
+    
     public function __toString(){
         @ $res ='(Gaia\DB\MySQLi object - ' . "\n" .
             '  [affected_rows] => ' . $this->affected_rows . "\n" .
