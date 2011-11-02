@@ -24,6 +24,15 @@ class Transaction
         return self::$tran;
     }
     
+    public static function internals(){
+        return array(
+            'connections'=>self::$tran,
+            'depth'=>self::$depth,
+            'commit_callbacks'=>self::$commit_callbacks,
+            'rollback_callbacks'=>self::$rollback_callbacks,
+        );
+    }
+    
     public static function instance( $name ){
         $obj = Connection::instance( $name );
         self::add( $obj );
@@ -77,10 +86,7 @@ class Transaction
         foreach( self::$commit_callbacks as $info ){
             self::triggerCallback( $info['cb'], $info['params'] );
         }
-        foreach( self::$tran as $name => $obj ){
-            Connection::add( $name, $obj );
-            unset( self::$tran[ $name ] );
-        }
+        self::$tran = array();
         self::reset();
         return $status;
     }
@@ -88,7 +94,9 @@ class Transaction
         self::$depth = 0;
         self::$commit_callbacks = array();
         self::$rollback_callbacks = array();
-        foreach( self::$tran as $t ) Connection::remove( $t );
+        foreach( self::$tran as $t ) {
+            Connection::remove( $t );
+        }
         self::$tran = array();
     }
     
