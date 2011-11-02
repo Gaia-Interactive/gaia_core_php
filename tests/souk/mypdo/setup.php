@@ -3,10 +3,14 @@ require __DIR__ . '/../lib/setup.php';
 use Gaia\DB;
 use Gaia\Test\Tap;
 
-if( ! class_exists('\MySQLi') ){
-    Tap::plan('skip_all', 'mysqli not installed');
+if( ! class_exists('\PDO') ){
+    Tap::plan('skip_all', 'pdo not installed');
 }
 
+
+if( ! in_array( 'mysql', PDO::getAvailableDrivers()) ){
+    Tap::plan('skip_all', 'this version of PDO does not support mysql');
+}
 
 if( ! @fsockopen('127.0.0.1', '3306')) {
     Tap::plan('skip_all', 'mysql-server not running on localhost');
