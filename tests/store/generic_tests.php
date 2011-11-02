@@ -4,7 +4,7 @@ use Gaia\Store;
 use Gaia\Time;
 
 if( ! isset( $skip_expiration_tests ) ) $skip_expiration_tests = FALSE;
-Tap::plan(12);
+Tap::plan(19);
 
 $data = array();
 for( $i = 1; $i <= 3; $i++){
@@ -60,3 +60,16 @@ Tap::ok( ! $cache->replace( $k, 1, 10), 'replace fails after key deletion');
 Tap::ok( $cache->add( $k, 1, 10), 'add works after key deletion');
 Tap::ok( $cache->replace( $k, 1, 10), 'replace works after key is added');
 
+$k = 'gaia/cache/test/' . microtime(TRUE) . '/' . mt_rand(1, 10000);
+Tap::ok( $cache->get( $k ) === NULL, 'cache get on a non-existent key returns NULL (not false)');
+
+$k = 'gaia/cache/test/' . microtime(TRUE) . '/' . mt_rand(1, 10000);
+
+Tap::is( $cache->increment($k, 1), FALSE, 'increment a new key returns (bool) FALSE');
+Tap::is( $cache->decrement($k, 1), FALSE, 'decrement a new key returns (bool) FALSE');
+
+Tap::cmp_ok( $cache->set( $k, 'test' ), '===', TRUE, 'setting a key returns bool TRUE');
+Tap::cmp_ok( $cache->replace( $k, 'test1' ), '===', TRUE, 'replacing a key returns bool TRUE');
+Tap::cmp_ok( $cache->{$k} = '11', '===', '11', 'setting using the magic method property approach returns value');
+unset( $cache->{$k} );
+Tap::cmp_ok( $cache->add($k, 'fun'), '===', TRUE, 'adding a key returns (bool) TRUE');

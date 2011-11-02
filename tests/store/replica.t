@@ -14,7 +14,7 @@ Tap::ok( $m instanceof Store\Iface, 'Store\replica instantiated successfully');
 
 $key = 'test' . microtime(TRUE);
 $res = $m->get($key);
-Tap::ok( $res === FALSE, 'send get request for a key, got no data back');
+Tap::ok( $res === NULL, 'send get request for a key, got no data back');
 $res = $m->set( $key, 1, 30);
 Tap::ok( $res, 'write data into the key, got an ok response back');
 $res = $m->get($key);
