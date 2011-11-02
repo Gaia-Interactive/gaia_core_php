@@ -12,7 +12,7 @@ if( ! class_exists('\PDO') ){
     Tap::plan('skip_all', 'php-pdo not installed');
 }
 
-Tap::plan(3);
+Tap::plan(5);
 
 $db = new DB\Except( $mock = new DB\Callback());
 
@@ -47,5 +47,8 @@ try {
 }
 
 Tap::is( $err, '', 'no exception thrown when query runs properly');
+
+Tap::is( $db->isa('Gaia\DB\Callback'), TRUE, 'expect is a wrapper and tells us the core instanceof');
+Tap::is( $db->isa('Gaia\DB\Transaction'), FALSE, 'doesnt false report instanceof');
 
 //print $err;
