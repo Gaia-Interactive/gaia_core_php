@@ -8,4 +8,5 @@ interface IFace {
     public function execute($query);
     public function format_query($query);
     public function format_query_args( $query, array $args );
+    public function isa( $name );
 }
