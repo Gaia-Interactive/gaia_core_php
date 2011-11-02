@@ -22,49 +22,65 @@ class MySQLi implements IFace {
     }
     
     protected function create($table){
-        $cache = new Store\Tier(new Store\Gate( new Store\Apc ), new Store\KVP );
+        $cache = \Gaia\Souk\Storage::cacher();
         $key = 'souk/storage/__create/' . md5( $this->dsn . '/' . get_class( $this ) . '/' . $table );
         if( $cache->get( $key ) ) return;
         if( ! $cache->add( $key, 1, 60 ) ) return;
         
         $rs = $this->execute('SHOW TABLES LIKE %s', $table);
         $row = $rs->fetch_array(MYSQLI_NUM);
-        if( $row ) return TRUE;
+        $rs->free_result();
+        if( ! $row ) {
+             $this->execute(
+            "CREATE TABLE IF NOT EXISTS $table (
+              `row_id` int unsigned NOT NULL auto_increment,
+              `seller` bigint unsigned NOT NULL,
+              `buyer` bigint unsigned NOT NULL DEFAULT '0',
+              `item_id` int unsigned NOT NULL DEFAULT '0',
+              `quantity` bigint unsigned NOT NULL DEFAULT '0',
+              `price` bigint unsigned default '0',
+              `pricesort` bigint unsigned default '0',
+              `step` bigint unsigned default '0',
+              `bid` bigint unsigned default '0',
+              `proxybid` bigint unsigned default '0',
+              `bidcount` int unsigned default '0',
+              `bidder` bigint unsigned default '0',
+              `reserve` bigint unsigned default NULL,
+              `closed` tinyint unsigned NOT NULL DEFAULT '0',
+              `created` int unsigned,
+              `expires` int unsigned,
+              `touch` int(10) unsigned,
+              PRIMARY KEY  (`row_id`),
+              KEY `closed` (`closed`),
+              KEY `created` (`created`),
+              KEY `expires` (`expires`),
+              KEY `pricesort` (`pricesort`),
+              KEY `item` (`item_id`),
+              KEY `price` (`price`),
+              KEY `step` (`step`),
+              KEY `seller` (`seller`),
+              KEY `bidder` (`bidder`),
+              KEY `buyer` (`buyer`)
+            ) ENGINE=InnoDB"
+                    
+            );
+        }
         
-        return $this->execute(
-        "CREATE TABLE IF NOT EXISTS $table (
-          `row_id` int unsigned NOT NULL auto_increment,
-          `seller` bigint unsigned NOT NULL,
-          `buyer` bigint unsigned NOT NULL DEFAULT '0',
-          `item_id` int unsigned NOT NULL DEFAULT '0',
-          `quantity` bigint unsigned NOT NULL DEFAULT '0',
-          `price` bigint unsigned default '0',
-          `pricesort` bigint unsigned default '0',
-          `step` bigint unsigned default '0',
-          `bid` bigint unsigned default '0',
-          `proxybid` bigint unsigned default '0',
-          `bidcount` int unsigned default '0',
-          `bidder` bigint unsigned default '0',
-          `reserve` bigint unsigned default NULL,
-          `closed` tinyint unsigned NOT NULL DEFAULT '0',
-          `created` int unsigned,
-          `expires` int unsigned,
-          `touch` int(10) unsigned,
-          `attributes` varchar(5000) character set utf8,
-          PRIMARY KEY  (`row_id`),
-          KEY `closed` (`closed`),
-          KEY `created` (`created`),
-          KEY `expires` (`expires`),
-          KEY `pricesort` (`pricesort`),
-          KEY `item` (`item_id`),
-          KEY `price` (`price`),
-          KEY `step` (`step`),
-          KEY `seller` (`seller`),
-          KEY `bidder` (`bidder`),
-          KEY `buyer` (`buyer`)
-        ) ENGINE=InnoDB"
-                
-        );
+        $table_attr = $table .'_attr';
+        
+        $rs = $this->execute('SHOW TABLES LIKE %s', $table_attr);
+        $row = $rs->fetch_array(MYSQLI_NUM);
+        $rs->free_result();
+        if( ! $row ) {
+             $this->execute(
+            "CREATE TABLE IF NOT EXISTS $table_attr (
+              `row_id` int unsigned NOT NULL,
+              `attributes` varchar(5000) character set utf8,
+              PRIMARY KEY  (`row_id`)
+            ) ENGINE=InnoDB"
+            );
+        }
+        
     }
     
     public function buy( $listing ){
@@ -106,9 +122,9 @@ class MySQLi implements IFace {
         if( ! Transaction::atStart() ) Transaction::add( $this->db );
         
         $sql = "INSERT INTO $table
-        (seller, created, expires, closed, buyer, bidder, bidcount, touch, price, pricesort, item_id, bid, step, reserve, quantity, attributes) 
+        (seller, created, expires, closed, buyer, bidder, bidcount, touch, price, pricesort, item_id, bid, step, reserve, quantity) 
         VALUES 
-        (%i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %s)";
+        (%i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i)";
         $rs = $this->execute($sql,
                 $listing->seller,
                 $listing->created,
@@ -124,10 +140,18 @@ class MySQLi implements IFace {
                 $listing->bid,
                 $listing->step,
                 $listing->reserve,
-                $listing->quantity,
-                json_encode($attributes)
+                $listing->quantity
                 );
-        $listing->id = Souk\Util::composeId( $shard,  $this->db->insert_id);
+        $row_id = $this->db->insert_id;
+        $listing->id = Souk\Util::composeId( $shard,  $row_id);
+        
+        if( $attributes ){
+            $table_attr = $table . '_attr';
+            $sql = "INSERT INTO `$table_attr` (`row_id`, `attributes`) 
+                    VALUES (%i, %s) 
+                    ON DUPLICATE KEY UPDATE `attributes` = VALUES(`attributes`)";
+            $this->execute( $sql, $row_id, json_encode( $attributes ) );
+        }
     }
     
     public function pending( $ts = 0 ){
@@ -204,25 +228,53 @@ class MySQLi implements IFace {
             
             if( \Gaia\Souk\Storage::isAutoSchemaEnabled() ) $this->create( $table );
         
-            $sql = "SELECT row_id, bid, proxybid, bidcount, item_id, quantity, price, step, created, expires, buyer, seller, bidder, reserve, closed, touch, attributes FROM $table WHERE row_id IN (?)";
+            $sql = "SELECT row_id, bid, proxybid, bidcount, item_id, quantity, price, step, created, expires, buyer, seller, bidder, reserve, closed, touch FROM $table WHERE row_id IN (?)";
             if( $lock ) $sql .= ' FOR UPDATE';
             $rs = $this->execute($sql, $row_ids);
             
             // grab the rows returned and populate the result as Souk\listings.
             $row_ids = array();
             while(  $row = $rs->fetch_assoc() ){
-                $row_id = $row['row_id'];
+                $row_id = $row_ids[] = $row['row_id'];
                 unset( $row['row_id'] );
-                $attributes = json_decode($row['attributes'], TRUE);
-                if( is_array( $attributes ) ) {
-                    foreach( $attributes as $k => $v ) $row[$k] = $v;
-                }
-                unset( $row['attributes']);
                 $listing = Souk\Util::listing( $row );
                 $listing->id = Souk\Util::composeId( $shard, $row_id );
                 $result[ $listing->id ] = $listing;
             }
             $rs->free_result();
+            
+            // did we get any rows back? if not, move on to the next shard.
+            if( count( $row_ids ) < 1 ) continue;
+            
+            // populate the listing with the serialized attributes that didn't map to any of
+            // the predefined columns in souk. in most cases this table will be empty, but
+            // we query it anyway to be sure.
+            // don't need a row lock on this table because we have one on the main listing table.
+            // since we always access these two tables in tandem, the prior row lock should 
+            // serialize the requests and work for both.
+            $table_attr = $table . '_attr';
+            $sql = "SELECT row_id, attributes FROM $table_attr WHERE row_id IN ( %i )";
+            $rs = $this->execute($sql, $row_ids);
+            
+            // no rows? no problem, just skip it. that is expected.
+            if( $this->db->affected_rows < 1 ) continue;
+            
+            // someone stored attributes! merge them in.
+            // stored as json in the db. deserialize and layer on top of the listing object.
+            while( $row = $rs->fetch_assoc() ){
+                $id = Souk\Util::composeId( $shard, $row['row_id'] );
+                if( ! isset( $result[ $id ] ) ) continue;
+                $attributes = json_decode($row['attributes'], TRUE);
+                if( !is_array( $attributes ) ) continue;
+                $listing = $result[ $id ];
+                foreach( $attributes as $k => $v ){
+                    if( $k == 'id' ) continue;
+                    $listing->$k = $v;
+                }
+            }
+            // free the query result.
+            $rs->free_result();
+            
         }
         
         // remember how we populated with nulls at the beginning? 

@@ -55,5 +55,9 @@ class Listing {
     public function __unset( $k ){
         unset( $this->listing[ $k ] );
     }
+    
+    public function __toString(){
+        return print_r($this, TRUE);
+    }
 }
 //

@@ -1,18 +1,28 @@
 <?php
 namespace Gaia\Souk;
-use \Gaia\Exception;
-use \Gaia\DB\Transaction;
-use \Gaia\DB\Connection;
+use Gaia\Exception;
+use Gaia\DB\Transaction;
+use Gaia\DB\Connection;
+use Gaia\Store;
 
 class Storage {
 
      protected static $resolver;
      protected static $autoschema = FALSE;
+     protected static $cacher;
      
          // hash the user id against vbuckets and determine wich database name to use.
     public static function attach( $callback ){
         if( ! is_callable( $callback ) ) throw new Exception('invalid connection resolver', $callback );
         self::$resolver = $callback;
+    }
+    
+    public static function cacher( \Gaia\Store\Iface $cacher = NULL ){
+        if( $cacher !== NULL ) self::$cacher = $cacher;
+        if( ! isset( self::$cacher ) ) {
+            self::$cacher = new Store\Tier(new Store\Gate( new Store\Apc ), new Store\KVP );
+        }
+        return self::$cacher;
     }
     
     
