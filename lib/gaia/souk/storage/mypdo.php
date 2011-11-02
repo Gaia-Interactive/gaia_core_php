@@ -6,14 +6,15 @@ use \Gaia\Store;
 use \Gaia\Souk;
 use \Gaia\DB\Transaction;
 
-class MySQLi implements IFace {
+class MyPDO implements IFace {
 
     protected $db;
     protected $app;
     protected $user_id;
     protected $dsn;
     public function __construct( \Gaia\DB\Iface $db, $app, $user_id, $dsn){
-        if( ! $db->isa('mysqli') ) throw new Exception('invalid driver', $db );
+        if( ! $db->isa('pdo') ) throw new Exception('invalid driver', $db );
+        if( $db->getAttribute(\PDO::ATTR_DRIVER_NAME) != 'mysql') throw new Exception('invalid driver', $db );
         $this->db = $db;
         $this->app = $app;
         $this->user_id = $user_id;
@@ -29,8 +30,8 @@ class MySQLi implements IFace {
         if( ! $cache->add( $key, 1, 60 ) ) return;
         
         $rs = $this->execute('SHOW TABLES LIKE %s', $table);
-        $row = $rs->fetch_row();
-        $rs->free_result();
+        $row = $rs->fetch();
+        $rs->closeCursor();
         if( ! $row ) {
              $this->execute(
             "CREATE TABLE IF NOT EXISTS $table (
@@ -70,8 +71,8 @@ class MySQLi implements IFace {
         $table_attr = $table .'_attr';
         
         $rs = $this->execute('SHOW TABLES LIKE %s', $table_attr);
-        $row = $rs->fetch_row();
-        $rs->free_result();
+        $row = $rs->fetch();
+        $rs->closeCursor();
         if( ! $row ) {
              $this->execute(
             "CREATE TABLE IF NOT EXISTS $table_attr (
@@ -98,7 +99,7 @@ class MySQLi implements IFace {
             $rs = $this->execute($sql, $listing->buyer, $listing->touch, $row_id);
             
             // should have affected 1 row. if it didn't something is wrong.
-            if( $this->db->affected_rows < 1 ) throw new Exception('failed', $this->db );
+            if( $rs->rowCount() < 1 ) throw new Exception('failed', $this->db );
     }
     
         /**
@@ -143,7 +144,7 @@ class MySQLi implements IFace {
                 $listing->reserve,
                 $listing->quantity
                 );
-        $row_id = $this->db->insert_id;
+        $row_id = $this->db->lastInsertId();
         $listing->id = Souk\Util::composeId( $shard,  $row_id);
         
         if( $attributes ){
@@ -164,7 +165,8 @@ class MySQLi implements IFace {
             $table = $this->table( $shard );
             if( \Gaia\Souk\Storage::isAutoSchemaEnabled() ) $this->create( $table );
             $rs = $this->execute("SELECT row_id FROM $table WHERE closed = 0 AND expires < ? ORDER BY expires ASC", $ts );
-            while( $row = $rs->fetch_assoc() ) $list[] = Souk\Util::composeId( $shard, $row['row_id'] );
+            while( $row = $rs->fetch(\PDO::FETCH_ASSOC) ) $list[] = Souk\Util::composeId( $shard, $row['row_id'] );
+            $rs->closeCursor();
             
         }
         return $list;
@@ -192,7 +194,7 @@ class MySQLi implements IFace {
                     );
             
             // should have affected 1 row. if not, blow up.
-            if( $this->db->affected_rows < 1 ) {
+            if( $rs->rowCount() < 1 ) {
                 throw new Exception('failed', $db );
             }
     
@@ -235,14 +237,14 @@ class MySQLi implements IFace {
             
             // grab the rows returned and populate the result as Souk\listings.
             $row_ids = array();
-            while(  $row = $rs->fetch_assoc() ){
+            while(  $row = $rs->fetch(\PDO::FETCH_ASSOC) ){
                 $row_id = $row_ids[] = $row['row_id'];
                 unset( $row['row_id'] );
                 $listing = Souk\Util::listing( $row );
                 $listing->id = Souk\Util::composeId( $shard, $row_id );
                 $result[ $listing->id ] = $listing;
             }
-            $rs->free_result();
+            $rs->closeCursor();
             
             // did we get any rows back? if not, move on to the next shard.
             if( count( $row_ids ) < 1 ) continue;
@@ -258,11 +260,11 @@ class MySQLi implements IFace {
             $rs = $this->execute($sql, $row_ids);
             
             // no rows? no problem, just skip it. that is expected.
-            if( $this->db->affected_rows < 1 ) continue;
+            if( $rs->rowCount() < 1 ) continue;
             
             // someone stored attributes! merge them in.
             // stored as json in the db. deserialize and layer on top of the listing object.
-            while( $row = $rs->fetch_assoc() ){
+            while( $row = $rs->fetch(\PDO::FETCH_ASSOC) ){
                 $id = Souk\Util::composeId( $shard, $row['row_id'] );
                 if( ! isset( $result[ $id ] ) ) continue;
                 $attributes = json_decode($row['attributes'], TRUE);
@@ -274,7 +276,7 @@ class MySQLi implements IFace {
                 }
             }
             // free the query result.
-            $rs->free_result();
+            $rs->closeCursor();
             
         }
         
@@ -403,7 +405,7 @@ class MySQLi implements IFace {
             // we are making the key of the id list contain the 
             // value of what we sort by, so we can do a keysort later, and order the
             // result in php since we have to span many shards.
-            while( $row = $rs->fetch_assoc()){
+            while( $row = $rs->fetch(\PDO::FETCH_ASSOC)){
                 $id = Souk\Util::composeId( $shard, $row['row_id'] );
                 switch( $sort ){
                     case 'low_price':
@@ -426,6 +428,7 @@ class MySQLi implements IFace {
                 $ids[ $key ] = $id;
                 
             }
+            $rs->closeCursor();
         }
         
         // now that we are all done fetching the rows, sort.
@@ -470,7 +473,7 @@ class MySQLi implements IFace {
                     $row_id);
         
         // should have affected a row. if it didn't toss an exception.
-        if( $this->db->affected_rows < 1 ) {
+        if( $rs->rowCount() < 1 ) {
             throw new Exception('failed', $this->db );
         }
     }
@@ -483,7 +486,7 @@ class MySQLi implements IFace {
         $args = func_get_args();
         array_shift( $args );
         $rs = $this->db->query( $qs = $this->db->format_query_args( $query, $args ) );
-        if( ! $rs ) throw new Exception('database error', array('db'=> $this->db, 'query'=>$qs ) );
+        if( ! $rs ) throw new Exception('database error', array('db'=> $this->db, 'query'=>$qs, 'error'=>$this->db->errorInfo()) );
         return $rs;
     }
 }
