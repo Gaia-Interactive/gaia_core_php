@@ -1,6 +1,5 @@
 <?php
 namespace Gaia\Stockpile\Storage\MyPDO;
-use \Gaia\DB\Driver\PDO;
 use \Gaia\Stockpile\Exception;
 use \Gaia\Stockpile\Storage\Iface;
 use \Gaia\Store;
@@ -10,8 +9,10 @@ class Core implements Iface {
     protected $db;
     protected $app;
     protected $user_id;
-    public function __construct( PDO $db, $app, $user_id, $dsn){
-        $this->db = $db;
+    public function __construct( \Gaia\DB\Iface $db, $app, $user_id, $dsn){
+        if( ! $db->isa('pdo') ) throw new Exception('invalid driver', $db );
+        if( $db->getAttribute(\PDO::ATTR_DRIVER_NAME) != 'mysql') throw new Exception('invalid driver', $db );
+       $this->db = $db;
         $this->app = $app;
         $this->user_id = $user_id;
         if( ! \Gaia\Stockpile\Storage::isAutoSchemaEnabled() ) return;
