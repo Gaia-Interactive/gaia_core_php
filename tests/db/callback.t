@@ -17,7 +17,7 @@ DB\Connection::load( array(
 ));
 $db = DB\Connection::instance('test');
 
-Tap::plan(28);
+Tap::plan(31);
 Tap::ok( DB\Connection::instance('test') === $db, 'db instance returns same object we instantiated at first');
 
 Tap::is( DB\Connection::instances(), array('test'=>$db), 'Connection::instances() returns test db object');
@@ -102,3 +102,10 @@ Tap::is($db->commit(), FALSE, 'commit returns false if no callback specified');
 $query = $db->format_query('test %%s ?, (?,?)', array(1, 2), 3, 4);
 Tap::is($query, "test %s '1', '2', ('3','4')", 'format query question mark as string');
 
+$db = new DB\Callback(array('isa'=>function(){return FALSE;}));
+
+Tap::ok( $db->isa( 'Gaia\DB\Callback' ), 'isa method detects type of outer wrapper correctly');
+Tap::is( $db->isa('MySQLi'), FALSE, 'isa fails when drilling down because handler closure returns false');
+
+$db = new DB\Callback(array('isa'=>function(){return TRUE;}));
+Tap::ok( $db->isa('MySQLi'), 'isa returns true when drilling down because handler closure returns true');
