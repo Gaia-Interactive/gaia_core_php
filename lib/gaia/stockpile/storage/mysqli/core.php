@@ -10,7 +10,8 @@ class Core implements IFace {
     protected $db;
     protected $app;
     protected $user_id;
-    public function __construct( MySQLi $db, $app, $user_id, $dsn){
+    public function __construct( \Gaia\DB\Iface $db, $app, $user_id, $dsn){
+        if( ! $db->isa('mysqli') ) throw new Exception('invalid driver', $db );
         $this->db = $db;
         $this->app = $app;
         $this->user_id = $user_id;

@@ -10,7 +10,9 @@ class Core implements Iface {
     protected $db;
     protected $app;
     protected $user_id;
-    public function __construct( PDO $db, $app, $user_id, $dsn){
+    public function __construct( \Gaia\DB\Iface $db, $app, $user_id, $dsn){
+        if( ! $db->isa('pdo') ) throw new Exception('invalid driver', $db );
+        if( $db->getAttribute(\PDO::ATTR_DRIVER_NAME) != 'sqlite') throw new Exception('invalid driver', $db );
         $this->db = $db;
         $this->app = $app;
         $this->user_id = $user_id;
