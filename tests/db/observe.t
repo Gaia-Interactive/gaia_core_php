@@ -5,7 +5,7 @@ use Gaia\Test\Tap;
 use Gaia\DB;
 
 
-Tap::plan(3);
+Tap::plan(6);
 
 $db = new DB\Callback( array('execute'=>function($query){
     return new DB\StaticResult( array(array('foo'=>'dummy\'', 'bar'=>'rummy')  ) );
@@ -28,3 +28,7 @@ $rs = $o->execute('SELECT %s as foo, %s as bar', 'dummy\'', 'rummy');
 Tap::ok( $rs, 'query executed successfully');
 Tap::is( $rs, $r, 'result object passed back to the callback');
 Tap::is( $a, array( 'SELECT %s as foo, %s as bar', 'dummy\'', 'rummy'), 'got method args passed to the callback too');
+
+Tap::is( $o->isa('Gaia\DB\Observe'), TRUE, 'wrapper tells us isa about itself');
+Tap::is( $o->isa('Gaia\DB\Callback'), TRUE, 'wrapper tells us the core instanceof');
+Tap::is( $o->isa('Gaia\DB\Transaction'), FALSE, 'doesnt false report instanceof');
