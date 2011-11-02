@@ -54,6 +54,10 @@ class Observe implements IFace {
         return $result;
     }
     
+    public function __toString(){
+        return '{' . get_class( $this ) . '} ' . $this->db->__toString();
+    }
+    
     public function __get( $key ){
         return $this->db->$key;
     }
