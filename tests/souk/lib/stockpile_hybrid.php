@@ -3,7 +3,7 @@ use Gaia\Test\Tap;
 
 
 // how many tests are we gonna run?
-Tap::plan( 66 );
+Tap::plan( $expected_test_count );
 
 
 Gaia\Stockpile\Storage::attach( function (){return 'test';} );

@@ -175,4 +175,15 @@ unset ($seller_id );
 unset( $buyer_id );
 unset( $item_id );
 
+Time::offset( 86400 * 30 );
+
+$id = 0;
+$ct = 0;
+while( $listings = Souk( $app )->pending(0, 5, $id ) ){
+    foreach( $listings as $id ){
+        $ct++;
+        //Tap::debug('pending: ' . $id );
+    }
+}
+Tap::cmp_ok( $ct, '>', 1, "found at least 1 item in pending: $ct found");
 //print "\n\n";

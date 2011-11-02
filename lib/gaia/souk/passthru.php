@@ -47,8 +47,8 @@ class Passthru implements Iface {
     public function search( $options ){
         return $this->core->search( $options );
     }
-    public function pending( $age = 0 ){
-        return $this->core->pending( $age );
+    public function pending( $age = 0, $limit = 1000, $offset_id = 0 ){
+        return $this->core->pending( $age, $limit, $offset_id );
     }
 
 }
