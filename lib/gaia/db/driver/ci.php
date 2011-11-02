@@ -112,6 +112,12 @@ class CI implements \Gaia\DB\Iface {
             );
     }
     
+    public function isa( $name ){
+        if( $this instanceof $name ) return TRUE;
+        if( $this->core instanceof $name ) return TRUE;
+        return FALSE;
+    }
+    
     public function __toString(){
         @ $res = print_r( $this, TRUE);
         return $res;
