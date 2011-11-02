@@ -1,5 +1,5 @@
 <?php
-$file = __DIR__ . '/.fb.config.php';
+$file = __DIR__ . '/../.fb.config.php';
 $config = @include $file;
 if( ! is_array( $config ) ){
     die("\n<pre>\nplease configure $file: \n" . htmlspecialchars( '<?php') . "\n return array('fbId'=>'', 'secret'=>'', 'canvaspage'=>'');\n");
@@ -15,7 +15,7 @@ ob_start();
 include __DIR__ . '/../common.php';
 use Gaia\Facebook\Persistence as Facebook;
 use Gaia\Store;
-$persistence = new Store\Signed(new Store\Cookie(array('prefix'=>'fb')), 'test');
+$persistence = new Store\Signed(new Store\Cookie(array('prefix'=>'fb' . $config['appId'])), $config['secret']);
 $facebook = new Facebook($config, $persistence);
 $me = null;
 if( isset( $_REQUEST['debug'] ) ){
