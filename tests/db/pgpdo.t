@@ -28,7 +28,7 @@ try {
 } catch( \Exception $e ){
     Tap::plan('skip_all', $e->__toString());
 }
-Tap::plan(12);
+Tap::plan(14);
 Tap::ok( DB\Connection::instance('test') === $db, 'db instance returns same object we instantiated at first');
 
 $rs = $db->execute('SELECT %s as foo, %s as bar', 'dummy\'', 'rummy');
@@ -70,4 +70,7 @@ try {
 
 Tap::like($err, '/database error/i', 'When a bad query is run using execute() the except wrapper tosses an exception');
 
+$db = new DB\Observe( $db );
+Tap::is( $db->isa('pdo'), TRUE, 'isa returns true for inner class');
+Tap::is( $db->isa('gaia\db\driver\pdo'), TRUE, 'isa returns true for driver');
 

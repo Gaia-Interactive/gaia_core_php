@@ -28,7 +28,7 @@ try {
 } catch( Exception $e ){
     Tap::plan('skip_all', $e->__toString());
 }
-Tap::plan(17);
+Tap::plan(19);
 Tap::ok( DB\Connection::instance('test') === $db, 'db instance returns same object we instantiated at first');
 
 $rs = $db->execute('SELECT %s as foo, %s as bar', 'dummy\'', 'rummy');
@@ -80,6 +80,11 @@ Transaction::rollback();
 $stmt = $db->prepare('SELECT ? as test');
 Tap::is( $stmt->execute(array('t1') ), FALSE, 'prepared statement returns false when transaction rollback happens');
 Tap::is( $stmt->fetch(PDO::FETCH_ASSOC), FALSE, 'prepared statement returns no result when locked');
+
+
+$db = new DB\Observe( $db );
+Tap::is( $db->isa('pdo'), TRUE, 'isa returns true for inner class');
+Tap::is( $db->isa('gaia\db\driver\pdo'), TRUE, 'isa returns true for driver');
 
 //Tap::debug( $rs );
 
