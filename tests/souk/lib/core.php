@@ -2,7 +2,7 @@
 use Gaia\Test\Tap;
 
 // how many tests are we gonna run?
-Tap::plan( 66 );
+Tap::plan( $expected_test_count );
 
 function souk( $app, $user_id = NULL) {
     return new \Gaia\Souk( $app, $user_id );

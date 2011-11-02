@@ -15,3 +15,4 @@ Gaia\Souk\Storage::enableAutoSchema();
 if( strpos(php_sapi_name(), 'apache') !== FALSE ) print "\n<pre>\n";
 
 $app = 'test1';
+$expected_test_count = 67;

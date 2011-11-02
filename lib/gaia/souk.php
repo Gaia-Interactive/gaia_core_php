@@ -410,8 +410,8 @@ class Souk implements Souk\Iface {
     * Age specifies how many seconds past expiration they are.
     * @return mysql result set object from the dao.
     */
-    public function pending( $age = 0 ){
-        return $this->storage()->pending( $age );
+    public function pending( $age = 0, $limit = 1000, $offset_id = 0 ){
+        return $this->storage()->pending( $age, $limit, $offset_id );
     }
     
     /************************       PROTECTED METHODS BELOW      **********************************/

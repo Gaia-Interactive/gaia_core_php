@@ -155,16 +155,36 @@ class MySQLi implements IFace {
         }
     }
     
-    public function pending( $ts = 0 ){
-        $ts = Souk\Util::now() - $age;
-        $stack = array();
-        
+    public function pending( $age = 0, $limit = 1000, $offset_id = 0){
+        $ts = Souk\Util::now() - $age;        
         $list = array();
-        foreach( Souk\Util::dateshard() as $shard ){
+        $offset_row_id = $offset_shard = 0;
+        if( $offset_id ){
+            list( $offset_shard, $offset_row_id ) = Souk\Util::parseId( $offset_id );
+        }
+        
+        $shards = array();
+        $ds = Souk\Util::dateshard();
+        foreach( $ds as $shard ){
+            if( $offset_shard && $offset_shard > $shard ) continue;
+            $shards[] = $shard;
+        }
+        $shards = array_reverse( $shards );
+        
+        foreach( $shards as $shard ){
+            if( $limit < 1 ) break;
             $table = $this->table( $shard );
             if( \Gaia\Souk\Storage::isAutoSchemaEnabled() ) $this->create( $table );
-            $rs = $this->execute("SELECT row_id FROM $table WHERE closed = 0 AND expires < ? ORDER BY expires ASC", $ts );
-            while( $row = $rs->fetch_assoc() ) $list[] = Souk\Util::composeId( $shard, $row['row_id'] );
+            $sql = "SELECT row_id FROM $table WHERE row_id > %i AND closed = 0 AND expires < %i ORDER BY expires ASC LIMIT %i";
+            //print "\n" . $this->db->format_query( $sql, $offset_row_id, $ts, $limit );
+            $rs = $this->execute($sql, $offset_row_id, $ts, $limit );
+            $offset_row_id = 0;
+            while( $row = $rs->fetch_assoc() ) {
+                $list[] = Souk\Util::composeId( $shard, $row['row_id'] );
+                $limit--;
+                if( $limit < 1 ) break;
+            }
+            $rs->free_result();
             
         }
         return $list;
