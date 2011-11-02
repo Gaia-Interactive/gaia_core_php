@@ -26,29 +26,28 @@ $binder = binder();
 
 // wrap in try/catch so we can fail and print out debug.
 try {
-    /*
+    //*
     $seller_id = uniqueUserId();
     $buyer_id = uniqueUserId();
     $item_id = uniqueNumber(1,1000000);
     $binder->itemAccount( $seller_id )->add( $item_id, 1000000);
     $binder->currencyAccount( $buyer_id )->add( $binder->currencyId(), 100000000 );
     include __DIR__ . '/../lib/auction.test.php';
-    */
-    ///*
+    
     $seller_id = uniqueUserId();
     $buyer_id = uniqueUserId();
     $item_id = uniqueNumber(1,1000000);
     $binder->itemAccount( $seller_id )->add( $item_id, 1000000);
-    $binder->currencyAccount( $buyer_id )->add( $binder->currencyId(), 100000000 );
+    $binder->currencyAccount( $buyer_id )->add( $binder->currencyId(), 100000000 );    
+    
     include __DIR__ . '/../lib/transaction.test.php';
-    //*/
-    /*
+    
     $seller_id = uniqueUserId();
     $buyer_id = uniqueUserId();
     $item_id = uniqueNumber(1,1000000);
     $binder->itemAccount( $seller_id )->add( $item_id, 1000000);
     $binder->currencyAccount( $buyer_id )->add( $binder->currencyId(), 100000000 );
-    */
+    
     include __DIR__ . '/../lib/search.test.php';
     
 } catch( Exception $e ){

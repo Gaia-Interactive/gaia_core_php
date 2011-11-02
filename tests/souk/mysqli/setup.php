@@ -21,7 +21,17 @@ DB\Connection::load( array(
             $pass = NULL, 
             $db = 'test', 
             '3306');
-         $cb = array();
+         $cb = array(
+            'start'=> function(){ $i = \Gaia\DB\Transaction::internals(); Tap::debug('TXN: start ' . $i['depth']); },
+            'commit'=> function(){ $i = \Gaia\DB\Transaction::internals(); Tap::debug('TXN: commit ' . $i['depth']); },
+            'rollback'=> function(){ $i = \Gaia\DB\Transaction::internals(); Tap::debug('TXN: rollback ' . $i['depth']); },
+            'query'=>function( $args ) {
+                $query = array_shift( $args );
+                $query = \Gaia\DB\Query::format($query, $args );
+                Tap::debug( 'QUERY: ' . $query );
+            },
+         
+         );
          //$db = new DB\Observe( $db, $cb);
          return $db;
     }

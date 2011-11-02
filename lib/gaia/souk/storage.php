@@ -34,32 +34,26 @@ class Storage {
      }
     protected static function loadDefault( Iface $souk, $dsn ){
         $db = Connection::instance( $dsn );
-        switch( get_class( $db ) ){
-            case 'Gaia\DB\Driver\MySQLi': 
-                        $classname = 'Gaia\Souk\Storage\MySQLi';
-                        break;
-            
-            case 'Gaia\DB\Driver\PDO': 
-                        switch( $db->getAttribute(\PDO::ATTR_DRIVER_NAME) ){
-                            case 'mysql': 
-                                $driver = 'MyPDO';
-                                break;
-                            
-                            case 'sqlite':
-                                $driver = 'LitePDO';
-                                break;
-                            
-                            default:
-                                throw new Exception('invalid db driver', $db );
+        if( ! $db instanceof \Gaia\DB\Iface ) throw new Exception('invalid db driver', $db );
+        if( $db->isa('mysqli') ){
+            $classname = 'Gaia\Souk\Storage\MySQLi';
+        } elseif( $db->isa('pdo') ){
+            switch( $db->getAttribute(\PDO::ATTR_DRIVER_NAME) ){
+                case 'mysql': 
+                    $driver = 'MyPDO';
+                    break;
+                
+                case 'sqlite':
+                    $driver = 'LitePDO';
+                    break;
+                
+                default:
+                    throw new Exception('invalid db driver', $db );
 
-                        }
-                        
-                        $classname = 'Gaia\Souk\Storage\\' . $driver;
-                        break;
-            default:
-                throw new Exception('invalid db driver', $db );
-
-
+            }
+            $classname = 'Gaia\Souk\Storage\\' . $driver;
+        } else {
+            throw new Exception('invalid db driver', $db );
         }
         return new $classname( $db, $souk->app(), $souk->user(), $dsn . '.' . Connection::version() );
     }
