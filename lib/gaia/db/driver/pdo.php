@@ -87,6 +87,13 @@ class PDO extends \PDO implements \Gaia\DB\Iface {
         return parent::commit();
     }
     
+    public function isa( $name ){
+        if( $this instanceof $name ) return TRUE;
+        $name = strtolower( $name );
+        if( $name == 'pdo') return TRUE;
+        return FALSE;
+    }
+    
     public function format_query( $query /*, ... */ ){
         $args = func_get_args();
         array_shift($args);
