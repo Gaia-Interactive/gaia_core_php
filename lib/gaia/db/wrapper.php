@@ -56,5 +56,9 @@ class Wrapper implements IFace {
     public function __call( $method, $args ){
         return call_user_func_array( array( $this->core, $method ), $args );
     }
+    
+    public function __toString(){
+        return '{' . get_class( $this ) . '} ' . $this->core->__toString();
+    }
 
 }
