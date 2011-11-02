@@ -65,7 +65,7 @@ class MySQLi extends \MySQLi implements \Gaia\DB\Iface {
         if( $auth == Transaction::SIGNATURE){
             if( $this->lock ) return FALSE;
             $this->txn = TRUE;
-            return parent::autocommit(FALSE);
+            return parent::query('START TRANSACTION');
         }
         Transaction::start();
         if( ! Transaction::add($this) ) return FALSE;
@@ -78,9 +78,9 @@ class MySQLi extends \MySQLi implements \Gaia\DB\Iface {
     
     public function rollback($auth = NULL){
         if( $auth != Transaction::SIGNATURE) return Transaction::rollback();
-        if( ! $this->txn ) return parent::rollback(); 
+        if( ! $this->txn ) return parent::query('ROLLBACK');
         if( $this->lock ) return TRUE;
-        $rs = parent::rollback();
+        $rs = parent::query('ROLLBACK');
         $this->close();
         $this->lock = TRUE;
         return $rs;
@@ -88,9 +88,9 @@ class MySQLi extends \MySQLi implements \Gaia\DB\Iface {
     
     public function commit($auth = NULL){
         if( $auth != Transaction::SIGNATURE) return Transaction::commit();
-        if( ! $this->txn ) return parent::commit(); 
+        if( ! $this->txn ) return parent::query('COMMIT');
         if( $this->lock ) return FALSE;
-        $res = parent::commit();
+        $res = parent::query('COMMIT');
         if( ! $res ) return $res;
         $this->txn = FALSE;
         return $res;
@@ -139,6 +139,7 @@ class MySQLi extends \MySQLi implements \Gaia\DB\Iface {
             '  [thread_id] => ' . $this->thread_id . "\n" .
             '  [warning_count] => ' . $this->warning_count . "\n" .
             '  [lock] => ' .( $this->lock ? 'TRUE' : 'FALSE') . "\n" .
+            '  [txn] => ' .( $this->txn ? 'TRUE' : 'FALSE') . "\n" .
             ')';
         return $res;
     }

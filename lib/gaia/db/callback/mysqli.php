@@ -56,7 +56,7 @@ class MySQLi extends Callback implements \Gaia\DB\Iface {
         };
         
         $callbacks['start'] = function () use ( $mysqli ){
-            return $mysqli->autocommit(FALSE);
+            return $mysqli->query('START TRANSACTION');
         };
         
         $callbacks['autocommit'] = function ($mode) use ( $wrapper ){
@@ -66,11 +66,11 @@ class MySQLi extends Callback implements \Gaia\DB\Iface {
         
         
         $callbacks['rollback'] = function () use ( $mysqli ){
-            return $mysqli->rollback();
+            return $mysqli->query('ROLLBACK');
         };
         
         $callbacks['commit'] = function () use ( $mysqli ){
-            return $mysqli->commit();
+            return $mysqli->query('COMMIT');
         };
         
         $callbacks['prepare'] = function($query){
