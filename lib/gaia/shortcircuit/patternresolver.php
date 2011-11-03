@@ -14,6 +14,7 @@ class PatternResolver implements Iface\Resolver {
     public function match( $uri, & $args ){
         $args = array();
         foreach( $this->patterns as $action => $pattern ){
+            if( isset( $pattern['action'] ) ) $action = $pattern['action'];
             if( preg_match( $pattern['regex'], $uri, $matches ) ) {
                 $args = array_slice($matches, 1);
                 foreach( $pattern['params'] as $i => $key ){
@@ -26,12 +27,17 @@ class PatternResolver implements Iface\Resolver {
         return $this->core->match( $uri, $args);
     }
     
-    public function addPattern( $action, $pattern ){
+    public function addPattern( $pattern, $action = NULL ){
         if( is_array( $pattern ) ){
             if( ! isset( $pattern['regex'] ) ) return;
             if( ! is_array( $pattern['params'] ) ) $pattern['params'] = array();
+            if( $action === NULL || is_int( $action ) ){
+                if( ! isset( $pattern['action'] ) ) return;
+                return $this->patterns[] = $pattern;
+            }
             return $this->patterns[ $action ] = $pattern;
         } elseif( is_scalar( $pattern ) ) {
+            if(  $action === NULL || is_int( $action ) ) return;
             return $this->patterns[ $action ] = array('regex'=>$pattern, 'params'=>array() );
         }
     }
@@ -39,7 +45,7 @@ class PatternResolver implements Iface\Resolver {
     public function setPatterns( array $patterns ){
         $this->patterns = array();
         foreach( $patterns as $action => $pattern ) {
-            $this->addPattern($action, $pattern );
+            $this->addPattern( $pattern, $action );
         }
     }
     
@@ -49,8 +55,18 @@ class PatternResolver implements Iface\Resolver {
     
     public function link( $action, array $params = array() ){
         $s = new \Gaia\Serialize\QueryString;
-        if( ! isset( $this->patterns[ $action ] ) ) return $this->core->link( $action, $params );
-        $pattern = $this->patterns[ $action ];
+        if( ! isset( $this->patterns[ $action ] ) ){
+            $match = FALSE;
+            foreach( $this->patterns as $pattern ){
+                if( isset( $pattern['action'] ) && $pattern['action'] == $action ){
+                    $match = TRUE;
+                    break;
+                }
+            }
+            if( ! $match ) return $this->core->link( $action, $params );
+        } else {
+            $pattern = $this->patterns[ $action ];
+        }
         $url_regex = $pattern['regex'];
         $url = str_replace(array('\\.', '\\-'), array('.', '-'), $url_regex);
         
