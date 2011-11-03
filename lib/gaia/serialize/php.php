@@ -3,18 +3,25 @@ namespace Gaia\Serialize;
 
 class PHP implements Iface {
 
-    const SERIALIZE_PREFIX = '#__PHP__:';
+    protected $prefix;
+    protected $len = 0;
+    
+    public function __construct( $prefix = '#__PHP__:' ){
+        $this->prefix = $prefix;
+        $this->len = strlen( $this->prefix );
+    }
 
     public function serialize($v){
-        if( is_scalar( $v ) || is_numeric( $v ) ) return $v;
-        return self::SERIALIZE_PREFIX . serialize( $v );
+        if( ! $this->len ) return serialize( $v );
+        if( is_bool($v) || ! is_scalar( $v ) ) return $this->prefix . serialize( $v );
+        return $v;
     }
     
     public function unserialize( $v ){
         if( $v === NULL ) return NULL;
         if( ! is_scalar( $v ) ) return $v;
-        $len = strlen(self::SERIALIZE_PREFIX);
-        if( substr( $v, 0, $len) != self::SERIALIZE_PREFIX) return $v;
-        return unserialize(substr( $v, $len) );
+        if( $this->len < 1 ) return unserialize( $v );
+        if( substr( $v, 0, $this->len) != $this->prefix) return $v;
+        return unserialize(substr( $v, $this->len) );
     }
 }
