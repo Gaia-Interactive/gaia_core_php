@@ -14,12 +14,14 @@ if( strlen( $raw ) < 1 ){
 }
 
 
-Tap::plan(2);
+Tap::plan(209);
 
-Tap::cmp_ok( @json_encode( $raw ), '===', 'null', 'json unable to parse the raw doc');
-
-$converted = UTF8::to($raw);
-//print $converted;
 Tap::todo_start();
-Tap::cmp_ok( @json_encode( $converted ), '!==', 'null', 'json able to parse the converted doc');
+foreach(explode("\n", $raw) as $i=>$line ){
+    //print $line . "\n";
+    if( substr($line, -1) != '|' ) continue;
+    $res = @json_encode( UTF8::to($line) ) !== 'null' ? TRUE : FALSE;
+    Tap::ok( $res , "json able to parse converted line ".  ($i + 1));
+    if( ! $res ) Tap::debug("failed on text: $line");
+}
 Tap::todo_end();
