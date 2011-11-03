@@ -48,6 +48,7 @@ class PatternResolver implements Iface\Resolver {
     }
     
     public function link( $action, array $params = array() ){
+        $s = new \Gaia\Serialize\QueryString;
         if( ! isset( $this->patterns[ $action ] ) ) return $this->core->link( $action, $params );
         $pattern = $this->patterns[ $action ];
         $url_regex = $pattern['regex'];
@@ -57,14 +58,14 @@ class PatternResolver implements Iface\Resolver {
         
         foreach( $params as $k => $v ){
             if( is_int( $k ) ) {
-                $args[$k] = urlencode( $v );
+                $args[$k] = $s->serialize( $v );
                 unset( $params[ $k ] );
             }
         }
         
         foreach( $pattern['params'] as $i => $key ){
             if( array_key_exists( $key, $params ) ) {
-                $args[ $i ] = urlencode($params[ $key ]);
+                $args[ $i ] = $s->serialize($params[ $key ]);
                 unset( $params[ $key ] );
             }
         }
@@ -76,7 +77,7 @@ class PatternResolver implements Iface\Resolver {
             $url = preg_replace($groups, $args, $url, 1);
         }
         if( ! preg_match('/^#\^?([^#\$]+)/', $url, $matches) ) return $this->core->link($action, $params );
-        $qs = http_build_query($params);
+        $qs = $s->serialize($params);
         if( $qs ) $qs = '?' . $qs;
         return '/' . trim($matches[1], '/') . $qs;
     }
