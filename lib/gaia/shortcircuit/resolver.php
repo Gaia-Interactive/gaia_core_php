@@ -40,18 +40,19 @@ class Resolver implements Iface\Resolver
     }
     
     public function link( $name, array $params = array() ){
-        if( ! $this->match( $name, $args ) ) return '';
+        $s = new \Gaia\Serialize\QueryString;
+        //if( ! $this->match( $name, $args ) ) return '';
         
         $args = array();
         $p = array();
         foreach( $params as $k => $v ){
             if( is_int( $k ) ){ 
-                $args[ $k ] = urlencode($v);
+                $args[ $k ] = $s->serialize($v);
             } else {
                 $p[ $k ] = $v;
             }
         }
-        $params = http_build_query($p);
+        $params = $s->serialize($p);
         if( $params ) $params = '?' . $params;
         return '/' . $name . '/' . implode('/', $args ) . $params;
     }
