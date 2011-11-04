@@ -14,7 +14,8 @@ if( strlen( $raw ) < 1 ){
 }
 
 
-Tap::plan(151);
+Tap::plan(152);
+Tap::cmp_ok( json_decode(json_encode($raw)), '===', $raw, 'i can eat glass files is correctly encoded');
 foreach(explode("\n", $raw) as $i=>$line ){
     $newline = UTF8::to($line);
     Tap::ok( $newline == $line , "didnt change encoding of line ".  ($i + 1) . ' :' . trim($line));
