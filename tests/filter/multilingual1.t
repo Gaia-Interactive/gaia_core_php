@@ -15,9 +15,8 @@ if( strlen( $raw ) < 1 ){
 
 
 Tap::plan(111);
+
 foreach(explode("\n", $raw) as $i=>$line ){
-    //print $line . "\n";
-    $res = json_encode( UTF8::to($line) ) !== 'null' ? TRUE : FALSE;
-    Tap::ok( $res , "json able to parse converted line ".  ($i + 1));
-    if( ! $res ) Tap::debug("failed on text: $line");
+    $newline = UTF8::to($line);
+    Tap::ok( $newline == $line , "didnt change encoding of line ".  ($i + 1) . ' :' . trim($line));
 }
