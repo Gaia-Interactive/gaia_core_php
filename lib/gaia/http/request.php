@@ -16,7 +16,7 @@ use Gaia\Exception;
 * print PHP_EOL . "URL: " . $request->url;
 * print PHP_EOL . "RESPONSE: " $response->body;
 */
-class Request extends Container implements \Iterator {
+class Request extends Container {
     
    /**
     * try to run the request right away.
@@ -74,6 +74,11 @@ class Request extends Container implements \Iterator {
         if( $this->post ) {
             $opts[CURLOPT_POST] = 1;
             $opts[CURLOPT_POSTFIELDS] = is_array( $this->post ) ? http_build_query( $this->post  ) : $this->post;
+        } 
+        
+        if ( $this->method ){
+            if( isset( $opts[CURLOPT_POST]) ) unset( $opts[CURLOPT_POST] );
+            $opts[CURLOPT_CUSTOMREQUEST] = strtoupper( $this->method );
         }
 
         if( ! isset($opts[CURLOPT_HTTPHEADER]) )$opts[CURLOPT_HTTPHEADER] = array();
@@ -98,20 +103,29 @@ class Request extends Container implements \Iterator {
         if( ! isset( $info['header_size'] ) ) $info['header_size'] = 0;
         $response_header =  substr( $info['response'], 0, $info['header_size'] );
         $header_lines = explode("\r\n", $response_header);
-        $headers = array();
-        foreach( $header_lines as $line ){
-            if( ! strpos( $line, ':') ) continue;
-            list( $k, $v ) = explode(':', $line );
-            $k = trim( $k );
-            $v = trim( $v );
-            $headers[ $k ] = $v;
-        }
+        $headers = self::parseHeaders($response_header );
         $info['body'] = substr( $info['response'], $info['header_size']);
         unset( $info['response'] );
         $info['headers'] = new \Gaia\Container($headers);
         $info['response_header'] = $response_header;
         $this->response = new \Gaia\Container( $info );
         return $this->response;
+    }
+    
+    protected static function parseHeaders($headers) {
+        $retVal = array();
+        $fields = explode("\r\n", preg_replace('/\x0D\x0A[\x09\x20]+/', ' ', $headers));
+        foreach( $fields as $field ) {
+            if( ! preg_match('/([^:]+): (.+)/m', $field, $match) ) continue;
+            $match[1] = preg_replace('/(?<=^|[\x09\x20\x2D])./e', 'strtoupper("\0")', strtolower(trim($match[1])));
+            if( isset($retVal[$match[1]]) ) {
+                $retVal[$match[1]] = array($retVal[$match[1]], $match[2]);
+            } else {
+                $retVal[$match[1]] = trim($match[2]);
+            }
+          
+        }
+        return $retVal;
     }
     
     public function close(){
