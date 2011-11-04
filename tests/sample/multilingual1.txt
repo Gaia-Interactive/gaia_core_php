@@ -1,0 +1,111 @@
+Letters with acute    AÁ aá   CĆ cć   EÉ eé   IÍ ií   LĹ lĺ   NŃ nń   OÓ oó   RŔ rŕ   SŚ sś   UÚ uú   YÝ yý   ZŹ zź
+Letters with apostrophe (hacek)    dď   LĽ lľ   tť
+Letters with breve    AĂ aă   GĞ gğ   UŬ uŭ
+Letters with caron (hacek)    CČ cč   DĎ   EĚ eě   NŇ nň   RŘ rř   SŠ sš   TŤ   ZŽ zž
+Letters with cedilla (comma)    CÇ cç   GĢ gģ   KĶ kķ   LĻ lļ   NŅ nņ   RŖ rŗ   SŞ sş   TŢ tţ
+Letters with circumflex    AÂ aâ   CĈ cĉ   EÊ eê   GĜ gĝ   HĤ hĥ   IÎ iî   JĴ jĵ   OÔ oô   SŜ sŝ   UÛ uû   WŴ wŵ   YŶ yŷ
+Letters with diaeresis (umlaut)    AÄ aä   EË eë   IÏ iï   OÖ oö   UÜ uü   YŸ yÿ
+Letters with/without dot above    CĊ cċ   EĖ eė   GĠ gġ   Iİ iı   ZŻ zż
+Letters with double acute    OŐ oő   UŰ uű
+Letters with grave    AÀ aà   EÈ eè   IÌ iì   OÒ oò   UÙ uù
+Letters with horn    OƠ oơ   UƯ uư
+Letters with macron    AĀ aā   EĒ eē   IĪ iī   OŌ oō   UŪ uū
+Letters with ogonek    AĄ aą   EĘ eę   IĮ iį   UŲ uų
+Letters with ring above    AÅ aå   UŮ uů
+Letters with stroke    DĐ dđ   HĦ hħ   LŁ lł   OØ oø
+Letters with tilde    AÃ aã   NÑ nñ   OÕ oõ
+Ligatures    AEÆ aeæ   OEŒ oeœ
+Eth & Thorn    DÐ dð   THÞ thþ
+German sharp s & long s    ß   ſ
+Greek Capital letters    Α Β Γ Δ Ε Ζ Η Θ Ι Κ Λ Μ Ν Ξ Ο Π Ρ Σ Τ Υ Φ Χ Ψ Ω
+Greek Capital letters with tonos    Ά   Έ   Ή   Ί   Ό   Ύ   Ώ
+Greek Capital letters with dialytika    Ϊ   Ϋ
+Greek Small letters    α β γ δ ε ζ η θ ι κ λ μ ν ξ ο π ρ σς τ υ φ χ ψ ω
+Greek Small letters with tonos    ά   έ   ή   ί   ό   ύ   ώ
+Greek Small letters with dialytika    ϊ   ϋ
+Greek Small letters with dialytika and tonos    ΐ   ΰ
+Russian alphabet    А Б В Г Д Е Ё Ж З И Й К Л М Н О П Р С Т У Ф Х Ц Ч Ш Щ Ъ Ы Ь Э Ю Я    а б в г д е ё ж з и й к л м н о п р с т у ф х ц ч ш щ ъ ы ь э ю я
+Belarussian alphabet    А Б В Г Д Е Ё Ж З І Й К Л М Н О П Р С Т У Ў Ф Х Ц Ч Ш Ы Ь Э Ю Я    а б в г д е ё ж з і й к л м н о п р с т у ў ф х ц ч ш ы ь э ю я
+Ukrainian alphabet    А Б В Г Ґ Д Е Є Ж З И І Ї Й К Л М Н О П Р С Т У Ф Х Ц Ч Ш Щ Ь Ю Я    а б в г ґ д е є ж з и і ї й к л м н о п р с т у ф х ц ч ш щ ь ю я
+Bulgarian alphabet    А Б В Г Д Е Ж З И Й К Л М Н О П Р С Т У Ф Х Ц Ч Ш Щ Ъ Ь Ю Я    а б в г д е ж з и й к л м н о п р с т у ф х ц ч ш щ ъ ь ю я
+Macedonian alphabet    А Б В Г Д Ѓ Е Ж З Ѕ И Ј К Л Љ М Н Њ О П Р С Т Ќ У Ф Х Ц Ч Џ Ш    а б в г д ѓ е ж з ѕ и ј к л љ м н њ о п р с т ќ у ф х ц ч џ ш
+Serbian alphabet    А Б В Г Д Ђ Е Ж З И Ј К Л Љ М Н Њ О П Р С Т Ћ У Ф Х Ц Ч Џ Ш    а б в г д ђ е ж з и ј к л љ м н њ о п р с т ћ у ф х ц ч џ ш
+Mongolian alphabet    A B V G D E Ë Zh Z I J K L M N O Ö P R S T U Ü F X C Ch Sh Shh " Y ' E Ju Ja    А Б В Г Д Е Ё Ж З И Й К Л М Н О Ө П Р С Т У Ү Ф Х Ц Ч Ш Щ Ъ Ы Ь Э Ю Я    а б в г д е ё ж з и й к л м н о ө п р с т у ү ф х ц ч ш щ ъ ы ь э ю я
+Armenian Capital letters    a b g d e z ê ă th   ž i l x c’ k’ h dz ğ   č’ m j n š o č p’ dž   rr s v t’ r c w ph kh   ô f    Ա Բ Գ Դ Ե Զ Է Ը Թ   Ժ Ի Լ Խ Ծ Կ Հ Ձ Ղ   Ճ Մ Յ Ն Շ Ո Չ Պ Ջ   Ռ Ս Վ Տ Ր Ց Ւ Փ Ք   Օ Ֆ 
+Armenian Small letters    a b g d e z ê ă th   ž i l x c’ k’ h dz ğ   č’ m j n š o č p’ dž   rr s v t’ r c w ph kh   ew ô f    ա բ գ դ ե զ է ը թ   ժ ի լ խ ծ կ հ ձ ղ   ճ մ յ ն շ ո չ պ ջ   ռ ս վ տ ր ց ւ փ ք   և օ ֆ 
+Mxedruli (Mkhedruli) script    a b g d e v z th   i k’ l m n o p’ ž   r s t’ u ph kh ğ q’ š   č c dz c’ č’ x dž h    ა ბ გ დ ე ვ ზ თ   ი კ ლ მ ნ ო პ ჟ   რ ს ტ უ ფ ქ ღ ყ შ   ჩ ც ძ წ ჭ ხ ჯ ჰ 
+Hebrew alphabet    ’ b g d h w z H T y kk l mm nn s ‘ pp cc q r š ś t      א ב ג ד ה ו ז ח ט י כך ל מם נן ס ע פף צץ ק ר שׁ שׂ ת 
+Hebrew Letters with dagesh or mapiq    ’ b g d h w z   T y kk l m  n  s   pp c  q r š ś t      אּ בּ גּ דּ הּ וּ זּ   טּ יּ כּךּ לּ מּ  נּ  סּ   פּףּ צּ  קּ רּ שּׁ שּׂ תּ 
+Yiddish digraphs    ww   wy   yy      װ   ױ   ײ 
+Hebrew Letters with rafeh    v   x   f      בֿ   כֿ   פֿ
+Hebrew Vowels with points    a   å   o   u   i   ai      אַ   אָ   וֹ   וּ   יִ   ײַ
+Arabic alphabet    ’a a b t þ j H x d ð r z s š S D T Z ‘ ğ f v q k l m n h -t w ÿ y -a     ـآ آ   ـا ا   بـبـب ب   تـتـت ت   ثـثـث ث   جـجـج ج   حـحـح ح   خـخـخ خ   ـد د   ـذ ذ   ـر ر   ـز ز   سـسـس س   شـشـش ش   صـصـص ص   ضـضـض ض   طـطـط ط   ظـظـظ ظ   عـعـع ع   غـغـغ غ   فـفـف ف   ڤـڤـڤ ڤ   قـقـق ق   كـكـك ك   لـلـل ل   مـمـم م   نـنـن ن   هـهـه ه   ـة ة   ـو و   يـيـي ي   یـیـی ی   ـى ى  
+Arabic Letters with hamzah       ء   ـإ إ   ـأ أ   ـؤ ؤ   ئـئـئ ئ  
+Persian alphabet      ’a a b p t s j c H x d z r z ž s š S Z T Z ‘ ğ f q k g l m n v h y     ـآ آ   ـا ا   بـبـب ب   پـپـپ پ   تـتـت ت   ثـثـث ث   جـجـج ج   چـچـچ چ   حـحـح ح   خـخـخ خ   ـد د   ـذ ذ   ـر ر   ـز ز   ـژ ژ   سـسـس س   شـشـش ش   صـصـص ص   ضـضـض ض   طـطـط ط   ظـظـظ ظ   عـعـع ع   غـغـغ غ   فـفـف ف   قـقـق ق   کـکـک ک   گـگـگ گ   لـلـل ل   مـمـم م   نـنـن ن   ـو و   هـهـه ه   یـیـی ی  
+Urdu alphabet      ’a a b p t t. s j c H x d d. z r r. z ž s š S Z T Z ‘ ğ f q k g l m n -n v h h y -e     ـآ آ   ـا ا   بـبـب ب   پـپـپ پ   تـتـت ت   ٹـٹـٹ ٹ   ثـثـث ث   جـجـج ج   چـچـچ چ   حـحـح ح   خـخـخ خ   ـد د   ـڈ ڈ   ـذ ذ   ـر ر   ـڑ ڑ   ـز ز   ـژ ژ   سـسـس س   شـشـش ش   صـصـص ص   ضـضـض ض   طـطـط ط   ظـظـظ ظ   عـعـع ع   غـغـغ غ   فـفـف ف   قـقـق ق   کـکـک ک   گـگـگ گ   لـلـل ل   مـمـم م   نـنـن ن   ـں ں   ـو و   ہـہـہ ہ   ھـھـھ ھ   یـیـی ی   ـے ے  
+Arabic-Indic digits      0 1 2 3 4 5 6 7 8 9 10 11 12     0 1 2 3 4 5 6 7 8 9 10 11 12     ٠ ١ ٢ ٣ ٤ ٥ ٦ ٧ ٨ ٩ ١٠ ١١ ١٢     ۰ ۱ ۲ ۳ ۴ ۵ ۶ ۷ ۸ ۹ ۱۰ ۱۱ ۱۲ 
+Sanskrit alphabet    a aa i ii u uu   r rr l   e ai o au    अ आ इ ई उ ऊ   ऋ ॠ ऌ   ए ऐ ओ औ     kaa ki kii ku kuu   kr krr kl   ke kai ko kau    का कि की कु कू   कृ कॄ कॢ   के कै को कौ     k kh g gh ng   c ch j jh ñ   t. t.h d. d.h n.   t th d dh n   p ph b bh m   y r l. l v   ś s. s h    क ख ग घ ङ   च छ ज झ ञ   ट ठ ड ढ ण   त थ द ध न   प फ ब भ म   य र ळ ल व   श ष स ह 
+Hindi/Urdu letters with nuqta    q x ğ z r. r.h f    क़ ख़ ग़ ज़ ड़ ढ़ फ़ 
+Sample conjuncts    ks. jñ tt tr rt    क्ष ज्ञ त्त त्र र्त 
+Devanagari digits    0 1 2 3 4 5 6 7 8 9 10    ० १ २ ३ ४ ५ ६ ७ ८ ९ १०
+Sanskrit alphabet    a aa i ii u uu   r rr   e ai o au    અ આ ઇ ઈ ઉ ઊ   ઋ ૠ   એ ઐ ઓ ઔ     kaa ki kii ku kuu   kr krr   ke kai ko kau    કા કિ કી કુ કૂ   કૃ કૄ   કે કૈ કો કૌ     k kh g gh ng   c ch j jh ñ   t. t.h d. d.h n.   t th d dh n   p ph b bh m   y r l. l v   ś s. s h    ક ખ ગ ઘ ઙ   ચ છ જ ઝ ઞ   ટ ઠ ડ ઢ ણ   ત થ દ ધ ન   પ ફ બ ભ મ   ય ર ળ લ વ   શ ષ સ હ 
+Sample conjuncts    ks. jñ tt tr rt    ક્ષ જ્ઞ ત્ત ત્ર ર્ત 
+Gujarati digits    0 1 2 3 4 5 6 7 8 9 10    ૦ ૧ ૨ ૩ ૪ ૫ ૬ ૭ ૮ ૯ ૧૦
+Sanskrit alphabet    a aa i ii u uu   r rr l   e ai o au    অ আ ই ঈ উ ঊ   ঋ ৠ ঌ   এ ঐ ও ঔ     kaa ki kii ku kuu   kr krr kl   ke kai ko kau    কা কি কী কু কূ   কৃ কৄ কৢ   কে কৈ কো কো     k kh g gh ng   c ch j jh ñ   t. t.h d. d.h n.   t th d dh n   p ph b bh m   y r l v   ś s. s h    ক খ গ ঘ ঙ   চ ছ জ ঝ ঞ   ট ঠ ড ঢ ণ   ত থ দ ধ ন   প ফ ব ভ ম   য র ল ব   শ ষ স হ 
+Letters with nukta & Assamese letters    r. r.h y.   r v    ড় ঢ় য়   ৰ ৱ 
+Sample conjuncts    ks. jñ tt tr rt    ক্ষ জ্ঞ ত্ত ত্র র্ত 
+Bengali digits    0 1 2 3 4 5 6 7 8 9 10    ০ ১ ২ ৩ ৪ ৫ ৬ ৭ ৮ ৯ ১০
+Panjabi alphabet    a aa i ii u uu   e ai o au    ਅ ਆ ਇ ਈ ਉ ਊ   ਏ ਐ ਓ ਔ     kaa ki kii ku kuu   ke kai ko kau    ਕਾ ਕਿ ਕੀ ਕੁ ਕੂ   ਕੇ ਕੈ ਕੋ ਕੌ     k kh g gh ng   c ch j jh ñ   t. t.h d. d.h n.   t th d dh n   p ph b bh m   y r l v r.   s h    ਕ ਖ ਗ ਘ ਙ   ਚ ਛ ਜ ਝ ਞ   ਟ ਠ ਡ ਢ ਣ   ਤ ਥ ਦ ਧ ਨ   ਪ ਫ ਬ ਭ ਮ   ਯ ਰ ਲ ਵ ੜ   ਸ ਹ 
+Letters with nukta    x ğ z f l. š    ਖ਼ ਗ਼ ਜ਼ ਫ਼ ਲ਼ ਸ਼ 
+Gurmukhi digits    0 1 2 3 4 5 6 7 8 9 10    ੦ ੧ ੨ ੩ ੪ ੫ ੬ ੭ ੮ ੯ ੧੦
+•	bullet
+¢	cent sign
+©	copyright sign
+¤	currency sign
+†	dagger
+°	degree sign
+÷	division sign
+«	double angle quotation mark (guillemet) <<
+»	double angle quotation mark (guillemet) >>
+“	double quotation mark 66
+”	double quotation mark 99
+„	double quotation mark low-99
+…	ellipsis
+—	em dash
+–	en dash
+€	euro sign
+―	horizontal bar (quotation dash)
+µ	micro sign
+·	middle dot (centered period)
+·	middle dot (centered period, Greek ano teleia)
+×	multiplication sign
+¬	not sign
+№	numero sign
+‰	per mille (per thousand) sign
+¶	pilcrow (paragraph) sign
+±	plus-minus sign
+£	pound sterling sign
+®	registered sign
+§	section sign
+₪	sheqel sign
+‹	single angle quotation mark (guillemet) <
+›	single angle quotation mark (guillemet) >
+‘	single quotation mark 6
+’	single quotation mark 9 (apostrophe)
+¹	superscript 1
+²	superscript 2
+³	superscript 3
+™	trademark sign
+¥	yen sign
+،	Arabic comma
+٫	Arabic decimal separator
+٪	Arabic percent sign
+؟	Arabic question mark
+؛	Arabic semicolon
+۔	Arabic-Urdu full stop (Arabic-Urdu period)
+־	Hebrew hyphen (maqaf)
+׳	Hebrew prime (geresh)
+״	Hebrew double prime (gershayim)
+॰	Indic abbreviation sign
+।	Indic danda
+॥	Indic double danda
