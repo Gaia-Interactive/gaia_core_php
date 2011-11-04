@@ -70,18 +70,35 @@ class Request extends Container {
         } else {
             $ch = $this->handle = curl_init();
         }
+        if( ! isset($opts[CURLOPT_HTTPHEADER]) )$opts[CURLOPT_HTTPHEADER] = array();
+        $headers = $this->headers;
+        if( is_array( $headers ) || $headers instanceof iterator ){
+            foreach( $headers as $k => $v ){
+                if( is_int( $k ) ){
+                    $opts[CURLOPT_HTTPHEADER][] = $v;
+                } else {
+                    $opts[CURLOPT_HTTPHEADER][] = $k . ': ' . $v;
+                }
+            }   
+        }
         $opts[ CURLOPT_URL ] = $url;
         if( $this->post ) {
             $opts[CURLOPT_POST] = 1;
-            $opts[CURLOPT_POSTFIELDS] = is_array( $this->post ) ? http_build_query( $this->post  ) : $this->post;
+            $s = $this->serializer;
+            $post = $this->post;
+            if( $s && $s instanceof \Gaia\Serialize\Iface ) {
+                 $post = $s->serialize( $post );
+                 $opts[CURLOPT_HTTPHEADER][] = 'X-Serialize: ' . str_replace('gaia\serialize\\', '',  strtolower(get_class( $s )));
+            } else {
+                if( is_array( $post ) ) $post = http_build_query( $post );
+            }
+            $opts[CURLOPT_POSTFIELDS] = $post;
         } 
         
         if ( $this->method ){
             if( isset( $opts[CURLOPT_POST]) ) unset( $opts[CURLOPT_POST] );
             $opts[CURLOPT_CUSTOMREQUEST] = strtoupper( $this->method );
         }
-
-        if( ! isset($opts[CURLOPT_HTTPHEADER]) )$opts[CURLOPT_HTTPHEADER] = array();
                 
         if( isset( $opts[CURLOPT_POSTFIELDS] ) && substr( $opts[CURLOPT_POSTFIELDS], 0, 5 ) == '<?xml'){
            $opts[CURLOPT_HTTPHEADER][] = 'Content-Type: text/xml';
@@ -105,9 +122,17 @@ class Request extends Container {
         $header_lines = explode("\r\n", $response_header);
         $headers = self::parseHeaders($response_header );
         $info['body'] = substr( $info['response'], $info['header_size']);
+        $s = $this->serializer;
+        if( $s && $s instanceof \Gaia\Serialize\Iface ) {
+            $info['body'] = $s->unserialize( trim($info['body']) );
+        }
+        $info['raw'] = $info['request_header'] . $info['response'];
+        
+        $info['headers'] = $info['response_headers'] = new \Gaia\Container($headers);
+        $info['request_headers'] = new \Gaia\Container($info['request_header']);
+        //$info['response_header'] = $response_header;
         unset( $info['response'] );
-        $info['headers'] = new \Gaia\Container($headers);
-        $info['response_header'] = $response_header;
+        unset( $info['request_header'] );
         $this->response = new \Gaia\Container( $info );
         return $this->response;
     }
