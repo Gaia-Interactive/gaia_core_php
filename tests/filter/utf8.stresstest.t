@@ -38,9 +38,14 @@ if( ! $ct ){
 
 Tap::plan( $ct );
 
-Tap::todo_start();
+$broken_lines = array(75, 76, 83, 84, 93, 102, 103, 105, 106, 107, 108, 109, 110, 114, 115, 116, 117, 175, 176, 177);
+
 foreach( $problems as $i=>$line ){
     $newline = @json_decode(json_encode( UTF8::to($line) ));
-    Tap::ok( $newline !== NULL , "fixed broken line ".  ($i + 1) . ' :' . trim($newline));
+    $line_no = $i + 1;
+    $todo = FALSE;
+    if( in_array( $line_no, $broken_lines ) ) $todo = TRUE;
+    if( $todo ) Tap::todo_start();
+    Tap::ok( $newline !== NULL , "fixed broken line ".  $line_no . ' :' . trim($newline));
+    if( $todo ) Tap::todo_end();
 }
-Tap::todo_end();
