@@ -1,0 +1,52 @@
+¬ 	not sign
+¯ 	macron, overline
+° 	degree sign
+¹ 	superscript 1
+² 	superscript 2
+³ 	superscript 3
+× 	multiplication sign
+÷ 	division sign
+± 	plus-minus sign
+− 	minus sign
+– 	en dash
+— 	em dash
+† 	dagger
+· 	middle dot, centered period
+· 	middle dot, centered period (boldface)
+• 	bullet
+… 	ellipsis
+‰ 	per mille sign, per thousand sign
+' 	apostrophe (italics)
+′ 	prime, minute
+″ 	double prime, second
+ ⁄  	fraction slash
+← 	leftwards arrow
+↑ 	upwards arrow
+→ 	rightwards arrow
+↓ 	downwards arrow
+↔ 	left right arrow
+↕ 	up down arrow
+√ 	square root, radical
+∞ 	infinity
+∩ 	intersection
+∫ 	integral
+⌠
+⌡ 	top half integral
+≈ 	almost equal to, approximately equal to
+≠ 	not equal to
+≡ 	identical to
+≤ 	less than or equal to
+≥ 	greater than or equal to
+∂ 	partial differential
+ƒ 	 f with hook, script f
+∆ 	increment, difference
+Δ 	Delta
+µ 	micro sign
+μ 	mu
+∏ 	product
+Π 	Pi
+∑ 	summation, sum
+Σ 	Sigma
+Ω 	ohm sign
+Ω 	Omega
+The Greek alphabet  Α Β Γ Δ Ε Ζ Η Θ Ι Κ Λ Μ Ν Ξ Ο Π Ρ Σ Τ Υ Φ Χ Ψ Ω α β γ δ ε ζ η θ ι κ λ μ ν ξ ο π ρ σ τ υ φ χ ψ ω Α Β Γ Δ Ε Ζ Η Θ Ι Κ Λ Μ Ν Ξ Ο Π Ρ Σ Τ Υ Φ Χ Ψ Ω α β γ δ ε ζ η θ ι κ λ μ ν ξ ο π ρ σ τ υ φ χ ψ ω Α Β Γ Δ Ε Ζ Η Θ Ι Κ Λ Μ Ν Ξ Ο Π Ρ Σ Τ Υ Φ Χ Ψ Ω α β γ δ ε ζ η θ ι κ λ μ ν ξ ο π ρ σ τ υ φ χ ψ ω Α Β Γ Δ Ε Ζ Η Θ Ι Κ Λ Μ Ν Ξ Ο Π Ρ Σ Τ Υ Φ Χ Ψ Ω α β γ δ ε ζ η θ ι κ λ μ ν ξ ο π ρ σ τ υ φ χ ψ ω
