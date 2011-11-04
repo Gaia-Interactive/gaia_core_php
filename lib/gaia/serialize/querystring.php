@@ -10,7 +10,7 @@ class QueryString implements Iface {
         return urldecode( $v );
     }
     
-    function serialize($params, $name=null) {
+    public function serialize($params, $name=null) {
         if( is_object( $params ) ) $params = json_decode( json_encode( $params ), TRUE);
         if( ! is_array( $params ) ) return urlencode($params);
         $ret = "";
