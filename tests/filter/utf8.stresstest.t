@@ -5,7 +5,7 @@ include __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\UTF8;
 
-$raw = file_get_contents(__DIR__ . '/UTF-8-test.txt');
+$raw = file_get_contents(__DIR__ . '/../sample/UTF-8-test.txt');
 
 /*
 $ch = curl_init("http://www.cl.cam.ac.uk/~mgk25/ucs/examples/UTF-8-test.txt");
@@ -14,7 +14,7 @@ CURLOPT_RETURNTRANSFER => 1,
 CURLOPT_ENCODING => 'UTF-8',
 ));
 $raw = curl_exec($ch);
-file_put_contents(__DIR__ . '/UTF-8-test.txt', $raw);
+file_put_contents(__DIR__ . '/../sample/UTF-8-test.txt', $raw);
 */
 
 

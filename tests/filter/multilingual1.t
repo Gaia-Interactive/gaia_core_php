@@ -5,7 +5,7 @@ include __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\UTF8;
 
-$raw = file_get_contents(__DIR__ . '/multilingual1.txt');
+$raw = file_get_contents(__DIR__ . '/../sample/multilingual1.txt');
 
 
 
