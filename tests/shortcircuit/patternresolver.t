@@ -7,29 +7,11 @@ use Gaia\ShortCircuit\PatternResolver;
 Tap::plan(13);
 
 $patterns = array(
-    'nested/test'=> array(
-                    'regex'=>'#^/go/([0-9]+?)$#i', 
-                    'params'=>array('id')
-                    ),
-                    
-                    array( 
-                    'action'=>'nested/test',
-                    'regex'=>'#^/gogo/([0-9]+?)$#i', 
-                    'params'=>array('id')
-                    ),
-     
-                    array(
-                    'action'=>'id',
-                    'regex'=>'#^/numerical/([0-9]+?)$#i',
-                    'params'=>array('id')
-                    ),
-                    
-    'nested/deep/test' => array(
-                    'regex'=>'#^/foo/bar/([a-z]+)/test/([a-z]+)$#i',
-                    'params'=>array('a','b')
-                    ),
-                    
-    'index' =>'#^/$#',
+'/go/(id)'                  => 'nested/test',
+'/gogo/(id)'                => 'nested/test',
+'/numerical/(id)'           => 'id',
+'/foo/bar/(a)/test/(b)'     => 'nested/deep/test',
+//'/'                         => 'index',
 );
 
 $r = new PatternResolver( new Resolver( __DIR__ . '/app/'), $patterns);
@@ -44,5 +26,5 @@ Tap::is( $r->link('id', array('id'=>123) ), '/numerical/123', 'pattern converted
 Tap::is( $r->match('/foo/bar/bazz/test/quux', $args ), 'nested/deep/test', 'deeply nested url matched action' );
 Tap::is( $args, array(0=>'bazz', 1=>'quux', 'a'=>'bazz', 'b'=>'quux'), 'extracted the correct args');
 Tap::is( $r->link('nested/test', array('id'=>123) ), '/go/123', 'pattern converted back into a url' );
-Tap::is( $r->link('nested/deep/test', array('b'=>'quux', 'a'=>'bazz', 'c'=>'test', 0=>'bazz')), '/foo/bar/bazz/test/quux?c=test', 'converted longer pattern with several parts into url');
+Tap::is( $r->link('nested/deep/test', array('b'=>'quux', 'a'=>'bazz', 'c'=>'test')), '/foo/bar/bazz/test/quux?c=test', 'converted longer pattern with several parts into url');
 Tap::is( $r->match('nested/deep/test/1', $args), 'nested/deep/test', 'without a pattern match, falls back on the core match method');
