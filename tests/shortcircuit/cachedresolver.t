@@ -35,12 +35,12 @@ Tap::is( $r->match('nested/deep/test/1/1/1',  $args), 'nested/deep/test', 'match
 Tap::is( $r->match('nested/deep/test',  $args), 'nested/deep/test', 'match finds deep match even when it is exact match');
 Tap::is( $r->match('nested/deep/no/1/1/1',  $args), 'nested', 'if it doesnt find it drops back down');
 
-$patterns = array(
+$urls = array(
 '/go/(id)' => 'nested/test',
 '/foo/bar/(a)/test/(b)' => 'nested/deep/test',
 );
 
-$r->setPatterns( $patterns );
+$r->setUrls( $urls );
 Tap::is( $r->match('/', $args), 'index', 'default url matched index');
 Tap::is( $r->match('/go/123', $args), 'nested/test', 'go url matched action' );
 Tap::is( $args['id'], '123', 'number extracted into the request id');

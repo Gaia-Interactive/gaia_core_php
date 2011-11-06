@@ -9,11 +9,11 @@ class Resolver implements Iface\Resolver
 
     protected $appdir = '';
     const param_match = '#\\\\\(([a-z0-9_\-]+)\\\\\)#i';
-    protected $patterns = array();
+    protected $urls = array();
 
-    public function __construct( $dir = '', array $patterns = null  ){
+    public function __construct( $dir = '', array $urls = null  ){
         $this->appdir = $dir;
-        if( $patterns ) $this->setPatterns( $patterns );
+        if( $urls ) $this->setUrls( $urls );
     }
     
     /**
@@ -21,7 +21,7 @@ class Resolver implements Iface\Resolver
     */
     public function match( $uri, & $args ){
         $args = array();
-        if( $this->patterns ){
+        if( $this->urls ){
             $buildRegex = function ( $pattern ){
                 $params = array();
                 $regex  = preg_replace_callback(Resolver::param_match, function($match) use ( &$params ) {
@@ -32,7 +32,7 @@ class Resolver implements Iface\Resolver
                 return array('#^' . $regex . '$#i', $params );
             };
             
-            foreach( $this->patterns as $pattern => $action ){
+            foreach( $this->urls as $pattern => $action ){
                 list( $regex, $params ) = $buildRegex( $pattern );
                 if( ! preg_match( $regex, $uri, $matches ) ) continue;
                 $args = array_slice($matches, 1);
@@ -68,7 +68,7 @@ class Resolver implements Iface\Resolver
     public function link( $name, array $params = array() ){
         $s = new \Gaia\Serialize\QueryString;
         $args = array();
-        if( $this->patterns ){
+        if( $this->urls ){
             $createLink = function( $pattern, array & $params ) use( $s ) {
                 $url = preg_replace_callback(Resolver::param_match, function($match) use ( & $params, $s ) {
                     if( ! array_key_exists( $match[1], $params ) ) return '';
@@ -80,7 +80,7 @@ class Resolver implements Iface\Resolver
             };
                 
             $match = FALSE;
-            foreach( $this->patterns as $pattern => $a ){
+            foreach( $this->urls as $pattern => $a ){
                 if(  $a == $name ){
                     $match = TRUE;
                     break;
@@ -125,19 +125,19 @@ class Resolver implements Iface\Resolver
         return $this->appdir = $dir;
     }
     
-    public function addPattern( $pattern, $action ){
-        $this->patterns[ '/' . trim($pattern, '/') ] = $action;
+    public function addURL( $pattern, $action ){
+        $this->urls[ '/' . trim($pattern, '/') ] = $action;
     }
     
-    public function setPatterns( array $patterns ){
-        $this->patterns = array();
-        foreach( $patterns as $pattern => $action ) {
-            $this->addPattern( $pattern, $action );
+    public function setURLS( array $urls ){
+        $this->urls = array();
+        foreach( $urls as $pattern => $action ) {
+            $this->addURL( $pattern, $action );
         }
     }
     
-    public function patterns(){
-        return $this->patterns;
+    public function urls(){
+        return $this->urls;
     }
 }
 
