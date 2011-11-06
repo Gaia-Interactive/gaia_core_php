@@ -12,5 +12,5 @@ $patterns = array(
 '/lt/(a)/(b)/(c)'           => 'linktest',                 
 );
 
-ShortCircuit::resolver( new PatternResolver( new Resolver(__DIR__ . '/../../shortcircuit/app/'), $patterns));
+ShortCircuit::resolver( new Resolver(__DIR__ . '/../../shortcircuit/app/', $patterns) );
 ShortCircuit::run();
