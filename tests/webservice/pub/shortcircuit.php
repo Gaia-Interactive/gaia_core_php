@@ -1,7 +1,7 @@
 <?php
 include __DIR__ . '/../../common.php';
 
-use Gaia\ShortCircuit\Router;
+use Gaia\ShortCircuit;
 use Gaia\ShortCircuit\Resolver;
 use Gaia\ShortCircuit\PatternResolver;
 
@@ -12,5 +12,5 @@ $patterns = array(
 '/lt/(a)/(b)/(c)'           => 'linktest',                 
 );
 
-Router::resolver( new PatternResolver( new Resolver(__DIR__ . '/../../shortcircuit/app/'), $patterns));
-Router::run();
+ShortCircuit::resolver( new PatternResolver( new Resolver(__DIR__ . '/../../shortcircuit/app/'), $patterns));
+ShortCircuit::run();

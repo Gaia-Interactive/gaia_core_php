@@ -12,7 +12,7 @@ class View extends Container implements Iface\View
     * Render a template
     */
     public function render($name, $strict = TRUE ){
-        $path = Router::resolver()->get( $name, 'view' );
+        $path = \Gaia\ShortCircuit::resolver()->get( $name, 'view' );
         if( ! $path ){
             if( $strict ) trigger_error('invalid view: ' . $name, E_USER_WARNING );
             return;
@@ -33,10 +33,10 @@ class View extends Container implements Iface\View
     * used to get the request object inside of the view template files
     */
     public function request(){
-        return Router::request();
+        return \Gaia\ShortCircuit::request();
     }
     
     public function link( $name, array $params = array() ){
-        return Router::link( $name, $params );
+        return \Gaia\ShortCircuit::link( $name, $params );
     }
 }

@@ -7,9 +7,9 @@ use Gaia\Container;
  * this can be subclassed if you wish to change the default behavior of the controller.
  * To attach your new version, do: 
  *
- *    Router::controller( new MyController );
+ *    ShortCircuit::controller( new MyController );
  *
- * The class will be used when Router::controller() is called.
+ * The class will be used when ShortCircuit::controller() is called.
  */
 class Controller extends Container implements Iface\Controller
 {
@@ -22,7 +22,7 @@ class Controller extends Container implements Iface\Controller
     * if strict, trigger errors if the path isn't found.
     */
     public function execute($name, $strict = TRUE ){
-        $path = Router::resolver()->get( $name, 'action' );
+        $path = \Gaia\ShortCircuit::resolver()->get( $name, 'action' );
         if( ! $path ){
             if( $strict ) trigger_error('invalid action: ' . $name, E_USER_WARNING );
             return;
@@ -34,10 +34,10 @@ class Controller extends Container implements Iface\Controller
     * alias method for the router request object.
     */
     public function request(){
-        return Router::request();
+        return \Gaia\ShortCircuit::request();
     }
     
     public function link( $name, array $params = array() ){
-        return Router::link( $name, $params );
+        return \Gaia\ShortCircuit::link( $name, $params );
     }
 }
