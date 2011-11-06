@@ -2,12 +2,12 @@
 <?php
 include_once __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
-use Gaia\ShortCircuit\Router;
+use Gaia\ShortCircuit;
 use Gaia\ShortCircuit\Resolver;
 use Gaia\ShortCircuit\View;
 Tap::plan(4);
 
-Router::resolver( new Resolver( __DIR__ . '/app/' ) );
+ShortCircuit::resolver( new Resolver( __DIR__ . '/app/' ) );
 
 $v = new View( array('test'=>'fun') );
 
