@@ -21,4 +21,4 @@ Tap::is($out, 'hello fun', 'rendered the test view correctly with the variable m
 $out = $v->fetch('nested/test');
 Tap::is($out, realpath(__DIR__ . '/app/nested/test.view.php') . ' fun', 'fetched the nested test view with the variable mapped in');
 $out = $v->fetch('nested');
-Tap::is($out, realpath(__DIR__ . '/app/nested/index.view.php') . ' fun', 'fetched the nested test index view');
+Tap::is($out, realpath(__DIR__ . '/app/nested.view.php') . ' fun', 'fetched the nested test index view');

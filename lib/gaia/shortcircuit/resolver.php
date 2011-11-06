@@ -64,10 +64,7 @@ class Resolver implements Iface\Resolver
         if( ! $skip_lower ) $name = strtolower($name);
         if( strlen( $name ) < 1 ) $name = 'index';
         $path = $this->appdir . $name . '.' . $type . '.php';
-        if( ! file_exists( $path ) ) {
-            $path = $this->appdir . $name . '/index.' . $type . '.php';
-            if( ! file_exists( $path ) ) $path = '';
-        }
+        if( ! file_exists( $path ) ) return '';
         return $path;
     }
     
