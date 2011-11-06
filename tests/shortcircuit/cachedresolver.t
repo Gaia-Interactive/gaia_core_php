@@ -37,17 +37,8 @@ Tap::is( $r->match('nested/deep/test',  $args), 'nested/deep/test', 'match finds
 Tap::is( $r->match('nested/deep/no/1/1/1',  $args), 'nested', 'if it doesnt find it drops back down');
 
 $patterns = array(
-    'nested/test'=> array(
-                    'regex'=>'#^/go/([0-9]+?)$#i', 
-                    'params'=>array('id')
-                    ),
-                    
-    'nested/deep/test' => array(
-                    'regex'=>'#^/foo/bar/([a-z]+)/test/([a-z]+)$#i',
-                    'params'=>array('a','b')
-                    ),
-                    
-    'index' =>'#^/$#',
+'/go/(id)' => 'nested/test',
+'/foo/bar/(a)/test/(b)' => 'nested/deep/test',
 );
 
 $r = new PatternResolver( $r, $patterns );
@@ -57,5 +48,5 @@ Tap::is( $args['id'], '123', 'number extracted into the request id');
 Tap::is( $r->match('/foo/bar/bazz/test/quux', $args ), 'nested/deep/test', 'deeply nested url matched action' );
 Tap::is( $args, array(0=>'bazz', 1=>'quux', 'a'=>'bazz', 'b'=>'quux'), 'extracted the correct args');
 Tap::is( $r->link('nested/test', array('id'=>123) ), '/go/123', 'pattern converted back into a url' );
-Tap::is( $r->link('nested/deep/test', array('b'=>'quux', 'a'=>'bazz', 'c'=>'test', 0=>'bazz')), '/foo/bar/bazz/test/quux?c=test', 'converted longer pattern with several parts into url');
+Tap::is( $r->link('nested/deep/test', array('b'=>'quux', 'a'=>'bazz', 'c'=>'test')), '/foo/bar/bazz/test/quux?c=test', 'converted longer pattern with several parts into url');
 Tap::is( $r->match('nested/deep/test/1', $args), 'nested/deep/test', 'without a pattern match, falls back on the core match method');

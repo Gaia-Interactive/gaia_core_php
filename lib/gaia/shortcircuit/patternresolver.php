@@ -3,6 +3,8 @@ namespace Gaia\ShortCircuit;
 
 class PatternResolver implements Iface\Resolver {
     
+    const param_match = '#\\\\\(([a-z0-9_\-]+)\\\\\)#i';
+
     protected $core;
     protected $patterns = array();
     
@@ -13,38 +15,38 @@ class PatternResolver implements Iface\Resolver {
 
     public function match( $uri, & $args ){
         $args = array();
-        foreach( $this->patterns as $action => $pattern ){
-            if( isset( $pattern['action'] ) ) $action = $pattern['action'];
-            if( preg_match( $pattern['regex'], $uri, $matches ) ) {
-                $args = array_slice($matches, 1);
-                foreach( $pattern['params'] as $i => $key ){
-                    if( ! isset( $args[ $i ] ) ) break;
-                    $args[ $key ] = $args[ $i ];
-                }
-                return $action;
+        
+        $buildRegex = function ( $pattern ){
+            $params = array();
+            $regex  = preg_replace_callback(PatternResolver::param_match, function($match) use ( &$params ) {
+                $params[] = $match[1];
+                return '([a-z0-9\.+\,\;\'\\\&%\$\#\=~_\-]+)';
+            
+            }, preg_quote($pattern, '#'));
+            return array('#^' . $regex . '$#i', $params );
+        };
+        
+        foreach( $this->patterns as $pattern => $action ){
+            list( $regex, $params ) = $buildRegex( $pattern );
+            if( ! preg_match( $regex, $uri, $matches ) ) continue;
+            $args = array_slice($matches, 1);
+            foreach( $params as $i => $key ){
+                if( ! isset( $args[ $i ] ) ) break;
+                $args[ $key ] = $args[ $i ];
             }
+            return $action;
+            
         }
         return $this->core->match( $uri, $args);
     }
     
-    public function addPattern( $pattern, $action = NULL ){
-        if( is_array( $pattern ) ){
-            if( ! isset( $pattern['regex'] ) ) return;
-            if( ! is_array( $pattern['params'] ) ) $pattern['params'] = array();
-            if( $action === NULL || is_int( $action ) ){
-                if( ! isset( $pattern['action'] ) ) return;
-                return $this->patterns[] = $pattern;
-            }
-            return $this->patterns[ $action ] = $pattern;
-        } elseif( is_scalar( $pattern ) ) {
-            if(  $action === NULL || is_int( $action ) ) return;
-            return $this->patterns[ $action ] = array('regex'=>$pattern, 'params'=>array() );
-        }
+    public function addPattern( $pattern, $action ){
+        $this->patterns[ '/' . trim($pattern, '/') ] = $action;
     }
     
     public function setPatterns( array $patterns ){
         $this->patterns = array();
-        foreach( $patterns as $action => $pattern ) {
+        foreach( $patterns as $pattern => $action ) {
             $this->addPattern( $pattern, $action );
         }
     }
@@ -55,47 +57,30 @@ class PatternResolver implements Iface\Resolver {
     
     public function link( $action, array $params = array() ){
         $s = new \Gaia\Serialize\QueryString;
-        if( ! isset( $this->patterns[ $action ] ) ){
-            $match = FALSE;
-            foreach( $this->patterns as $pattern ){
-                if( isset( $pattern['action'] ) && $pattern['action'] == $action ){
-                    $match = TRUE;
-                    break;
-                }
-            }
-            if( ! $match ) return $this->core->link( $action, $params );
-        } else {
-            $pattern = $this->patterns[ $action ];
-        }
-        $url_regex = $pattern['regex'];
-        $url = str_replace(array('\\.', '\\-'), array('.', '-'), $url_regex);
         
-        $args = array();
+        $createLink = function( $pattern, array & $params ) use( $s ) {
+            $url = preg_replace_callback(PatternResolver::param_match, function($match) use ( & $params, $s ) {
+                if( ! array_key_exists( $match[1], $params ) ) return '';
+                $ret = $s->serialize($params[ $match[1] ]);   
+                unset( $params[ $match[1] ] );
+                return $ret;
+            }, preg_quote($pattern, '#'));
+            return $url;
+        };
+            
         
-        foreach( $params as $k => $v ){
-            if( is_int( $k ) ) {
-                $args[$k] = $s->serialize( $v );
-                unset( $params[ $k ] );
+        $match = FALSE;
+        foreach( $this->patterns as $pattern => $a ){
+            if(  $a == $action ){
+                $match = TRUE;
+                break;
             }
         }
-        
-        foreach( $pattern['params'] as $i => $key ){
-            if( array_key_exists( $key, $params ) ) {
-                $args[ $i ] = $s->serialize($params[ $key ]);
-                unset( $params[ $key ] );
-            }
-        }
-        
-        
-        $args_count = count( $args );
-        if ($args_count) {
-            $groups = array_fill(0, $args_count, '#\(([^)]+)\)#'); 
-            $url = preg_replace($groups, $args, $url, 1);
-        }
-        if( ! preg_match('/^#\^?([^#\$]+)/', $url, $matches) ) return $this->core->link($action, $params );
+        if( ! $match ) return $this->core->link( $action, $params );
+        $url = $createLink( $pattern, $params );
         $qs = $s->serialize($params);
         if( $qs ) $qs = '?' . $qs;
-        return '/' . trim($matches[1], '/') . $qs;
+        return $url . $qs;
     }
     
     public function appdir(){
