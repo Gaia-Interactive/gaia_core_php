@@ -8,9 +8,12 @@ class Resolver implements Iface\Resolver
 {
 
     protected $appdir = '';
-    
-    public function __construct( $dir = '' ){
+    const param_match = '#\\\\\(([a-z0-9_\-]+)\\\\\)#i';
+    protected $patterns = array();
+
+    public function __construct( $dir = '', array $patterns = null  ){
         $this->appdir = $dir;
+        if( $patterns ) $this->setPatterns( $patterns );
     }
     
     /**
@@ -18,6 +21,29 @@ class Resolver implements Iface\Resolver
     */
     public function match( $uri, & $args ){
         $args = array();
+        if( $this->patterns ){
+            $buildRegex = function ( $pattern ){
+                $params = array();
+                $regex  = preg_replace_callback(Resolver::param_match, function($match) use ( &$params ) {
+                    $params[] = $match[1];
+                    return '([a-z0-9\.+\,\;\'\\\&%\$\#\=~_\-]+)';
+                
+                }, preg_quote($pattern, '#'));
+                return array('#^' . $regex . '$#i', $params );
+            };
+            
+            foreach( $this->patterns as $pattern => $action ){
+                list( $regex, $params ) = $buildRegex( $pattern );
+                if( ! preg_match( $regex, $uri, $matches ) ) continue;
+                $args = array_slice($matches, 1);
+                foreach( $params as $i => $key ){
+                    if( ! isset( $args[ $i ] ) ) break;
+                    $args[ $key ] = $args[ $i ];
+                }
+                return $action;
+                
+            }
+        }
         $uri = strtolower(trim( $uri, '/'));
         if( strlen( $uri ) < 1) $uri = 'index';
         $elements = explode('/', $uri );
@@ -41,9 +67,32 @@ class Resolver implements Iface\Resolver
     
     public function link( $name, array $params = array() ){
         $s = new \Gaia\Serialize\QueryString;
-        //if( ! $this->match( $name, $args ) ) return '';
-        
         $args = array();
+        if( $this->patterns ){
+            $createLink = function( $pattern, array & $params ) use( $s ) {
+                $url = preg_replace_callback(Resolver::param_match, function($match) use ( & $params, $s ) {
+                    if( ! array_key_exists( $match[1], $params ) ) return '';
+                    $ret = $s->serialize($params[ $match[1] ]);   
+                    unset( $params[ $match[1] ] );
+                    return $ret;
+                }, preg_quote($pattern, '#'));
+                return $url;
+            };
+                
+            $match = FALSE;
+            foreach( $this->patterns as $pattern => $a ){
+                if(  $a == $name ){
+                    $match = TRUE;
+                    break;
+                }
+            }
+            if( $match ) {
+                $url = $createLink( $pattern, $params );
+                $qs = $s->serialize($params);
+                if( $qs ) $qs = '?' . $qs;
+                return $url . $qs;
+            }
+        }
         $p = array();
         foreach( $params as $k => $v ){
             if( is_int( $k ) ){ 
@@ -74,6 +123,21 @@ class Resolver implements Iface\Resolver
     
     public function setAppDir( $dir ){
         return $this->appdir = $dir;
+    }
+    
+    public function addPattern( $pattern, $action ){
+        $this->patterns[ '/' . trim($pattern, '/') ] = $action;
+    }
+    
+    public function setPatterns( array $patterns ){
+        $this->patterns = array();
+        foreach( $patterns as $pattern => $action ) {
+            $this->addPattern( $pattern, $action );
+        }
+    }
+    
+    public function patterns(){
+        return $this->patterns;
     }
 }
 

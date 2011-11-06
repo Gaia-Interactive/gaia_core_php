@@ -3,7 +3,6 @@
 include_once __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\ShortCircuit\Resolver;
-use Gaia\ShortCircuit\PatternResolver;
 Tap::plan(13);
 
 $patterns = array(
@@ -14,7 +13,7 @@ $patterns = array(
 //'/'                         => 'index',
 );
 
-$r = new PatternResolver( new Resolver( __DIR__ . '/app/'), $patterns);
+$r = new Resolver( __DIR__ . '/app/', $patterns);
 Tap::is( $r->match('/', $args), 'index', 'default url matched index');
 Tap::is( $r->match('/go/123', $args), 'nested/test', 'go url matched action' );
 Tap::is( $args['id'], '123', 'number extracted into the request id');
