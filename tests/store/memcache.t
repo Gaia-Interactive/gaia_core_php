@@ -12,7 +12,7 @@ if( ! class_exists('\Memcache') && ! class_exists('\Memcached') ){
     Tap::plan('skip_all', 'no pecl-memcache or pecl-memcached extension installed');
 }
 
-Tap::plan(11);
+Tap::plan(13);
 
 $cache = new Store\Memcache();
 
@@ -70,5 +70,16 @@ $replicas = $cache->replicas(2);
 Tap::is( $replicas[0]->servers(), array( array( 'host' => '10.0.0.1', 'port' => 11211, 'weight' => 1), array( 'host' => '10.0.0.3', 'port' => 11211, 'weight' => 1)  ), 'first replica has the correct servers in it');
 Tap::is( $replicas[1]->servers(), array( array( 'host' => '10.0.0.2', 'port' => 11211, 'weight' => 1) ), 'second replica has the correct servers in it');
 
+if( class_exists('\Memcache') ){
+    $m = new Store\Memcache( new \Memcache );
+    Tap::ok( $m , 'able to instantiate and inject the memcache object into Store\Memcache');
+} else {
+    Tap::pass('skipping memcache injection check');
+}
 
-
+if( class_exists('\Memcached') ){
+    $m = new Store\Memcache( new \Memcached );
+    Tap::ok( $m , 'able to instantiate and inject the memcached object into Store\Memcache');
+} else {
+    Tap::pass('skipping memcached injection check');
+}
