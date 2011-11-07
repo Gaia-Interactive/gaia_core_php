@@ -4,7 +4,7 @@ include_once __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\ShortCircuit\Request;
 use Gaia\ShortCircuit\Input;
-Tap::plan(9);
+Tap::plan(8);
 
 $_REQUEST = array('test'=>'1');
 $r = new Request;
@@ -26,9 +26,6 @@ $_SERVER['REQUEST_URI'] = '/test/a/b/c?hello=1';
 
 $r = new Request();
 Tap::is( $r->action(), '/test/a/b/c', 'action extracted from REQUEST_URI' );
-$r->setArgs( $args = array('a', 'b', 'c') );
-Tap::is( $r->args(), $args, 'args set and retrieved properly');
-
 
 $_POST = array('test1'=>'hello<script>world</script>');
 $r = new Request( array('GET'=>new Input($_GET), 'POST'=>new Input($_POST) ) );

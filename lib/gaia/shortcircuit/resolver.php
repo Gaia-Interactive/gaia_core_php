@@ -45,23 +45,9 @@ class Resolver implements Iface\Resolver
             }
         }
         $uri = strtolower(trim( $uri, '/'));
-        if( strlen( $uri ) < 1) $uri = 'index';
-        $elements = explode('/', $uri );
-        $ct = count( $elements );
-        $pos = 1;
-        while( $ct >= $pos ){
-             $uri = implode('/', array_slice($elements, 0, $pos ));
-            if( ! file_exists( $this->appdir . $uri ) ) break;
-            $pos++;
-        }
-
-        while( strlen( ( $uri = implode('/', $elements ) ) ) > 0 ){
-            $res = $this->get( $uri, 'action', TRUE);
-            if( $res ) return $uri;
-            $ele = array_pop($elements );
-            if( $ele === NULL ) return '';
-            array_unshift($args, $ele);
-        }
+        if( ! $uri ) $uri = 'index';
+        $res = $this->get( $uri, 'action', TRUE);
+        if( $res ) return $uri;
         return '';
     }
     

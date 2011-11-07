@@ -9,7 +9,6 @@ use Gaia\Store;
 Tap::plan(2);
 $_SERVER['REQUEST_URI'] = '/';
 $resolver = new ShortCircuit\Resolver(__DIR__ . '/app/');
-$resolver = new ShortCircuit\CachedResolver( $resolver, new Store\KVP );
 ShortCircuit::resolver( $resolver );
 ob_start();
 $start = microtime(TRUE);
