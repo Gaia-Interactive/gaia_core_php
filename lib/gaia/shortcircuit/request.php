@@ -36,7 +36,7 @@ class Request extends Input implements Iface\Request
                 $this->uri : substr($this->uri , 0, $pos);
         }
         $script_name = isset($_SERVER['SCRIPT_NAME']) ? $_SERVER['SCRIPT_NAME'] : '';
-        $action = str_replace(array($script_name.'/', $script_name.'?_='), '', $action);
+        $action = str_replace(array($script_name, $script_name.'?_='), '', $action);
         $action = trim($action, $trim_chars);
         $this->action = '/' . $action;
           if (strpos($this->uri, $script_name) === 0) {

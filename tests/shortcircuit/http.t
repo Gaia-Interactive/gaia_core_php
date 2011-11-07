@@ -11,7 +11,7 @@ if( ! function_exists('curl_init') ){
     Tap::plan('skip_all', 'php curl library not installed');
 }
 
-Tap::plan(5);
+Tap::plan(7);
 
 $ch = curl_init("http://127.0.0.1:11299/shortcircuit.php/test/");
 curl_setopt( $ch, CURLOPT_RETURNTRANSFER, 1 );
@@ -43,3 +43,11 @@ $info = curl_getinfo($ch);
 
 Tap::is($res, '<a href="/shortcircuit.php/lt/3/2/1">linktest</a>', 'params in the url are mapped into a link with correct base url');
 
+$ch = curl_init("http://127.0.0.1:11299/shortcircuit.php");
+curl_setopt( $ch, CURLOPT_RETURNTRANSFER, 1 );
+$res = trim(curl_exec($ch));
+$info = curl_getinfo($ch);
+curl_close($ch);
+
+Tap::is( $info['http_code'], 200, 'tested the entry point with no url args or params');
+Tap::like($res, '/site index/i', 'got back the content I expected');
