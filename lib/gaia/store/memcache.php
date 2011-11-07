@@ -20,7 +20,7 @@ class Memcache implements Iface {
     protected $core;
     
     public function __construct( $core = null ){
-        if( $core && ($core instanceof Memcache  || $core instanceof Memcached ) ){
+        if( $core && ($core instanceof \Memcache  || $core instanceof \Memcached ) ){
             $this->core = $core;
         }elseif( class_exists( '\Memcached' )){
             $this->core = new \Memcached;
@@ -95,6 +95,10 @@ class Memcache implements Iface {
     
     public function servers(){
         return $this->conns;
+    }
+    
+    public function core(){
+        return $this->core;
     }
     
     public function addServer( $host, $port, $weight = 0 ){
