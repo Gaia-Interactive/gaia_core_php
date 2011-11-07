@@ -11,7 +11,7 @@ if( ! function_exists('curl_init') ){
     Tap::plan('skip_all', 'php curl library not installed');
 }
 
-Tap::plan(8);
+Tap::plan(9);
 
 $ch = curl_init("http://127.0.0.1:11299/shortcircuit.php/test/");
 curl_setopt( $ch, CURLOPT_RETURNTRANSFER, 1 );
@@ -58,3 +58,20 @@ $res = trim( curl_exec($ch) );
 $info = curl_getinfo($ch);
 curl_close($ch);
 Tap::is($res, '<p>id: john wayne</p>', 'the name with the space in the url was mapped into the request');
+
+
+use Gaia\ShortCircuit\Resolver;
+$r = new Resolver;
+$r->setAppDir( __DIR__ . '/app/' );
+$expected = array('foo'=>'bar', 'bazz'=>array('1','2','3', 'quux'=>array('a','b','c')));
+
+$link = $r->link('printrequest', $expected );
+
+$ch = curl_init("http://127.0.0.1:11299/shortcircuit.php" . $link);
+curl_setopt( $ch, CURLOPT_RETURNTRANSFER, 1 );
+$res = json_decode( $raw = trim( curl_exec($ch) ), TRUE);
+$info = curl_getinfo($ch);
+curl_close($ch);
+
+Tap::cmp_ok( $res, '===', $expected, 'deeply nested complex data structure passed in url');
+
