@@ -119,7 +119,8 @@ class Tap {
                 die("No such operator or function $op\n");
             }
         }
-    
+        $have = self::stringify( $have );
+        $want = self::stringify( $want );
         return self::_proclaim($pass, $desc, /* todo */ false, $have, "$have $op $want");
     }
     
