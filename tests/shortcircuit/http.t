@@ -11,7 +11,7 @@ if( ! function_exists('curl_init') ){
     Tap::plan('skip_all', 'php curl library not installed');
 }
 
-Tap::plan(7);
+Tap::plan(8);
 
 $ch = curl_init("http://127.0.0.1:11299/shortcircuit.php/test/");
 curl_setopt( $ch, CURLOPT_RETURNTRANSFER, 1 );
@@ -51,3 +51,10 @@ curl_close($ch);
 
 Tap::is( $info['http_code'], 200, 'tested the entry point with no url args or params');
 Tap::like($res, '/site index/i', 'got back the content I expected');
+
+$ch = curl_init("http://127.0.0.1:11299/shortcircuit.php/idtest/john%20wayne/");
+curl_setopt( $ch, CURLOPT_RETURNTRANSFER, 1 );
+$res = trim( curl_exec($ch) );
+$info = curl_getinfo($ch);
+curl_close($ch);
+Tap::is($res, '<p>id: john wayne</p>', 'the name with the space in the url was mapped into the request');

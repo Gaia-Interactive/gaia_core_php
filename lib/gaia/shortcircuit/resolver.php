@@ -26,7 +26,7 @@ class Resolver implements Iface\Resolver
                 $params = array();
                 $regex  = preg_replace_callback(Resolver::param_match, function($match) use ( &$params ) {
                     $params[] = $match[1];
-                    return '([a-z0-9\.+\,\;\'\\\&%\$\#\=~_\-]+)';
+                    return '([a-z0-9\.+\,\;\'\\\&%\$\#\=~_\-%\s]+)';
                 
                 }, preg_quote($pattern, '#'));
                 return array('#^' . $regex . '$#i', $params );
