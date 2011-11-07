@@ -30,9 +30,11 @@ class Gate extends Wrap {
         $now = Time::now();
         foreach( $exp_keys as $k ){
             if( ! isset( $matches[ ($parent_key = substr( $k,0, -7)) ] ) ) continue;
-            $diff = ( ctype_digit( (string) $matches[ $k ] ) ) ? $matches[ $k ] - $now : 0;
+            $diff = ( ctype_digit( (string) $matches[ $k ] ) ) ? bcsub($matches[ $k ], $now ) : 0;
+            if($diff > 1000) $diff = 1000;
+            if( $diff < 1 ) $diff = 0;
             if( $diff > 0 && // if the soft ttl is too old, reset it
-                mt_rand(1, pow( $diff, 3) ) != 1 // randomly reset it based on a parabolic curve approaching timeout.
+                mt_rand(1, bcpow( $diff, 3) ) != 1 // randomly reset it based on a parabolic curve approaching timeout.
             ) continue;
             if( ! $this->core->add( $k . '/__r-lock', 1, 5) && 
                   $this->core->get( $k . '/__r-lock') ) continue;
