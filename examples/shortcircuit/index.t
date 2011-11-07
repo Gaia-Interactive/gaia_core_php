@@ -4,7 +4,6 @@ include __DIR__ . '/common.php';
 
 use Gaia\Test\Tap;
 use Gaia\ShortCircuit;
-use Gaia\Store;
 
 Tap::plan(2);
 $_SERVER['REQUEST_URI'] = '/';
