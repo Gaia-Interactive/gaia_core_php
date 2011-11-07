@@ -2,16 +2,15 @@
 namespace Gaia;
 
 /**
- * Routes requests to the correct shortcircuit object, performs the action, and routes
- * the response to a view to render the output.
  * This class is static and can be accessed from anywhere throughout the lifetime of the request.
  * this is the only static class in the framework. the rest are instantiated and attached to this
  * static class.
- * Typically, you use it by doing this:
+ * Typically, you use ShortCircuit by doing this:
  *
  * ShortCircuit::setApp( __DIR__ . '/../path/to/myapp');
  * ShortCircuit::run();
  *
+ * see examples/shortcircuit/app/ for how to set up an application.
  */
 class ShortCircuit {
     
@@ -72,28 +71,19 @@ class ShortCircuit {
     */
     public static function dispatch( $input, $skip_render = FALSE ){
         $r = self::request();
-        $data = $view = NULL;
+        $controller = self::controller();
+        $name = self::resolver()->match( $input, $args );
+        $r->load( $args );
+        $view = self::view();
+        if( ! $name ) $name = '404';
+        $data = NULL;
         try {
-            $controller = self::controller();
-            $name = self::resolver()->match( $input, $args );
-            if( ! $name ) $name = '404';
-            if( is_array( $args ) ){
-                foreach( $args as $k => $v ){
-                    if( ! is_int( $k ) ) {
-                        unset( $args[ $k ] );
-                        $r->set( $k, $v );
-                    }
-                }
-                $r->setArgs( $args );
-            }
             $data = $controller->execute( $name );
             if( $data === self::ABORT || $skip_render ) return $data;
-            $view = self::view();
             $view->load( $data );
             return $view->render( $name );
         } catch( \Exception $e ){
             if( $skip_render ) throw $e;
-            if( ! $view ) $view = self::view();
             $view->load( $data );
             $view->set('exception', $e );
             if( self::resolver()->get(  $name . 'error', 'view' ) ){

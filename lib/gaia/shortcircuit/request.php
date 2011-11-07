@@ -45,22 +45,6 @@ class Request extends Input implements Iface\Request
             $this->base = '';
         }
     }
-   
-   /**
-    * get the args
-    * @return array
-    * @access protected
-    */
-    public function args() {
-        return $this->args;
-    }
-    
-   /**
-    * set args into the request
-    */
-    public function setArgs( array $v ){
-        return $this->args = $v;
-    }
     
     /**
     * grab the action set in the constructor

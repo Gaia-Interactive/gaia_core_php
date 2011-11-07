@@ -1,5 +1,5 @@
 <?php 
 use Gaia\ShortCircuit;
 
-ShortCircuit::dispatch('hello/' . implode('/', $this->request()->args()));
+ShortCircuit::dispatch('hello/echo');
 return ShortCircuit::ABORT;
