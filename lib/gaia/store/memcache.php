@@ -19,13 +19,15 @@ class Memcache implements Iface {
     
     protected $core;
     
-    public function __construct(){
-        if( class_exists( '\Memcached' )){
+    public function __construct( $core = null ){
+        if( $core && ($core instanceof Memcache  || $core instanceof Memcached ) ){
+            $this->core = $core;
+        }elseif( class_exists( '\Memcached' )){
             $this->core = new \Memcached;
         } elseif( class_exists('\Memcache') ) {
             $this->core = new \Memcache;
         } else {
-            die("doh!");
+            die("unable to instantiate " . __CLASS__);
         }
     }
     
