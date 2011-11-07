@@ -12,16 +12,15 @@ class QueryString implements Iface {
     
     public function serialize($params, $name=null) {
         if( is_object( $params ) ) $params = json_decode( json_encode( $params ), TRUE);
-        if( ! is_array( $params ) ) return urlencode($params);
+        if( ! is_array( $params ) ) return rawurlencode($params);
         $ret = "";
-        if( $name != NULL ) $name = urlencode( $name );
         foreach($params as $key=>$val) {
-            $key = urlencode( $key );
+            $key = rawurlencode( $key );
             if(is_array($val)) {
                 if($name==null) $ret .= $this->serialize($val, $key);
                 else $ret .= $this->serialize($val, $name."[$key]");   
             } else {
-                $val=urlencode($val);
+                $val=rawurlencode($val);
                 if($name!=null)
                 $ret.=$name."[$key]"."=$val&";
                 else $ret.= "$key=$val&";
