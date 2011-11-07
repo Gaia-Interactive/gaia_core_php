@@ -51,7 +51,10 @@ class Wrap implements Iface {
     public function ttlEnabled(){
         return $this->core->ttlEnabled();
     }
-
+    
+    public function core(){
+        return $this->core;
+    }
     
     public function __call($method, array $args ){
         return call_user_func_array( array( $this->core, $method ), $args );
