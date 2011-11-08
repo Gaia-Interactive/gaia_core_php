@@ -46,6 +46,7 @@ class DBA implements Iface {
     }
     
     public function add( $k, $v ){
+        if( dba_exists($k, $this->handle ) ) return FALSE;
         return @dba_insert( $k, $this->s->serialize($v), $this->handle );
     }
     
