@@ -85,16 +85,15 @@ if( class_exists('\Memcached') ){
 }
 
 
-$m = new Store\Memcache();
-$m->addServer('127.0.0.1', '11211');
 
-if( class_exists('Memcached') ){
-    $verify = new \Memcached;
-} else {
+if( class_exists('Memcache') ){
     $verify = new \Memcache;
+} else {
+    $verify = new \Memcached;
 }
 
 $verify->addServer('127.0.0.1', '11211');
+$m = new Store\Memcache($verify);
 
 $key = sha1('test' . microtime(TRUE) . __FILE__);
 
