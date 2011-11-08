@@ -141,7 +141,7 @@ souk( $app )->close( $id );
 
 $ids = souk( $app )->search( array('item_id'=>$item_id, 'seller'=>$seller_id, 'closed'=>0) );
 
-Tap::ok(! in_array( $id, $ids), 'after closing an item, it no longer appears in the list of unclosed items');
+Tap::ok(! in_array( $id, $ids, TRUE), 'after closing an item, it no longer appears in the list of unclosed items');
 
 
 $res = souk( $app )->fetch( souk( $app )->search( array('item_id'=>$item_id, 'seller'=>$seller_id, 'closed'=>0, 'only'=>'bid') ) );
