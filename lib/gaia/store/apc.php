@@ -10,7 +10,7 @@ class Apc implements Iface {
     protected $core = FALSE; 
     
     public function __construct(){
-        if( function_exists('apc_fetch') ) {
+        if( ! function_exists('apc_fetch') ) {
             $this->core = new Prefix( new Mock, __CLASS__);
         }
     }
@@ -18,7 +18,7 @@ class Apc implements Iface {
         if( $this->core ) return $this->core->get( $request );
         $res = apc_fetch( $request );
         if( is_array( $request ) && ! is_array( $res ) ) $res = array();
-        //if( $res === FALSE ) return NULL;
+        if( $res === FALSE ) return NULL;
         return $res;
     }
     
