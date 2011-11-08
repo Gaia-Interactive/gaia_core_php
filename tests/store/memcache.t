@@ -8,11 +8,11 @@ if( ! @fsockopen('127.0.0.1', '11211')) {
     Tap::plan('skip_all', 'Memcached not running on localhost');
 }
 
-if( ! class_exists('\Memcache') && ! class_exists('\Memcached') ){
+if( ! class_exists('Memcache') && ! class_exists('Memcached') ){
     Tap::plan('skip_all', 'no pecl-memcache or pecl-memcached extension installed');
 }
 
-Tap::plan(13);
+Tap::plan(24);
 
 $cache = new Store\Memcache();
 
@@ -83,3 +83,67 @@ if( class_exists('\Memcached') ){
 } else {
     Tap::pass('skipping memcached injection check');
 }
+
+
+$m = new Store\Memcache();
+$m->addServer('127.0.0.1', '11211');
+
+if( class_exists('Memcache') ){
+    $verify = new \Memcache;
+} else {
+    $verify = new \Memcached;
+}
+
+$verify->addServer('127.0.0.1', '11211');
+
+$key = sha1('test' . microtime(TRUE) . __FILE__);
+
+$verify->set( $key, 1 );
+
+Tap::cmp_ok( $m->get( $key ), '===', 1, 'Write into memcache and verify the store\memcache class can read it');
+
+$m->set($key, 2);
+
+Tap::cmp_ok($verify->get($key), '===', 2, 'change the value with store\memcache and verify it changed in memcache');
+
+$m->increment($key);
+
+Tap::cmp_ok( $verify->get($key), '===', 3, 'incremented the key and verified correct value in memcache');
+
+
+$m->increment($key, 2);
+
+Tap::cmp_ok( $verify->get($key), '===', 5, 'incremented the key by several and verified correct value in memcache');
+
+$m->decrement($key);
+
+Tap::cmp_ok( $verify->get($key), '===', 4, 'decremented the key and verified correct value in memcache');
+
+
+$m->decrement($key, 2);
+
+Tap::cmp_ok( $verify->get($key), '===', 2, 'decremented the key by serveral and verified correct value in memcache');
+
+$m->replace( $key, 100);
+
+Tap::cmp_ok( $verify->get( $key ), '===', 100, 'replaced the value and verified correct value shows up in memcache');
+
+
+$m->delete($key);
+
+Tap::cmp_ok($verify->get($key), '===', FALSE, 'delete the key using store\memcache and verify it is gone');
+
+
+$m->replace( $key, 100);
+
+Tap::cmp_ok( $verify->get( $key ), '===', FALSE, 'attempted replace after delete and verified nothing shows up in memcache');
+
+
+$m->add( $key, 100);
+
+Tap::cmp_ok( $verify->get( $key ), '===', 100, 'added the key after delete and verified it shows up in memcache');
+
+$m->add( $key, 200);
+
+Tap::cmp_ok( $verify->get( $key ), '===', 100, 'added the key again with differrent value and verified nothing changes in memcache');
+
