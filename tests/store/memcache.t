@@ -88,10 +88,10 @@ if( class_exists('\Memcached') ){
 $m = new Store\Memcache();
 $m->addServer('127.0.0.1', '11211');
 
-if( class_exists('Memcache') ){
-    $verify = new \Memcache;
-} else {
+if( class_exists('Memcached') ){
     $verify = new \Memcached;
+} else {
+    $verify = new \Memcache;
 }
 
 $verify->addServer('127.0.0.1', '11211');
