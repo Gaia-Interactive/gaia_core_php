@@ -1,22 +1,16 @@
 #!/usr/bin/env php
 <?php
-include __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\Job;
 use Gaia\Job\Runner;
 use Gaia\Pheanstalk;
 
-if( ! class_exists('Pheanstalk') ) {
-    Tap::plan('skip_all', 'Pheanstalk class library not loaded. check vendors/pheanstalk.');
-}
+include __DIR__ . '/../common.php';
+include __DIR__ . '/../assert/curl_installed.php';
+include __DIR__ . '/../assert/pheanstalk_installed.php';
+include __DIR__ . '/../assert/beanstalkd_running.php';
+include __DIR__ . '/../assert/webservice_started.php';
 
-if( ! @fsockopen('127.0.0.1', '11300')) {
-    Tap::plan('skip_all', 'Beanstalkd not running on localhost');
-}
-
-if( ! @fsockopen('127.0.0.1', '11299')) {
-    Tap::plan('skip_all', "unable to connect to test job url: please run tests/webservice/start.sh\n");
-}
 
 Tap::plan(8);
 
