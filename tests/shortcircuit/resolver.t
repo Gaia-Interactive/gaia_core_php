@@ -3,7 +3,7 @@
 include_once __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\ShortCircuit\Resolver;
-Tap::plan(40);
+Tap::plan(44);
 $r = new Resolver;
 
 Tap::ok($r instanceof \Gaia\ShortCircuit\Iface\Resolver, 'able to instantiate the resolver');
@@ -43,7 +43,7 @@ Tap::is( $r->match('/', $args), 'index', 'default url matched index');
 Tap::is( $r->match('/go/123', $args), 'nested/test', 'go url matched action' );
 Tap::is( $args['id'], '123', 'number extracted into the request id');
 Tap::is( $r->match('/foo/bar/bazz/test/quux', $args ), 'nested/deep/test', 'deeply nested url matched action' );
-Tap::is( $args, array(0=>'bazz', 1=>'quux', 'a'=>'bazz', 'b'=>'quux'), 'extracted the correct args');
+Tap::is( $args, array('a'=>'bazz', 'b'=>'quux'), 'extracted the correct args');
 Tap::is( $r->link('nested/test', array('id'=>123) ), '/go/123', 'pattern converted back into a url' );
 Tap::is( $r->link('nested/deep/test', array('b'=>'quux', 'a'=>'bazz', 'c'=>'test')), '/foo/bar/bazz/test/quux?c=test', 'converted longer pattern with several parts into url');
 Tap::is( $r->match('nested/deep/test', $args), 'nested/deep/test', 'without a pattern match, falls back on the core match method');
@@ -66,7 +66,15 @@ Tap::is( $r->match('/numerical/123', $args), 'id', 'numerical url matched action
 Tap::is( $args['id'], '123', 'number extracted into the request id');
 Tap::is( $r->link('id', array('id'=>123) ), '/numerical/123', 'pattern converted back into a url' );
 Tap::is( $r->match('/foo/bar/bazz/test/quux', $args ), 'nested/deep/test', 'deeply nested url matched action' );
-Tap::is( $args, array(0=>'bazz', 1=>'quux', 'a'=>'bazz', 'b'=>'quux'), 'extracted the correct args');
+Tap::is( $args, array('a'=>'bazz', 'b'=>'quux'), 'extracted the correct args');
 Tap::is( $r->link('nested/test', array('id'=>123) ), '/go/123', 'pattern converted back into a url' );
 Tap::is( $r->link('nested/deep/test', array('b'=>'quux', 'a'=>'bazz', 'c'=>'test')), '/foo/bar/bazz/test/quux?c=test', 'converted longer pattern with several parts into url');
 Tap::is( $r->match('nested/deep/test/1', $args), '', 'without a pattern match fails');
+
+$link = $r->link('nested/test', $args = array('id'=>json_encode(array('a'=>1, 'b'=>array()))));
+Tap::is( $r->match(rawurldecode($link), $a), 'nested/test', 'complex encoded link with json characters converts back into a match');
+Tap::cmp_ok( $a, '===', $args, 'args with json extracts properly');
+
+$link = $r->link('nested/test', $args = array('id'=>json_decode('"\u140a\u14d5\u148d\u1585 \u14c2\u1546\u152d\u154c\u1593\u1483\u146f \u14f1\u154b\u1671\u1466\u1450\u14d0\u14c7\u1585\u1450\u1593"')));
+Tap::is( $r->match(rawurldecode($link), $a), 'nested/test', 'complex encoded link with utf8 characters converts back into a match');
+Tap::cmp_ok( $a, '===', $args, 'args with utf8 extracts properly');

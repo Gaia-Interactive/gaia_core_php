@@ -8,7 +8,7 @@ class Resolver implements Iface\Resolver
 {
 
     protected $appdir = '';
-    const param_match = '#\\\\\(([a-z0-9_\-]+)\\\\\)#i';
+    const param_match = '#\\\\\(([a-z0-9_\-]+)\\\\\)#iu';
     protected $urls = array();
 
     public function __construct( $dir = '', array $urls = null  ){
@@ -26,7 +26,13 @@ class Resolver implements Iface\Resolver
                 $params = array();
                 $regex  = preg_replace_callback(Resolver::param_match, function($match) use ( &$params ) {
                     $params[] = $match[1];
-                    return '([a-z0-9\.+\,\;\'\\\&%\$\#\=~_\-%\s]+)';
+                    // only exclude line breaks from my match. this will let utf-8 sequences through.
+                    // older patterns below. 
+                    // turns out I don't need to be super strict on my pattern matching.
+                    // php sapi does most of the work for me in giving me the url.
+                    return '([^\n]+)'; 
+                    //return '([[:graph:][:space:]]+)';
+                    //return '([a-z0-9\.+\,\;\'\\\&%\$\#\=~_\-%\s\"\{\}/\:\(\)\[\]]+)';
                 
                 }, preg_quote($pattern, '#'));
                 return array('#^' . $regex . '$#i', $params );
@@ -35,11 +41,11 @@ class Resolver implements Iface\Resolver
             foreach( $this->urls as $pattern => $action ){
                 list( $regex, $params ) = $buildRegex( $pattern );
                 if( ! preg_match( $regex, $uri, $matches ) ) continue;
-                $args = array_slice($matches, 1);
-                foreach( $params as $i => $key ){
-                    if( ! isset( $args[ $i ] ) ) break;
-                    $args[ $key ] = $args[ $i ];
+                $a = array_slice($matches, 1);
+                foreach( $a as $i=>$v ){
+                    $args[ $params[$i] ] = $v;
                 }
+                
                 return $action;
                 
             }
