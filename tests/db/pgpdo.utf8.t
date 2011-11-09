@@ -3,31 +3,21 @@
 include __DIR__ . '/../common.php';
 
 use Gaia\Test\Tap;
-use Gaia\UTF8;
 use Gaia\DB;
 
-if( ! class_exists('\PDO') ){
-    Tap::plan('skip_all', 'php-pdo not installed');
-}
+include __DIR__ . '/../common.php';
+include __DIR__ . '/../assert/pdo_installed.php';
+include __DIR__ . '/../assert/pdo_pgsql_installed.php';
+include __DIR__ . '/../assert/postgres_running.php';
 
-if( ! in_array( 'pgsql', PDO::getAvailableDrivers()) ){
-    Tap::plan('skip_all', 'this version of PDO does not support postgres');
+try {
+   $db = new Gaia\DB\Driver\PDO('pgsql:host=localhost;port=5432;dbname=test');
+} catch( \Exception $e ){
+    Tap::plan('skip_all', $e->__toString());
 }
-
-if( ! @fsockopen('localhost', 5432) ){
-    Tap::plan('skip_all', 'postgres not running on localhost:5432');
-}
-
 
 $raw = file_get_contents(__DIR__ . '/../sample/i_can_eat_glass.txt');
 
-if( strlen( $raw ) < 1 ){
-    Tap::plan('skip_all', 'unable to load test data');
-}
-
-
-
-$db = new Gaia\DB\Driver\PDO( 'pgsql:host=localhost;port=5432;dbname=test');
 
 Tap::plan(152);
 $lines = explode("\n", $raw);

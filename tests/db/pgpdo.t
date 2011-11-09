@@ -1,35 +1,19 @@
 #!/usr/bin/env php
 <?php
-include_once __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\DB;
 
-if( ! class_exists('\PDO') ){
-    Tap::plan('skip_all', 'php-pdo not installed');
-}
-
-if( ! in_array( 'pgsql', PDO::getAvailableDrivers()) ){
-    Tap::plan('skip_all', 'this version of PDO does not support postgres');
-}
-
-if( ! @fsockopen('localhost', 5432) ){
-    Tap::plan('skip_all', 'postgres not running on localhost:5432');
-}
-
+include __DIR__ . '/../common.php';
+include __DIR__ . '/../assert/pdo_installed.php';
+include __DIR__ . '/../assert/pdo_pgsql_installed.php';
+include __DIR__ . '/../assert/postgres_running.php';
 
 try {
-    DB\Connection::load( array(
-    'test'=> function () {
-        $db = new Gaia\DB\Driver\PDO( 'pgsql:host=localhost;port=5432;dbname=test');
-        return $db;
-    }
-    ) );
-    $db = DB\Connection::instance('test');
+   $db = new Gaia\DB\Driver\PDO('pgsql:host=localhost;port=5432;dbname=test');
 } catch( \Exception $e ){
     Tap::plan('skip_all', $e->__toString());
 }
-Tap::plan(14);
-Tap::ok( DB\Connection::instance('test') === $db, 'db instance returns same object we instantiated at first');
+Tap::plan(13);
 
 $rs = $db->execute('SELECT %s as foo, %s as bar', 'dummy\'', 'rummy');
 Tap::ok( $rs, 'query executed successfully');
