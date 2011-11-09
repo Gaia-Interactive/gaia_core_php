@@ -1,16 +1,10 @@
 <?php
-require __DIR__ . '/../lib/setup.php';
 use Gaia\DB;
 use Gaia\Test\Tap;
 
-if( ! class_exists('\MySQLi') ){
-    Tap::plan('skip_all', 'mysqli not installed');
-}
-
-
-if( ! @fsockopen('127.0.0.1', '3306')) {
-    Tap::plan('skip_all', 'mysql-server not running on localhost');
-}
+include __DIR__ . '/../lib/setup.php';
+include __DIR__ . '/../../assert/mysqli_installed.php';
+include __DIR__ . '/../../assert/mysql_running.php';
 
 
 DB\Connection::load( array(
