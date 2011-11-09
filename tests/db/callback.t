@@ -1,23 +1,19 @@
 #!/usr/bin/env php
 <?php
-include_once __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\DB;
 
-if( ! class_exists('\MySQLi') ){
-    Tap::plan('skip_all', 'php-mysqli not installed');
-}
+include_once __DIR__ . '/../common.php';
+include_once __DIR__ . '/../assert/mysqli_installed.php';
+include_once __DIR__ . '/../assert/pdo_installed.php';
 
-if( ! class_exists('\PDO') ){
-    Tap::plan('skip_all', 'php-pdo not installed');
-}
+Tap::plan(31);
 
 DB\Connection::load( array(
     'test'=> function(){return new DB\Callback();}
 ));
 $db = DB\Connection::instance('test');
 
-Tap::plan(31);
 Tap::ok( DB\Connection::instance('test') === $db, 'db instance returns same object we instantiated at first');
 
 Tap::is( DB\Connection::instances(), array('test'=>$db), 'Connection::instances() returns test db object');
