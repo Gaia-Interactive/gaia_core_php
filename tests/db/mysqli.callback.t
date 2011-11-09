@@ -8,23 +8,16 @@ include __DIR__ . '/../assert/mysqli_installed.php';
 include __DIR__ . '/../assert/mysql_running.php';
 
 
-try {
-    DB\Connection::load( array(
-        'test'=> function(){
-             $db = new DB\Callback\MySQLi( new \MySQLi(
-                $host = '127.0.0.1', 
-                $user = NULL, 
-                $pass = NULL, 
-                $db = 'test', 
-                '3306'));
-                return $db;
-        }
-    ));
-    $db = DB\Connection::instance('test');
-} catch( Exception $e ){
-    Tap::plan('skip_all', $e->__toString());
+$db = new \MySQLi( '127.0.0.1', NULL, NULL, 'test', '3306');
+if( $db->connect_error ){
+    Tap::plan('skip_all', 'mysqli: ' . $db->connect_error );
 }
-Tap::plan(14);
+
+Tap::plan(15);
+$db = new DB\Callback\MySQLi($db);
+
+DB\Connection::load( array( 'test'=> function() use( $db ){ return $db; }));
+
 Tap::ok( DB\Connection::instance('test') === $db, 'db instance returns same object we instantiated at first');
 
 $rs = $db->execute('SELECT %s as foo, %s as bar', 'dummy\'', 'rummy');
@@ -71,3 +64,10 @@ Tap::like($err, '/database error/i', 'When a bad query is run using execute() th
 
 Tap::is( $db->isa('mysqli'), TRUE, 'isa returns true for mysqli');
 Tap::is( $db->isa('gaia\db\callback\mysqli'), TRUE, 'isa returns true for gaia\db\callback\mysqli');
+
+
+class FunkyChicken extends \MySQLi { }
+
+$db = new DB\Callback\MySQLi( new FunkyChicken( '127.0.0.1', NULL, NULL, 'test', '3306') );
+
+Tap::is( $db->isa('FunkyChicken'), TRUE, 'extended class of mysqli passed into callback correctly detects isa of the new class');

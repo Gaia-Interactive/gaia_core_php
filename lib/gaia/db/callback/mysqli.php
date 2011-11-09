@@ -127,8 +127,9 @@ class MySQLi extends Callback implements \Gaia\DB\Iface {
             return $res;
         };
         
-        $callbacks['isa'] = function( $name ) use( $wrapper ) {
+        $callbacks['isa'] = function( $name ) use( $wrapper, $mysqli ) {
             if( $wrapper instanceof $name ) return TRUE;
+            if( $mysqli instanceof $name ) return TRUE;
             $name = strtolower( $name );
             if( $name == 'mysqli' ) return TRUE;
             //if( strpos($name, 'mysqli') !== FALSE ) return TRUE;
