@@ -1,8 +1,9 @@
 #!/usr/bin/env php
 <?php
-include_once __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\DB;
+
+include __DIR__ . '/../common.php';
 
 
 Tap::plan(6);
