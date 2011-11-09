@@ -1,12 +1,13 @@
 #!/usr/bin/env php
 <?php
-include __DIR__ . '/../common.php';
+
 use Gaia\Test\Tap;
 use Gaia\Store;
 
-if( ! function_exists('apc_fetch') ) {
-    Tap::plan('skip_all', 'php5-apc extension not installed or enabled (check apc.enable_cli=1)');
-}
+include __DIR__ . '/../common.php';
+include __DIR__ . '/../assert/apc_installed.php';
+
+
 Tap::plan(11);
 
 $apc = new Store\Apc;

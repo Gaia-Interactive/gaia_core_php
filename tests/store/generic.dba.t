@@ -1,9 +1,11 @@
 #!/usr/bin/env php
 <?php
-include __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\Store;
-if( ! function_exists('dba_open') ) Tap::plan('skip_all', 'dba not enabled');
+
+include __DIR__ . '/../common.php';
+include __DIR__ . '/../assert/dba_installed.php';
+
 $file = tempnam('/tmp', 'PHP');
 $cache = new Store\DBA($handle =  dba_open( $file, 'cd' ));
 #$cache = new Store\DBA($file); // this works too
