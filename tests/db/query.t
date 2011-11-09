@@ -1,8 +1,10 @@
 #!/usr/bin/env php
 <?php
-include_once __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\DB\Query;
+
+include __DIR__ . '/../common.php';
+
 Tap::plan(8);
 Tap::is(Query::format('test=%i', array(1) ), "test=1", 'inject query param by sprintf rule');
 Tap::is(Query::format('test=?', array(1) ), "test='1'", 'inject query param by question mark with equals sign next to it');
