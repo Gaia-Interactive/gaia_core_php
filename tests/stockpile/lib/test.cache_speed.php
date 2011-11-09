@@ -2,13 +2,9 @@
 namespace Gaia\Stockpile;
 use Gaia\Test\Tap;
 
-if( ! class_exists('\Memcache') && ! class_exists('\Memcached') ){
-    Tap::plan('skip_all', 'no pecl-memcache or pecl-memcached extension installed');
-}
+include __DIR__ . '/../../assert/memcache_installed.php';
+include __DIR__ . '/../../assert/memcache_running.php';
 
-if( ! @fsockopen('127.0.0.1', '11211')) {
-    Tap::plan('skip_all', 'memcached not running on localhost');
-}
 
 // how many tests are we gonna run?
 Tap::plan(5);
