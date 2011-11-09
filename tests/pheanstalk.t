@@ -4,13 +4,9 @@ include __DIR__ . '/common.php';
 use Gaia\Test\Tap;
 use Gaia\Pheanstalk;
 
-if( ! @fsockopen('127.0.0.1', '11300')) {
-    Tap::plan('skip_all', 'Beanstalkd not running on localhost');
-}
-
-if( ! class_exists('Pheanstalk') ) {
-    Tap::plan('skip_all', 'Pheanstalk class library not loaded. check vendors/pheanstalk.');
-}
+include __DIR__ . '/common.php';
+include __DIR__ . '/assert/pheanstalk_installed.php';
+include __DIR__ . '/assert/beanstalkd_running.php';
 
 Tap::plan(4);
 
