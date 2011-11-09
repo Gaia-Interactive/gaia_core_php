@@ -1,17 +1,13 @@
 #!/usr/bin/env php
 <?php
-include_once __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\DB;
 use Gaia\DB\Transaction;
 
-if( ! class_exists('\MySQLi') ){
-    Tap::plan('skip_all', 'php-mysqli not installed');
-}
+include __DIR__ . '/../common.php';
+include __DIR__ . '/../assert/mysqli_installed.php';
+include __DIR__ . '/../assert/mysql_running.php';
 
-if( ! @fsockopen('127.0.0.1', '3306')) {
-    Tap::plan('skip_all', 'mysql-server not running on localhost');
-}
 
 Tap::plan(29);
 $table = 'test_' . time() . '_' . mt_rand(10000, 99999);
