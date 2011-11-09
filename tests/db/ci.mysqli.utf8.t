@@ -1,38 +1,18 @@
 #!/usr/bin/env php
 <?php
-include_once __DIR__ . '/../common.php';
-define('BASEPATH', __DIR__ . '/../../vendor/CodeIgniter/system/');
-define('APPPATH', __DIR__ . '/lib/codeigniter/app/');
-@include BASEPATH . 'database/DB.php';
-@include BASEPATH . 'core/Common.php';
-
 use Gaia\Test\Tap;
-use Gaia\UTF8;
 use Gaia\DB;
 
-if( ! @fsockopen('127.0.0.1', '3306')) {
-    Tap::plan('skip_all', 'mysql-server not running on localhost');
-}
+include __DIR__ . '/../common.php';
+include __DIR__ . '/../assert/mysql_running.php';
+include __DIR__ . '/../assert/ci_installed.php';
 
-if( ! function_exists('DB') ){
-	Tap::plan('skip_all', 'CodeIgniter database library not loaded');
-}
-
-if( ! @fsockopen('127.0.0.1', '3306')) {
-    Tap::plan('skip_all', 'mysql-server not running on localhost');
-}
+Tap::plan(153);
 
 $raw = file_get_contents(__DIR__ . '/../sample/i_can_eat_glass.txt');
 
-if( strlen( $raw ) < 1 ){
-    Tap::plan('skip_all', 'unable to load test data');
-}
-
-
-
 $db = new DB\Driver\CI( DB( array('dbdriver'=>'mysql','hostname'=>'127.0.0.1', 'database'=>'test') ) );
 
-Tap::plan(153);
 $lines = explode("\n", $raw);
 $sql = "CREATE TEMPORARY TABLE t1utf8 (`i` INT UNSIGNED NOT NULL PRIMARY KEY, `line` VARCHAR(5000) ) ENGINE=InnoDB DEFAULT CHARACTER SET utf8";
 $db->execute($sql);
