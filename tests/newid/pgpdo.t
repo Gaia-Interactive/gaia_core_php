@@ -5,21 +5,19 @@ use Gaia\Test\Tap;
 use Gaia\NewID;
 use Gaia\Store;
 
-if( ! class_exists('\PDO') ){
-    Tap::plan('skip_all', 'php-pdo not installed');
+include __DIR__ . '/../common.php';
+include __DIR__ . '/../assert/pdo_installed.php';
+include __DIR__ . '/../assert/pdo_pgsql_installed.php';
+include __DIR__ . '/../assert/postgres_running.php';
+
+try {
+    $db = new PDO('pgsql:host=127.0.0.1;dbname=test;port=5432');
+    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT );
+} catch( Exception $e ){
+    Tap::plan('skip_all', $e->__toString() );
 }
 
-if( ! in_array( 'pgsql', PDO::getAvailableDrivers()) ){
-    Tap::plan('skip_all', 'this version of PDO does not support postgres');
-}
-
-if( ! @fsockopen('localhost', 5432) ){
-    Tap::plan('skip_all', 'postgres not running on localhost:5432');
-}
 Tap::plan(4);
-
-$db = new PDO('pgsql:host=127.0.0.1;dbname=test;port=5432');
-$db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT );
 $cache = new Store\KVP();
 $app = 'test';
 $new = new NewId\PgPDO( $app, $db, $cache );

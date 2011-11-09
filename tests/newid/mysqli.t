@@ -1,17 +1,12 @@
 #!/usr/bin/env php
 <?php
-include_once __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\NewID;
 use Gaia\Store;
 
-if( ! class_exists('\MySQLi') ){
-    Tap::plan('skip_all', 'php-mysqli not installed');
-}
-
-if( ! @fsockopen('127.0.0.1', '3306')) {
-    Tap::plan('skip_all', 'mysql-server not running on localhost');
-}
+include __DIR__ . '/../common.php';
+include __DIR__ . '/../assert/mysqli_installed.php';
+include __DIR__ . '/../assert/mysql_running.php';
 
 Tap::plan(4);
 
@@ -21,6 +16,9 @@ $db = new MySQLi(
                 $pass = NULL, 
                 $dbname = 'test', 
                 '3306');
+if( $db->connect_error ) Tap::plan('skip_all', $db->connect_error);
+
+
 $cache = new Store\KVP();
 $app = 'test';
 $new = new NewId\MySQLi( $app, $db, $cache );

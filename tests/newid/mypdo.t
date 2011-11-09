@@ -1,27 +1,23 @@
 #!/usr/bin/env php
 <?php
-include_once __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\NewID;
 use Gaia\Store;
 
-if( ! class_exists('\PDO') ){
-    Tap::plan('skip_all', 'php-pdo not installed');
-}
+include __DIR__ . '/../common.php';
+include __DIR__ . '/../assert/pdo_installed.php';
+include __DIR__ . '/../assert/pdo_mysql_installed.php';
+include __DIR__ . '/../assert/mysql_running.php';
 
-if( ! in_array( 'mysql', PDO::getAvailableDrivers()) ){
-    Tap::plan('skip_all', 'this version of PDO does not support mysql');
+try {
+    $db = new \PDO('mysql:host=127.0.0.1;dbname=test;port=3306');
+    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT );
+} catch( Exception $e ){
+    Tap::plan('skip_all', $e->__toString() );
 }
-
-if( ! @fsockopen('127.0.0.1', '3306')) {
-    Tap::plan('skip_all', 'mysql-server not running on localhost');
-}
-
 
 Tap::plan(4);
 
-$db = new \PDO('mysql:host=127.0.0.1;dbname=test;port=3306');
-$db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT );
 $cache = new Store\KVP();
 $app = 'test';
 $new = new NewId\MyPDO( $app, $db, $cache );
