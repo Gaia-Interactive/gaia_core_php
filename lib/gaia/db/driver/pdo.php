@@ -113,4 +113,14 @@ class PDO extends \PDO implements \Gaia\DB\Iface {
     public function __toString(){
         return print_r( $this, TRUE);
     }
+    
+    public function __get( $k ){
+        if( $k == 'lock' ) return $this->lock;
+        if( $k == 'txn' ) return $this->txn;
+    }
+
+    public function __set( $k, $v ){
+        if( $k == 'lock' ) return $this->lock = (bool) $v;
+        if( $k == 'txn' ) return $this->txn = (bool) $v;
+    }
 }
