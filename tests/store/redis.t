@@ -1,16 +1,11 @@
 #!/usr/bin/env php
 <?php
-include __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\Store;
 
-if( ! @fsockopen('127.0.0.1', '6379')) {
-    Tap::plan('skip_all', 'Redis not running on localhost');
-}
-
-if( ! class_exists('Predis\Client') ){
-    Tap::plan('skip_all', 'Predis library not loaded. check vendor/predis.');
-}
+include __DIR__ . '/../common.php';
+include __DIR__ . '/../assert/predis_installed.php';
+include __DIR__ . '/../assert/redis_running.php';
 
 Tap::plan(20);
 
