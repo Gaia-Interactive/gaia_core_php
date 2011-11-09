@@ -7,6 +7,13 @@ use Gaia\Exception;
 use Gaia\Test\Tap;
 
 include __DIR__ . '/common.php';
+include __DIR__ . '/../tests/assert/curl_installed.php';
+
+
+if( ! @fsockopen('maps.googleapis.com', 80) ){
+    Tap::plan('skip_all', 'could not connect to google api');
+}
+
 
 //  http://maps.googleapis.com/maps/api/directions/json?origin=Chicago,IL&destination=Los+Angeles,CA&waypoints=Joplin,MO|Oklahoma+City,OK&sensor=false
 
@@ -56,14 +63,6 @@ class GoogleMaps {
     protected static function time(){
         return time() + self::$time_offset;
     }
-}
-
-if( ! function_exists('curl_init') ){
-    Tap::plan('skip_all', 'php curl library not installed');
-}
-
-if( ! @fsockopen('maps.googleapis.com', 80) ){
-    Tap::plan('skip_all', 'could not connect to google api');
 }
 
 Tap::plan(3);
