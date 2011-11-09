@@ -1,18 +1,11 @@
 #!/usr/bin/env php
 <?php
-include __DIR__ . '/../common.php';
-
 use Gaia\Test\Tap;
-use Gaia\UTF8;
 use Gaia\DB;
 
-if( ! class_exists('\MySQLi') ){
-    Tap::plan('skip_all', 'php-mysqli not installed');
-}
-
-if( ! @fsockopen('127.0.0.1', '3306')) {
-    Tap::plan('skip_all', 'mysql-server not running on localhost');
-}
+include __DIR__ . '/../common.php';
+include __DIR__ . '/../assert/mysqli_installed.php';
+include __DIR__ . '/../assert/mysql_running.php';
 
 $raw = file_get_contents(__DIR__ . '/../sample/i_can_eat_glass.txt');
 
