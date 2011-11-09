@@ -1,17 +1,12 @@
 #!/usr/bin/env php
 <?php
-include_once __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\Http\Request;
 use Gaia\Http\Pool;
 
-if( ! function_exists('curl_init') ){
-    Tap::plan('skip_all', 'php curl library not installed');
-}
-
-if( ! @fsockopen('127.0.0.1', '11299')) {
-    Tap::plan('skip_all', "unable to connect to test job url: please do: tests/webservice/start.sh\n");
-}
+include __DIR__ . '/../common.php';
+include __DIR__ . '/../assert/curl_installed.php';
+include __DIR__ . '/../assert/webservice_started.php';
 
 Tap::plan(5);
 
