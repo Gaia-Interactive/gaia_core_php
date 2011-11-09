@@ -3,9 +3,9 @@
 use Gaia\Test\Tap;
 use Gaia\DB;
 
-include_once __DIR__ . '/../common.php';
-include_once __DIR__ . '/../assert/mysqli_installed.php';
-include_once __DIR__ . '/../assert/pdo_installed.php';
+include __DIR__ . '/../common.php';
+include __DIR__ . '/../assert/mysqli_installed.php';
+include __DIR__ . '/../assert/pdo_installed.php';
 
 Tap::plan(31);
 
