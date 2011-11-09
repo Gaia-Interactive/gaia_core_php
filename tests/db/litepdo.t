@@ -1,29 +1,22 @@
 #!/usr/bin/env php
 <?php
-include_once __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\DB;
 
-if( ! class_exists('\PDO') ){
-    Tap::plan('skip_all', 'php-pdo not installed');
-}
-
-if( ! in_array( 'sqlite', PDO::getAvailableDrivers()) ){
-    Tap::plan('skip_all', 'this version of PDO does not support sqlite');
-}
+include __DIR__ . '/../common.php';
+include __DIR__ . '/../assert/pdo_installed.php';
+include __DIR__ . '/../assert/pdo_sqlite_installed.php';
 
 try {
-    DB\Connection::load( array(
-    'test'=> function () {
-        $db = new Gaia\DB\Driver\PDO( 'sqlite::memory:');
-        return $db;
-    }
-    ) );
-    $db = DB\Connection::instance('test');
+    $db = new Gaia\DB\Driver\PDO( 'sqlite::memory:');
 } catch( \Exception $e ){
     Tap::plan('skip_all', $e->__toString());
 }
 Tap::plan(14);
+
+DB\Connection::load( array('test'=> function () use ( $db ) { return $db; }) );
+
+
 Tap::ok( DB\Connection::instance('test') === $db, 'db instance returns same object we instantiated at first');
 
 $rs = $db->execute('SELECT %s as foo, %s as bar', 'dummy\'', 'rummy');

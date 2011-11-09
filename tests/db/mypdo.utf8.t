@@ -1,30 +1,15 @@
 #!/usr/bin/env php
 <?php
-include __DIR__ . '/../common.php';
-
 use Gaia\Test\Tap;
-use Gaia\UTF8;
 use Gaia\DB;
 
-if( ! class_exists('\PDO') ){
-    Tap::plan('skip_all', 'php-pdo not installed');
-}
+include __DIR__ . '/../common.php';
+include __DIR__ . '/../assert/pdo_installed.php';
+include __DIR__ . '/../assert/pdo_mysql_installed.php';
+include __DIR__ . '/../assert/mysql_running.php';
 
-if( ! in_array( 'mysql', PDO::getAvailableDrivers()) ){
-    Tap::plan('skip_all', 'this version of PDO does not support mysql');
-}
-
-if( ! @fsockopen('127.0.0.1', '3306')) {
-    Tap::plan('skip_all', 'mysql-server not running on localhost');
-}
 
 $raw = file_get_contents(__DIR__ . '/../sample/i_can_eat_glass.txt');
-
-if( strlen( $raw ) < 1 ){
-    Tap::plan('skip_all', 'unable to load test data');
-}
-
-
 
 $db = new DB\Driver\PDO('mysql:host=127.0.0.1;dbname=test;port=3306');
 
