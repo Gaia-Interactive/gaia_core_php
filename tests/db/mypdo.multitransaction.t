@@ -7,15 +7,17 @@ use Gaia\DB\Transaction;
 include __DIR__ . '/../common.php';
 include __DIR__ . '/../assert/pdo_installed.php';
 include __DIR__ . '/../assert/pdo_mysql_installed.php';
+include __DIR__ . '/../assert/mysql_running.php';
 
-if( ! @fsockopen('127.0.0.1', '3306')) {
-    Tap::plan('skip_all', 'mysql-server not running on localhost');
+try {
+    $dbmain = new DB\Driver\PDO('mysql:host=127.0.0.1;dbname=test;port=3306');
+} catch( Exception $e ){
+    Tap::plan('skip_all', $e->__toString() );
 }
 
 Tap::plan(28);
 $table = 'test_' . time() . '_' . mt_rand(10000, 99999);
 
-$dbmain = new DB\Driver\PDO('mysql:host=127.0.0.1;dbname=test;port=3306');
 $dbmain->query("create table $table (id int unsigned not null primary key) engine=innodb");
 $conn1 = new DB\Driver\PDO('mysql:host=127.0.0.1;dbname=test;port=3306');
 $conn2 = new DB\Driver\PDO('mysql:host=127.0.0.1;dbname=test;port=3306');

@@ -14,8 +14,11 @@ if( strlen( $raw ) < 1 ){
 }
 
 
-
-$db = new Gaia\DB\Driver\PDO( 'sqlite::memory:');
+try {
+    $db = new Gaia\DB\Driver\PDO( 'sqlite::memory:');
+} catch( \Exception $e ){
+    Tap::plan('skip_all', $e->__toString());
+}
 
 Tap::plan(424);
 $lines = explode("\n", $raw);
