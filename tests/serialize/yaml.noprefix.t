@@ -1,11 +1,10 @@
 #!/usr/bin/env php
 <?php
-include __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 
-if( ! class_exists('sfYaml')){
-    Tap::plan('skip_all', 'sfYaml class not loaded. check vendors/yaml git submodule');
-}
+include __DIR__ . '/../common.php';
+include __DIR__ . '/../assert/sfyaml_installed.php';
+
 
 Tap::plan(18);
 
