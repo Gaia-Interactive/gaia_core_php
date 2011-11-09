@@ -1,16 +1,11 @@
 #!/usr/bin/env php
 <?php
-include_once __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\DB;
 
-if( ! class_exists('\PDO') ){
-    Tap::plan('skip_all', 'php-pdo not installed');
-}
-
-if( ! in_array( 'sqlite', PDO::getAvailableDrivers()) ){
-    Tap::plan('skip_all', 'this version of PDO does not support sqlite');
-}
+include __DIR__ . '/../common.php';
+include __DIR__ . '/../assert/pdo_installed.php';
+include __DIR__ . '/../assert/pdo_sqlite_installed.php';
 
 try {
     DB\Connection::load( array(

@@ -1,18 +1,12 @@
 #!/usr/bin/env php
 <?php
-include_once __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\DB;
 use Gaia\DB\Transaction;
 
-
-if( ! class_exists('\PDO') ){
-    Tap::plan('skip_all', 'php-pdo not installed');
-}
-
-if( ! in_array( 'mysql', PDO::getAvailableDrivers()) ){
-    Tap::plan('skip_all', 'this version of PDO does not support mysql');
-}
+include __DIR__ . '/../common.php';
+include __DIR__ . '/../assert/pdo_installed.php';
+include __DIR__ . '/../assert/pdo_mysql_installed.php';
 
 if( ! @fsockopen('127.0.0.1', '3306')) {
     Tap::plan('skip_all', 'mysql-server not running on localhost');
