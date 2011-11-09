@@ -6,17 +6,11 @@ use Gaia\Test\Tap;
 use Gaia\FaceBook\ApiCache as FacebookAPI;
 use Gaia\Store\KVP;
 use Gaia\Facebook\Persistence as Facebook;
-if( ! function_exists('curl_init') ){
-    Tap::plan('skip_all', 'php curl library not installed');
-}
 
-if( ! @fsockopen('api.facebook.com', '443') ){
-    Tap::plan('skip_all', 'unable to connect to facebook api');
-}
-
-if( ! class_exists('BaseFacebook') ){
-    Tap::plan('skip_all', 'basefacebook class not loaded.');
-}
+include __DIR__ . '/../common.php';
+include __DIR__ . '/../assert/curl_installed.php';
+include __DIR__ . '/../assert/basefacebook_installed.php';
+include __DIR__ . '/../assert/facebook_api_connect.php';
 
 $config = @include __DIR__ . '/.config.php';
 try {
