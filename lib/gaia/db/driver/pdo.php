@@ -35,15 +35,7 @@ class PDO extends \PDO implements \Gaia\DB\Iface {
         }
         return $res;
     }
-    
-    public function locked(){
-        return $this->lock;
-    }
-    
-    public function txn(){
-        return $this->txn;
-    }
-    
+
     public function exec( $query ){
         if( $this->lock ) return FALSE;
         $res = parent::exec( $query );
@@ -91,6 +83,7 @@ class PDO extends \PDO implements \Gaia\DB\Iface {
         if( $this instanceof $name ) return TRUE;
         $name = strtolower( $name );
         if( $name == 'pdo') return TRUE;
+        if( $name == $this->getAttribute(\PDO::ATTR_DRIVER_NAME) ) return TRUE;
         return FALSE;
     }
     
@@ -112,5 +105,15 @@ class PDO extends \PDO implements \Gaia\DB\Iface {
     
     public function __toString(){
         return print_r( $this, TRUE);
+    }
+    
+    public function __get( $k ){
+        if( $k == 'lock' ) return $this->lock;
+        if( $k == 'txn' ) return $this->txn;
+    }
+
+    public function __set( $k, $v ){
+        if( $k == 'lock' ) return $this->lock = (bool) $v;
+        if( $k == 'txn' ) return $this->txn = (bool) $v;
     }
 }

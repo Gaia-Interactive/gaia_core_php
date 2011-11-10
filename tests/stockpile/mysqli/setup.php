@@ -8,12 +8,12 @@ include __DIR__ . '/../../assert/mysql_running.php';
 
 DB\Connection::load( array(
     'test'=> function(){
-         $db = new DB\Driver\MySQLi( 
+         $db = new DB( new \MySQLi( 
             $host = '127.0.0.1', 
             $user = NULL, 
             $pass = NULL, 
             $db = 'test', 
-            '3306');
+            '3306'));
             return $db;
     }
 ));
