@@ -115,7 +115,7 @@ class MySQLi extends \MySQLi implements \Gaia\DB\Iface {
     public function isa( $name ){
         if( $this instanceof $name ) return TRUE;
         $name = strtolower( $name );
-        //if( strpos($name, 'mysqli') !== FALSE ) return TRUE;
+        if( $name == 'mysql' ) return TRUE;
         return FALSE;
     }
     

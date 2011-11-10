@@ -77,7 +77,6 @@ class Callback implements IFace {
         return $this->__call( __FUNCTION__, array( $name ) );
     }
     
-    
     public function __get( $k ){
         if( $k == 'lock' ) return $this->lock;
         if( $k == 'txn' ) return $this->txn;

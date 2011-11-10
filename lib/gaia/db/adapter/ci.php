@@ -79,7 +79,9 @@ $cb['errorcode'] = function() use ( $db ){
 };
 
 $cb['isa'] = function($name) use ( $db ){
-    return ( $db instanceof $name) ? TRUE : FALSE;
+    if( $db instanceof $name) return TRUE;
+    if( $db->dbdriver == $name ) return TRUE;
+    return FALSE;
 };
 
 return $cb;

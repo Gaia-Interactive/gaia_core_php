@@ -110,7 +110,7 @@ class DB implements DB\Iface {
         $f = $this->callbacks[ 'isa' ];
         return $f( $name );
     }
-
+    
     public function __tostring(){
         $f = $this->callbacks[ __FUNCTION__ ];
         return $f();

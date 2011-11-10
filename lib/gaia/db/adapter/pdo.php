@@ -84,7 +84,9 @@ $cb['errorcode'] = function() use ( $db ){
 };
 
 $cb['isa'] = function($name) use ( $db ){
-    return ( $db instanceof $name) ? TRUE : FALSE;
+    if ( $db instanceof $name) return TRUE;
+    if( $name == $db->getAttribute(\PDO::ATTR_DRIVER_NAME) ) return TRUE;
+    return FALSE;
 };
 
 return $cb;
