@@ -1,5 +1,5 @@
 <?php
-namespace Gaia\Stockpile\Storage\MyPDO;
+namespace Gaia\Stockpile\Storage\MySQL;
 use \Gaia\Stockpile\Exception;
 
 
@@ -35,20 +35,20 @@ class Tally extends Core {
     public function add( $item_id, $quantity ){
         $rs = $this->execute($this->sql('ADD'),$this->user_id, $item_id, $quantity );
         $rs = $this->execute($this->sql('SELECT_TOKEN'));
-        $row = $rs->fetch(\PDO::FETCH_ASSOC);
-        $rs->closeCursor();
+        $row = $rs->fetch();
+        $rs->free();
         if( ! $row ) throw new Exception('database error', $this->db );
         return $row['tally'];
     }
     
     public function subtract( $item_id, $quantity ){
         $rs = $this->execute($this->sql('SUBTRACT'), $quantity, $this->user_id,$item_id,$quantity );
-        if( $rs->rowCount() < 1 ) {
+        if( $rs->affected() < 1 ) {
             throw new Exception('not enough left to subtract', $this->db );
         }
         $rs = $this->execute($this->sql('SELECT_TOKEN'));
-        $row = $rs->fetch(\PDO::FETCH_ASSOC);
-        $rs->closeCursor();
+        $row = $rs->fetch();
+        $rs->free();
         if( ! $row ) throw new Exception('database error', $this->db );
         return $row['tally'];
     }
@@ -62,11 +62,11 @@ class Tally extends Core {
             $rs = $this->execute($this->sql('FETCH') . $lock, $this->user_id );
         }
         $list = array();
-        while( $row = $rs->fetch(\PDO::FETCH_ASSOC) ){
+        while( $row = $rs->fetch() ){
             if( $row['quantity'] < 1 ) continue;
             $list[ $row['item_id'] ] = $row['quantity'];
         }
-        $rs->closeCursor();
+        $rs->free();
         return $list;
     }
     

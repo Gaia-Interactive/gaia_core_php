@@ -1,5 +1,5 @@
 <?php
-namespace Gaia\Stockpile\Storage\LitePDO;
+namespace Gaia\Stockpile\Storage\SQLite;
 use \Gaia\Stockpile\Exception;
 use Gaia\DB\Transaction;
 
@@ -38,16 +38,16 @@ const SQL_FETCH =
     public function add( $item_id, $quantity ){
         $local_txn = $this->claimStart();
         $rs = $this->execute($this->sql('ADD'),$this->user_id, $item_id, $quantity );
-        if( ! $rs->rowCount() ){
+        if( ! $rs->affected() ){
             $rs = $this->execute($this->sql('UPDATE'),$quantity, $this->user_id, $item_id );
-            if( ! $rs->rowCount() ){
+            if( ! $rs->affected() ){
                 if( $local_txn ) Transaction::rollback();
                 throw new Exception('database error', $this->dbInfo() );
             }
         }
         $rs = $this->execute($this->sql('SELECT'), $this->user_id, $item_id);
-        $row = $rs->fetch(\PDO::FETCH_ASSOC);
-        $rs->closeCursor();
+        $row = $rs->fetch();
+        $rs->free();
         if( ! $row ) {
             if( $local_txn ) Transaction::rollback();
             throw new Exception('database error', $this->dbInfo() );
@@ -63,13 +63,13 @@ const SQL_FETCH =
     public function subtract( $item_id, $quantity ){
         $local_txn = $this->claimStart();
         $rs = $this->execute($this->sql('SUBTRACT'), $quantity, $this->user_id,$item_id, $quantity );        
-        if( $rs->rowCount() < 1 ) {
+        if( $rs->affected() < 1 ) {
             if( $local_txn ) Transaction::rollback();
             throw new Exception('not enough', $this->dbInfo() );
         }
         $rs = $this->execute($this->sql('SELECT'), $this->user_id, $item_id);
-        $row = $rs->fetch(\PDO::FETCH_ASSOC);
-        $rs->closeCursor();
+        $row = $rs->fetch();
+        $rs->free();
         if( ! $row ) {
             if( $local_txn ) Transaction::rollback();
             throw new Exception('database error', $this->dbInfo() );
@@ -89,11 +89,11 @@ const SQL_FETCH =
             $rs = $this->execute($this->sql('FETCH'), $this->user_id );
         }
         $list = array();
-        while( $row = $rs->fetch(\PDO::FETCH_ASSOC) ){
+        while( $row = $rs->fetch() ){
             if( $row['quantity'] < 1 ) continue;
             $list[ $row['item_id'] ] = $row['quantity'];
         }
-        $rs->closeCursor();
+        $rs->free();
         return $list;
     }
     

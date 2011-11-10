@@ -1,6 +1,7 @@
 <?php
-namespace Gaia\Stockpile\Storage\MyPDO;
+namespace Gaia\Stockpile\Storage\SQLITE;
 use \Gaia\Stockpile\Exception;
+use \Gaia\DB\Transaction;
 
 /**
  * base class for sorting.
@@ -14,24 +15,23 @@ const TABLE = 'sort';
     
 const SQL_CREATE =
 "CREATE TABLE IF NOT EXISTS `{TABLE}` (
-  `user_id` bigint unsigned NOT NULL,
-  `item_id` int unsigned NOT NULL,
-  `pos` bigint unsigned NOT NULL default '0',
-  UNIQUE KEY  (`user_id`,`item_id`),
-  KEY `user_id_pos` ( `user_id`, `pos`)
-) ENGINE=InnoDB";
+  `user_id` INTEGER NOT NULL,
+  `item_id` INTEGER NOT NULL,
+  `pos` INTEGER NOT NULL default '0',
+  UNIQUE  (`user_id`,`item_id`)
+)";
+
+const SQL_INDEX =
+"CREATE INDEX IF NOT EXISTS `{TABLE)_idx_user_id_pos` ON `{TABLE}` ( `user_id`, `pos`)";
 
 const SQL_SELECT = 
     'SELECT `item_id`, `pos` FROM `{TABLE}` WHERE `user_id` = %i AND `item_id` IN ( %i )';
 
-const SQL_INSERT =
-'INSERT INTO `{TABLE}` (`user_id`, `item_id`, `pos`) VALUES 
- %s
-ON DUPLICATE KEY UPDATE `pos` = VALUES(`pos`)';
+const SQL_UPDATE =
+'UPDATE `{TABLE}` SET `pos` = %i WHERE `user_id` = %i AND `item_id` = %i';
 
-const SQL_INSERT_IGNORE = 
-'INSERT IGNORE INTO `{TABLE}` (`user_id`, `item_id`, `pos`) VALUES 
- %s';
+const SQL_INSERT = 
+'INSERT OR IGNORE INTO `{TABLE}` (`user_id`, `item_id`, `pos`) VALUES (%i, %i, %i)';
 
 const SQL_REMOVE = 
 'UPDATE `{TABLE}` SET `pos` = 0 WHERE `user_id` = %i AND `item_id` = %i';
@@ -41,12 +41,21 @@ const SQL_MAXPOS =
     
     public function sort( $pos, array $item_ids, $ignore_dupes = FALSE ){
         $batch = array();
+        $ct = 0;
+        $local_txn = $this->claimStart();
         foreach( $item_ids as $item_id ){
             $pos = bcadd($pos, 1);
-            $batch[] = $this->db->format_query('(%i, %i, %i)', $this->user_id, $item_id, $pos );
+            $rs = $this->execute($this->sql('INSERT'), $this->user_id, $item_id, $pos );
+            $ct += $curr = $rs->affected();
+            if( ! $ignore_dupes && ! $curr  ){
+                $rs = $this->execute($this->sql('UPDATE'), $pos, $this->user_id, $item_id );
+                $ct += $rs->affected();
+            }
         }
-        $rs = $this->execute(sprintf( $this->sql( $ignore_dupes ? 'INSERT_IGNORE' : 'INSERT'), implode(",\n ", $batch )));
-        return $rs->rowCount();
+         if( $local_txn ) {
+            if( ! Transaction::commit()) throw new Exception('database error', $this->dbInfo() );
+        }
+        return $ct;
     }
     
     public function remove( $item_id ){
@@ -60,10 +69,10 @@ const SQL_MAXPOS =
     public function fetchPos( array $ids ){
         $rs = $this->db->execute($this->sql('SELECT'), $this->user_id, $ids );
         $list = array();
-        while( $row = $rs->fetch(\PDO::FETCH_ASSOC) ){
+        while( $row = $rs->fetch() ){
             $list[ $row['item_id'] ] = $row['pos'];
         }
-        $rs->closeCursor();
+        $rs->free();
         return $list;
     }
     
@@ -72,8 +81,8 @@ const SQL_MAXPOS =
     */
     public function maxPos(){
         $rs = $this->execute($this->sql('MAXPOS'), $this->user_id );
-        $row = $rs->fetch(\PDO::FETCH_ASSOC);
-        $rs->closeCursor();
+        $row = $rs->fetch();
+        $rs->free();
         return $row['pos'];
     }
  
