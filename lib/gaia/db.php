@@ -1,0 +1,116 @@
+<?php
+namespace Gaia;
+use Gaia\DB\Transaction;
+
+class DB implements DB\Iface {
+    
+    protected $core;
+    protected $callbacks = array();
+    protected $lock = FALSE;
+    protected $txn = FALSE;
+    
+    function __construct( $core ){
+        $this->core = $core;
+        if( $core instanceof DB\Iface ){
+            trigger_error('invalid db object', E_USER_ERROR);
+            exit(1);
+        }
+        if( $core instanceof \PDO ){            
+           $this->callbacks = include __DIR__ . '/db/adapter/pdo.php';
+        } elseif( $core instanceof \MySQLi ) {     
+           $this->callbacks = include __DIR__ . '/db/adapter/mysqli.php';
+        } elseif( is_array( $core ) ) {
+            $this->callbacks = $core;
+        } else {
+            trigger_error('invalid db object', E_USER_ERROR);
+            exit(1);
+        }
+    }
+    
+    public function core(){
+        return $this->core;
+    }
+    
+    public function start($auth = NULL){
+        $args = func_get_args();        
+        if( $auth == Transaction::SIGNATURE){
+            if( $this->lock ) return FALSE;
+            $this->txn = TRUE;
+            $f = $this->callbacks[ __FUNCTION__];
+            return (bool) $f();
+        }
+        Transaction::start();
+        if( ! Transaction::add($this) ) return FALSE;
+        return TRUE;
+    }
+    
+    public function rollback($auth = NULL){
+        if( $auth != Transaction::SIGNATURE) return Transaction::rollback();
+        if( ! $this->txn ) return FALSE;
+        if( $this->lock ) return TRUE;
+        $f = $this->callbacks[ __FUNCTION__];
+        $res = (bool) $f();
+        $this->lock = TRUE;
+        return $res;
+    }
+    
+    public function commit($auth = NULL){
+        $args = func_get_args();
+        if( $auth != Transaction::SIGNATURE) return Transaction::commit();
+        if( ! $this->txn ) return FALSE;
+        if( $this->lock ) return FALSE;
+        $f = $this->callbacks[ __FUNCTION__];
+        $res = (bool) $f();
+        if( ! $res ) return $res;
+        $this->txn = FALSE;
+        return $res;
+    }
+    
+    public function execute($query){
+        if( $this->lock ) return FALSE;
+        $args = func_get_args();
+        array_shift( $args );
+        $sql = $this->format_query_args( $query, $args );
+        $f = $this->callbacks[ __FUNCTION__ ];
+        $res = $f( $sql );
+        if( $res ) return $res;
+        if( $this->txn ) {
+            Transaction::block();
+            $this->lock = TRUE;
+        }
+        return $res;
+    }
+    
+    public function error(){
+        $f = $this->callbacks[ __FUNCTION__ ];
+        return $f();
+    }
+    
+    public function errorcode(){
+        $f = $this->callbacks[ __FUNCTION__ ];
+        return $f();
+    }
+    
+    public function format_query( $query /*, ... */ ){
+        $args = func_get_args();
+        array_shift($args);
+        return $this->format_query_args( $query, $args );
+    }
+
+    public function format_query_args($query, array $args) {
+        $f = $this->callbacks[ __FUNCTION__ ];
+        return $f( $query, $args );
+    }
+    
+    public function isa( $name ){
+        if( $this instanceof $name ) return TRUE;
+        $f = $this->callbacks[ 'isa' ];
+        return $f( $name );
+    }
+
+    public function __tostring(){
+        $f = $this->callbacks[ __FUNCTION__ ];
+        return $f();
+    }
+ 
+}
