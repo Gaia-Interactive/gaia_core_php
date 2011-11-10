@@ -173,15 +173,19 @@ Tap::is( $rs, FALSE, 'after rolling back, new queries fail on rolled back db obj
 
 $dbmain->execute("drop table $table");
 
+
 $db = $newconn();
 
 $raw = file_get_contents(__DIR__ . '/../sample/i_can_eat_glass.txt');
 
 $lines = explode("\n", $raw);
-$sql = "CREATE TEMPORARY TABLE t1utf8 (`i` INT UNSIGNED NOT NULL PRIMARY KEY, `line` VARCHAR(5000) )";
+$lines = array_slice($lines, 0, 10) + array_slice($lines, 100, 10) + array_slice($lines, 200, 10) + array_slice($lines, 200, 10);
+$raw = implode("\n", $lines);
+$sql = "CREATE TEMPORARY TABLE t1utf8 (`i` INT UNSIGNED NOT NULL PRIMARY KEY, `line` VARCHAR(5000) ) ENGINE=InnoDB DEFAULT CHARACTER SET utf8";
 $db->execute($sql);
 
 foreach($lines as $i=>$line ){
+    //$lines[ $i ] = $line = mb_convert_encoding($line, 'UTF-8', 'auto');
     $db->execute('INSERT INTO t1utf8 (`i`, `line`) VALUES (%i, %s)', $i, $line);
 }
 
@@ -196,7 +200,6 @@ $rs->free();
 Tap::cmp_ok( $readlines, '===', $lines, 'inserted all the rows and read them back, worked as expected');
 //Tap::debug( $readlines );
 
-$raw = file_get_contents(__DIR__ . '/../sample/UTF-8-test.txt');
 
 
 $rs = $db->execute('SELECT %s AS `d`', $raw);
@@ -205,8 +208,5 @@ $rs->free();
 
 Tap::cmp_ok( $row['d'], '===', $raw, 'passed a huge chunk of utf-8 data to db and asked for it back. got what I sent.');
 //Tap::debug( $row['d'] );
-
-
-
 
 

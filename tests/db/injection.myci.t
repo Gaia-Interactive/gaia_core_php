@@ -4,15 +4,12 @@ use Gaia\Test\Tap;
 use Gaia\DB;
 
 include __DIR__ . '/../common.php';
-include __DIR__ . '/../assert/mysqli_installed.php';
 include __DIR__ . '/../assert/mysql_running.php';
+include __DIR__ . '/../assert/ci_installed.php';
 
 $instance = function(){
-    return new MySQLi( '127.0.0.1', NULL, NULL, 'test', '3306');
+    return DB( array( 'dbdriver' => 'mysql', 'hostname' => '127.0.0.1', 'database' => 'test') );
 };
 $db = $instance();
-if( $db->connect_error ){
-    Tap::plan('skip_all', 'mysqli: ' . $db->connect_error );
-}
 
 include __DIR__ . '/injection.mysql.php';

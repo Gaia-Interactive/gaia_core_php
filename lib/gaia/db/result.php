@@ -10,16 +10,19 @@ class Result { //implements Traversable {
     }
     
     public function affected(){
+        if( ! isset( $this->callbacks[ __FUNCTION__ ] ) ) return 0;
         $f = $this->callbacks[ __FUNCTION__ ];
         return $f();
     }
     
     public function free(){
+        if( ! isset( $this->callbacks[ __FUNCTION__ ] ) ) return;
         $f = $this->callbacks[ __FUNCTION__ ];
         return $f();
     }
     
     public function fetch(){
+        if( ! isset( $this->callbacks[ __FUNCTION__ ] ) ) return FALSE;
         $f = $this->callbacks[ __FUNCTION__ ];
         return $f();
     }

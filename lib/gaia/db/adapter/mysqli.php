@@ -51,13 +51,6 @@ $cb['execute'] = function( $query ) use ( $db ){
         $cb['free'] = function() use( $res ){
             $res->free_result();
         };
-    } else {
-        $cb['fetch'] = function() {
-            return FALSE;
-        };
-        $cb['free'] = function() {
-            
-        };
     }
     
     $cb['affected'] = function() use( $affected ){
@@ -67,15 +60,18 @@ $cb['execute'] = function( $query ) use ( $db ){
     return new Result( $cb );
 };
             
-$cb['start'] = function () use ( $db ){
+$cb['start'] = function ($auth = NULL) use ( $db ){
+    if( $db instanceof Iface ) return $db->start($auth);
     return $db->query('START TRANSACTION');
 };
 
-$cb['rollback'] = function () use ( $db ){
+$cb['rollback'] = function ($auth = NULL) use ( $db ){
+    if( $db instanceof Iface ) return $db->rollback($auth);
     return $db->query('ROLLBACK');
 };
 
-$cb['commit'] = function () use ( $db ){
+$cb['commit'] = function ($auth = NULL) use ( $db ){
+    if( $db instanceof Iface ) return $db->commit($auth);
     return $db->query('COMMIT');
 };
 

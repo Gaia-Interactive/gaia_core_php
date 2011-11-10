@@ -5,16 +5,8 @@ $cb = array();
 $db = $this->core();
 
 
- $cb['__tostring'] = function () use ( $db ){
-    list( $errstate, $errcode, $errmsg ) = $db->errorInfo();
-    @ $res ='(Gaia\DB\PDO object - ' . "\n" .
-        '  [driver] => ' . $db->getAttribute(\PDO::ATTR_DRIVER_NAME) . "\n" .
-        '  [connection] => ' . $db->getAttribute(\PDO::ATTR_CONNECTION_STATUS) . "\n" .
-        '  [version] => ' . $db->getAttribute(\PDO::ATTR_SERVER_VERSION) . "\n" .
-        '  [info] => ' . $db->getAttribute(\PDO::ATTR_SERVER_INFO) . "\n" .
-        '  [error] => ' . $errmsg . "\n" .
-        '  [insert_id] => ' . $db->lastInsertId() . "\n" .
-        ')';
+$cb['__tostring'] = function () use ( $db ){
+    @ $res = print_r( $db, TRUE);
     return $res;
 };
 
@@ -23,7 +15,7 @@ $cb['format_query_args'] = $format_args = function($query, array $args ) use ( $
     return \Gaia\DB\Query::format( 
         $query, 
         $args, 
-        function($v) use( $db ){ return $db->quote( $v ); }
+        function($v) use( $db ){  return "'" . $db->escape_str( $v ) . "'"; }
        );
 };
 
@@ -33,15 +25,17 @@ $cb['format_query_args'] = $format_args = function($query, array $args ) use ( $
         
         if( ! $res ) return FALSE;
         $cb = array();
-    
-        $cb['fetch'] = function() use( $res ){
-            return $res->fetch(\PDO::FETCH_ASSOC);
-        };
-        $cb['free'] = function() use( $res ){
-            $res->closeCursor();
-        };
         
-        $affected = $res->rowCount();
+        if( is_object( $res ) ){
+            $cb['fetch'] = function() use( $res ){
+                return $res->_fetch_assoc();
+            };
+            $cb['free'] = function() use( $res ){
+                $res->free_result();
+            };
+        }
+        
+        $affected = $db->affected_rows();
         
         $cb['affected'] = function() use( $affected ){
             return $affected;
@@ -56,17 +50,20 @@ $cb['format_query_args'] = $format_args = function($query, array $args ) use ( $
             
 $cb['start'] = function ($auth = NULL) use ($db){ 
     if( $db instanceof Iface ) return $db->start($auth);
-    return $db->beginTransaction();
+    $db->trans_start();
+    return TRUE;
 };
 
 $cb['commit'] = function ($auth = NULL) use ($db){ 
     if( $db instanceof Iface ) return $db->commit($auth);
-    return $db->commit();
+    $db->trans_complete();
+    return TRUE;
 };
 
-$cb['rollback'] = function ($auth = NULL) use ($db){
+$cb['rollback'] = function ($auth = NULL) use ($db){ 
     if( $db instanceof Iface ) return $db->rollback($auth);
-    return $db->rollback();
+    $db->trans_rollback($auth);
+    return TRUE;
 };
 
 $cb['lastinsertid'] = function() use ( $db ){
@@ -74,13 +71,11 @@ $cb['lastinsertid'] = function() use ( $db ){
 };
 
 $cb['error'] = function() use ( $db ){
-    $info = $db->errorInfo();
-    return $info[2];
+    return $db->_error_message();
 };
 
 $cb['errorcode'] = function() use ( $db ){
-    $info = $db->errorInfo();
-    return $info[1];
+    return $db->_error_number();
 };
 
 $cb['isa'] = function($name) use ( $db ){

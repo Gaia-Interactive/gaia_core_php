@@ -11,16 +11,18 @@ class DB implements DB\Iface {
     
     function __construct( $core ){
         $this->core = $core;
+        /*
         if( $core instanceof DB\Iface ){
             trigger_error('invalid db object', E_USER_ERROR);
-            exit(1);
+            //exit(1);
         }
+        */
         if( $core instanceof \PDO ){            
            $this->callbacks = include __DIR__ . '/db/adapter/pdo.php';
         } elseif( $core instanceof \MySQLi ) {     
            $this->callbacks = include __DIR__ . '/db/adapter/mysqli.php';
-        } elseif( is_array( $core ) ) {
-            $this->callbacks = $core;
+        } elseif( $core instanceof \CI_DB_driver) {
+           $this->callbacks = include __DIR__ . '/db/adapter/ci.php';
         } else {
             trigger_error('invalid db object', E_USER_ERROR);
             exit(1);
@@ -37,7 +39,7 @@ class DB implements DB\Iface {
             if( $this->lock ) return FALSE;
             $this->txn = TRUE;
             $f = $this->callbacks[ __FUNCTION__];
-            return (bool) $f();
+            return (bool) $f($auth);
         }
         Transaction::start();
         if( ! Transaction::add($this) ) return FALSE;
@@ -49,7 +51,7 @@ class DB implements DB\Iface {
         if( ! $this->txn ) return FALSE;
         if( $this->lock ) return TRUE;
         $f = $this->callbacks[ __FUNCTION__];
-        $res = (bool) $f();
+        $res = (bool) $f($auth);
         $this->lock = TRUE;
         return $res;
     }
@@ -60,7 +62,7 @@ class DB implements DB\Iface {
         if( ! $this->txn ) return FALSE;
         if( $this->lock ) return FALSE;
         $f = $this->callbacks[ __FUNCTION__];
-        $res = (bool) $f();
+        $res = (bool) $f($auth);
         if( ! $res ) return $res;
         $this->txn = FALSE;
         return $res;
@@ -104,6 +106,7 @@ class DB implements DB\Iface {
     
     public function isa( $name ){
         if( $this instanceof $name ) return TRUE;
+        if( $this->core instanceof $name ) return TRUE;
         $f = $this->callbacks[ 'isa' ];
         return $f( $name );
     }
