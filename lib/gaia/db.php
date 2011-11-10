@@ -1,18 +1,19 @@
 <?php
 namespace Gaia;
 use Gaia\DB\Transaction;
+use Gaia\DB\Iface;
 
-class DB implements DB\Iface {
+class DB implements Iface {
     
     protected $core;
     protected $callbacks = array();
-    protected $lock = FALSE;
-    protected $txn = FALSE;
+    protected $_lock = FALSE;
+    protected $_txn = FALSE;
     
     function __construct( $core ){
         $this->core = $core;
         /*
-        if( $core instanceof DB\Iface ){
+        if( $core instanceof Iface ){
             trigger_error('invalid db object', E_USER_ERROR);
             //exit(1);
         }
@@ -34,7 +35,7 @@ class DB implements DB\Iface {
     }
     
     public function start($auth = NULL){
-        $args = func_get_args();        
+        if( $this->core instanceof Iface ) return $this->core->start( $auth );
         if( $auth == Transaction::SIGNATURE){
             if( $this->lock ) return FALSE;
             $this->txn = TRUE;
@@ -47,6 +48,7 @@ class DB implements DB\Iface {
     }
     
     public function rollback($auth = NULL){
+        if( $this->core instanceof Iface ) return $this->core->rollback( $auth );
         if( $auth != Transaction::SIGNATURE) return Transaction::rollback();
         if( ! $this->txn ) return FALSE;
         if( $this->lock ) return TRUE;
@@ -57,7 +59,7 @@ class DB implements DB\Iface {
     }
     
     public function commit($auth = NULL){
-        $args = func_get_args();
+        if( $this->core instanceof Iface ) return $this->core->commit( $auth );
         if( $auth != Transaction::SIGNATURE) return Transaction::commit();
         if( ! $this->txn ) return FALSE;
         if( $this->lock ) return FALSE;
@@ -114,6 +116,18 @@ class DB implements DB\Iface {
     public function __tostring(){
         $f = $this->callbacks[ __FUNCTION__ ];
         return $f();
+    }
+    
+    public function __get( $k ){
+        if( $this->core instanceof Iface) return $this->core->__get( $k );
+        if( $k == 'lock' ) return $this->_lock;
+        if( $k == 'txn' ) return $this->_txn;
+    }
+
+    public function __set( $k, $v ){
+        if( $this->core instanceof Iface) return $this->core->__set( $k, $v );
+        if( $k == 'lock' ) return $this->_lock = (bool) $v;
+        if( $k == 'txn' ) return $this->_txn = (bool) $v;
     }
  
 }

@@ -49,7 +49,7 @@ $cb['format_query_args'] = $format_args = function($query, array $args ) use ( $
     
         return new Result( $cb );
 
-    } catch( Exception $e ){
+    } catch( \Exception $e ){
         return FALSE;
     }
 };
