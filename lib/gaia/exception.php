@@ -45,13 +45,7 @@ class Exception extends \Exception {
     public function __toString(){
         $out = parent::__toString();
         if( $this->debug === NULL ) return $out;
-        if( is_scalar( $this->debug ) ){
-            return $out . self::DEBUG_HEADER . self::formatDebugOutput( $this->debug );
-        }
-        if( is_object( $this->debug ) && method_exists( $this->debug, '__toString') ){
-            return $out . self::DEBUG_HEADER . self::formatDebugOutput( $this->debug->__toString() );
-        }
-        return $out . self::DEBUG_HEADER . self::formatDebugOutput( print_r( $this->debug, TRUE ) );
+        return $out . self::DEBUG_HEADER . self::formatDebugOutput( self::stringify( $this->debug ) );
     }
     
    /**
@@ -59,6 +53,18 @@ class Exception extends \Exception {
     */
     protected function formatDebugOutput( $str ){
         return str_replace("\n", "\n# ", $str ) . "\n";
+    }
+    
+    public static function stringify( $var ){
+        if( is_bool( $var ) ) return '(bool) ' . ($var ? 'true' : 'false');
+        if( is_scalar( $var ) ) return $var;
+        if( is_object( $var ) && method_exists($var, '__toString') ) return $var->__toString();
+        if( is_array( $var ) ){
+            foreach( $var as $k => $v ){
+                $var[ $k ] = str_replace("\n", "\n             ", self::stringify( $v ));
+            }
+        }
+        return print_r( $var, TRUE);
     }
 } // EOC
 
