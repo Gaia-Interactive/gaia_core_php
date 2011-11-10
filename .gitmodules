@@ -7,3 +7,6 @@
 [submodule "vendor/yaml"]
 	path = vendor/yaml
 	url = https://github.com/fabpot/yaml.git
+[submodule "vendor/CodeIgniter"]
+	path = vendor/CodeIgniter
+	url = http://github.com/EllisLab/CodeIgniter.git
