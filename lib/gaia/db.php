@@ -11,6 +11,9 @@ class DB implements Iface {
     protected $_txn = FALSE;
     
     function __construct( $core ){
+    
+        while( $core instanceof \Gaia\DB && $core->core() instanceof Iface ) $core = $core->core();
+
         $this->core = $core;
         /*
         if( $core instanceof Iface ){
