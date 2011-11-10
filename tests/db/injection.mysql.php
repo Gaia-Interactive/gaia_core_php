@@ -6,12 +6,14 @@ use Gaia\DB\Transaction;
 $original = $db;
 
 
-Tap::plan(49);
+Tap::plan(50);
 $db = new DB($db);
 
 DB\Connection::load( array( 'test'=> function() use( $db ){ return $db; }));
 
 Tap::ok( DB\Connection::instance('test') === $db, 'db instance returns same object we instantiated at first');
+
+Tap::is( $db->isa('mysql'), TRUE, 'driver is mysql');
 
 $rs = $db->execute('SELECT %s as foo, %s as bar', 'dummy\'', 'rummy');
 Tap::ok( $rs, 'query executed successfully');
