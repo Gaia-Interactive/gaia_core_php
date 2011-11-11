@@ -5,17 +5,18 @@ use Gaia\DB\Result;
 
 class PDO {
     public static function callbacks( \PDO $db ){
-        $_ = array();        
+        $_ = array();
         
-         $_['__tostring'] = function () use ( $db ){
+        $lastquery = '';
+        
+         $_['__tostring'] = function () use ( $db, & $lastquery){
             list( $errstate, $errcode, $errmsg ) = $db->errorInfo();
-            @ $res ='(Gaia\DB\PDO object - ' . "\n" .
+            $error = ( $errmsg ) ? $errcode . ': ' . $errmsg : '';
+            $res ='(Gaia\DB\PDO object - ' . "\n" .
                 '  [driver] => ' . $db->getAttribute(\PDO::ATTR_DRIVER_NAME) . "\n" .
-                '  [connection] => ' . $db->getAttribute(\PDO::ATTR_CONNECTION_STATUS) . "\n" .
-                '  [version] => ' . $db->getAttribute(\PDO::ATTR_SERVER_VERSION) . "\n" .
-                '  [info] => ' . $db->getAttribute(\PDO::ATTR_SERVER_INFO) . "\n" .
-                '  [error] => ' . $errmsg . "\n" .
-                '  [insert_id] => ' . $db->lastInsertId() . "\n" .
+                '  [connection] => ' . @$db->getAttribute(\PDO::ATTR_CONNECTION_STATUS) . "\n" .
+                '  [error] => ' . $error . "\n" .
+                '  [lastquery] => ' . $lastquery . "\n" .
                 ')';
             return $res;
         };
@@ -29,8 +30,10 @@ class PDO {
                );
         };
         
-         $_['execute'] = function( $query ) use ( $db ){
+         $_['execute'] = function( $query ) use ( $db, & $lastquery ){
             try {
+                $lastquery = $query;
+                if( strlen( $lastquery ) > 500 ) $lastquery = substr($lastquery, 0, 485) . ' ...[trucated]';
                 $res = $db->query($query);
                 
                 if( ! $res ) return FALSE;
