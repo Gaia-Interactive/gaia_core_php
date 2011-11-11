@@ -1,17 +1,17 @@
 <?php
-namespace Gaia\Stockpile\Storage\MySQLi;
-use \Gaia\DB\Driver\MySQLi;
+namespace Gaia\Stockpile\Storage\SQLite;
+use \Gaia\DB\Driver\PDO;
 use \Gaia\Stockpile\Exception;
+use \Gaia\DB\Transaction;
 use \Gaia\Stockpile\Storage\Iface;
 use \Gaia\Store;
-use \Gaia\DB\Transaction;
 
-class Core implements IFace {
+class Core implements Iface {
     protected $db;
     protected $app;
     protected $user_id;
-    public function __construct( \Gaia\DB\Iface $db, $app, $user_id, $dsn){
-        if( ! $db->isa('mysqli') ) throw new Exception('invalid driver', $db );
+    public function __construct( \Gaia\DB $db, $app, $user_id, $dsn){
+        if( ! $db->isa('sqlite') ) throw new Exception('invalid driver', $db );
         $this->db = $db;
         $this->app = $app;
         $this->user_id = $user_id;
@@ -25,9 +25,13 @@ class Core implements IFace {
     
     public function create(){
         $table = $this->table();
-        $rs = $this->execute('SHOW TABLES LIKE %s', $this->table());
-        $row = $rs->fetch_array(MYSQLI_NUM);
-        if( ! $row ) return $this->execute($this->sql('CREATE'));
+        $rs = $this->execute("SELECT `name` FROM `sqlite_master` WHERE `type` = 'table' and `name` = %s", $this->table());
+        $row = $rs->fetch();
+        if( $row ) return TRUE;
+        $rs = $this->execute($this->sql('CREATE'));
+        if( ! $rs ) return FALSE;
+        if( $sql = $this->sql('INDEX') ) return $this->execute( $sql );
+        return TRUE;
     }
     
     protected function table(){
@@ -46,8 +50,21 @@ class Core implements IFace {
         if( ! Transaction::atStart() ) Transaction::add( $this->db );
         $args = func_get_args();
         array_shift( $args );
-        $rs = $this->db->query( $qs = $this->db->format_query_args( $query, $args ) );
-        if( ! $rs ) throw new Exception('database error', array('db'=> $this->db, 'query'=>$qs ) );
+        $rs = $this->db->execute( $qs = $this->db->format_query_args( $query, $args ) );
+        //print "#    " . $qs ."\n";
+        if( ! $rs ){
+            throw new Exception('database error', $this->dbInfo($qs) );
+        }
         return $rs;
+    }
+    
+    protected function dbinfo($qs = NULL){
+        return  array('db'=> $this->db, 'query'=>$qs, 'error'=>$this->db->error());
+    }
+    
+    protected function claimStart(){
+        if( ! Transaction::claimStart() ) return FALSE;
+        Transaction::add( $this->db );
+        return TRUE;
     }
 }

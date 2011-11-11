@@ -7,7 +7,7 @@ use \Gaia\Test\Tap;
 
 $user_id = uniqueUserID();
 
-$iterations = 500;
+$iterations = 100;
 
 // start off by making sure we can add stuff to an account.
 $stockpile = stockpile( $app, $user_id );

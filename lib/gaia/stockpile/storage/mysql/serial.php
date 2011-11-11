@@ -1,31 +1,26 @@
 <?php
-namespace Gaia\Stockpile\Storage\LitePDO;
+namespace Gaia\Stockpile\Storage\MySQL;
 use \Gaia\Stockpile\Exception;
-use \Gaia\DB\Transaction;
 
 class Serial extends Core {
     
-const TABLE = 'serial';
+    const TABLE = 'serial';
     
-const SQL_CREATE =
+    const SQL_CREATE =
 "CREATE TABLE IF NOT EXISTS `{TABLE}` (
-  `user_id` BIGINT NOT NULL,
-  `item_id` INTEGER NOT NULL,
-  `serial` BIGINT NOT NULL,
-  `properties` TEXT,
-  `soft_delete` INTEGER NOT NULL DEFAULT '0',
-  UNIQUE (`user_id`,`item_id`,`serial`)
-  )";
-
-const SQL_INDEX =
-"CREATE INDEX IF NOT EXISTS `{TABLE}_idx_user_id_soft_delete_item_id` ON `{TABLE}` (`user_id`, `soft_delete`, `item_id`)";
+  `user_id` bigint unsigned NOT NULL,
+  `item_id` int unsigned NOT NULL,
+  `serial` bigint unsigned NOT NULL,
+  `properties` varchar(5000) character set utf8,
+  `soft_delete` tinyint UNSIGNED NOT NULL DEFAULT '0',
+  UNIQUE KEY `user_id_item_id_serial` (`user_id`,`item_id`,`serial`),
+   KEY `user_id_item_id` (`user_id`, `soft_delete`, `item_id`)
+) ENGINE=InnoDB";
 
 const SQL_ADD = 
-"INSERT OR IGNORE INTO `{TABLE}` (`user_id`, `item_id`, `serial`, `properties`, `soft_delete`) VALUES (%i, %i, %i, %s, 0)";
-
-const SQL_UPDATE = 
-'UPDATE `{TABLE}` SET `properties` = %s, `soft_delete` = 0 WHERE 
-`user_id` = %i AND `item_id` = %i AND `serial` = %i';
+'INSERT INTO `{TABLE}` (`user_id`, `serial`, `item_id`, `properties`, `soft_delete`) VALUES 
+%s 
+ON DUPLICATE KEY UPDATE `properties` = VALUES(`properties`), `soft_delete` = VALUES(`soft_delete`)';
 
 const SQL_SUBTRACT = 
 'UPDATE {TABLE} SET `soft_delete` = 1 WHERE 
@@ -49,27 +44,16 @@ WHERE `user_id` = %i AND `item_id` = %i AND `serial` IN ( %i )';
 
     public function add( $item_id, $quantity ){
         $batches = array();
-        $local_txn = $this->claimStart();
         foreach( $quantity->all() as $serial => $properties ){
-            $properties = json_encode( $properties );
-            $rs = $this->execute($this->sql('ADD'), $this->user_id, $item_id, $serial, $properties);
-            if( $rs->rowCount() < 1 ) {
-                $rs = $this->execute($this->sql('UPDATE'), $properties, $this->user_id, $item_id, $serial);
-                if( $rs->rowCount() < 1 ) {
-                    if( $local_txn ) Transaction::rollback();
-                    throw new Exception('database error', $this->dbInfo() );
-                }
-            }
+            $batches[] = $this->db->format_query('(%i, %i, %i, %s, 0)', $this->user_id, $serial, $item_id, json_encode( $properties ));
         }
-        if( $local_txn ) {
-            if( ! Transaction::commit()) throw new Exception('database error', $this->dbInfo() );
-        }
+        $rs = $this->execute( sprintf( $this->sql('ADD'), implode(",\n", $batches)) );
         return TRUE;
     }
     
     public function subtract( $item_id, $serials ){
         $rs = $this->execute( $this->sql('SUBTRACT'), $this->user_id, $item_id, $serials );
-        return $rs->rowCount();
+        return $rs->affected();
     }
     
     public function fetch( array $item_ids = NULL ){
@@ -80,11 +64,11 @@ WHERE `user_id` = %i AND `item_id` = %i AND `serial` IN ( %i )';
             $rs = $this->execute( $this->sql('FETCH'), $this->user_id );
         }
         $list = array();
-        while( $row = $rs->fetch(\PDO::FETCH_ASSOC) ){
+        while( $row = $rs->fetch() ){
             if( ! isset( $list[ $row['item_id'] ] ) ) $list[ $row['item_id'] ] = array();
             $list[ $row['item_id'] ][ $row['serial'] ] = $this->deserializeProperties( $row['properties'] );
         }
-        $rs->closeCursor();
+        $rs->free();
         return $list;
     }
     
@@ -98,8 +82,8 @@ WHERE `user_id` = %i AND `item_id` = %i AND `serial` IN ( %i )';
     public function verifySerials( $item_id, array $serials ){
         $rs = $this->execute( $this->sql('VERIFY'), $this->user_id, $item_id, $serials );
         $serials = array();
-        while( $row = $rs->fetch(\PDO::FETCH_ASSOC) )  $serials[] = $row['serial'];
-        $rs->closeCursor();
+        while( $row = $rs->fetch() )  $serials[] = $row['serial'];
+        $rs->free();
         return $serials;
     }
     

@@ -1,5 +1,5 @@
 <?php
-namespace Gaia\Stockpile\Storage\MyPDO;
+namespace Gaia\Stockpile\Storage\MySQL;
 use \Gaia\Stockpile\Exception;
 use \Gaia\Stockpile\Storage\Iface;
 use \Gaia\Store;
@@ -9,14 +9,13 @@ class Core implements Iface {
     protected $db;
     protected $app;
     protected $user_id;
-    public function __construct( \Gaia\DB\Iface $db, $app, $user_id, $dsn){
-        if( ! $db->isa('pdo') ) throw new Exception('invalid driver', $db );
-        if( $db->getAttribute(\PDO::ATTR_DRIVER_NAME) != 'mysql') throw new Exception('invalid driver', $db );
+    public function __construct( \Gaia\DB $db, $app, $user_id, $dsn){
+        if( ! $db->isa('mysql') ) throw new Exception('invalid driver', $db );
        $this->db = $db;
         $this->app = $app;
         $this->user_id = $user_id;
         if( ! \Gaia\Stockpile\Storage::isAutoSchemaEnabled() ) return;
-        $cache = function_exists('apc_fetch') ? new Store\Gate( new Store\Apc() ) : new Store\KVP;
+        $cache = new Store\Gate( new Store\Apc() );
         $key = 'stockpile/storage/__create/' . md5( $dsn . '/' . $app . '/' . get_class( $this ) );
         if( $cache->get( $key ) ) return;
         if( ! $cache->add( $key, 1, 60 ) ) return;
@@ -26,7 +25,7 @@ class Core implements Iface {
     public function create(){
         $table = $this->table();
         $rs = $this->execute('SHOW TABLES LIKE %s', $this->table());
-        $row = $rs->fetch(\PDO::FETCH_BOTH);
+        $row = $rs->fetch();
         if( ! $row ) return $this->execute($this->sql('CREATE'));
     }
     
@@ -46,8 +45,8 @@ class Core implements Iface {
         if( ! Transaction::atStart() ) Transaction::add( $this->db );
         $args = func_get_args();
         array_shift( $args );
-        $rs = $this->db->query( $qs = $this->db->format_query_args( $query, $args ) );
-        if( ! $rs ) throw new Exception('database error', array('db'=> $this->db, 'query'=>$qs, 'error'=>$this->db->errorInfo()) );
+        $rs = $this->db->execute( $qs = $this->db->format_query_args( $query, $args ) );
+        if( ! $rs ) throw new Exception('database error', array('db'=> $this->db, 'query'=>$qs, 'error'=>$this->db->error()) );
         return $rs;
     }
 }

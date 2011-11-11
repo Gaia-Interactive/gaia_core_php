@@ -6,15 +6,14 @@ use \Gaia\Store;
 use \Gaia\Souk;
 use \Gaia\DB\Transaction;
 
-class LitePDO implements IFace {
+class SQLite implements IFace {
 
     protected $db;
     protected $app;
     protected $user_id;
     protected $dsn;
-    public function __construct( \Gaia\DB\Iface $db, $app, $user_id, $dsn){
-        if( ! $db->isa('pdo') ) throw new Exception('invalid driver', $db );
-        if( $db->getAttribute(\PDO::ATTR_DRIVER_NAME) != 'sqlite') throw new Exception('invalid driver', $db );
+    public function __construct( \Gaia\DB $db, $app, $user_id, $dsn){
+        if( ! $db->isa('sqlite') ) throw new Exception('invalid driver', $db );
         $this->db = $db;
         $this->app = $app;
         $this->user_id = $user_id;
@@ -31,7 +30,7 @@ class LitePDO implements IFace {
         
         $rs = $rs = $this->execute("SELECT `name` FROM `sqlite_master` WHERE `type` = 'table' and `name` = %s", $table);
         $row = $rs->fetch();
-        $rs->closeCursor();
+        $rs->free();
         if( ! $row ) {
              $this->execute(
             "CREATE TABLE IF NOT EXISTS $table (
@@ -66,7 +65,7 @@ class LitePDO implements IFace {
         
         $rs = $this->execute("SELECT `name` FROM `sqlite_master` WHERE `type` = 'table' and `name` = %s", $table_attr);
         $row = $rs->fetch();
-        $rs->closeCursor();
+        $rs->free();
         if( ! $row ) {
              $this->execute(
             "CREATE TABLE IF NOT EXISTS $table_attr (
@@ -93,7 +92,7 @@ class LitePDO implements IFace {
             $rs = $this->execute($sql, $listing->buyer, $listing->touch, $row_id);
             
             // should have affected 1 row. if it didn't something is wrong.
-            if( $rs->rowCount() < 1 ) throw new Exception('failed', $this->db );
+            if( $rs->affected() < 1 ) throw new Exception('failed', $this->db );
     }
     
         /**
@@ -138,7 +137,7 @@ class LitePDO implements IFace {
                 $listing->reserve,
                 $listing->quantity
                 );
-        $row_id = $this->db->lastInsertId();
+        $row_id = $rs->insertId();
         $listing->id = Souk\Util::composeId( $shard,  $row_id);
         
         if( $attributes ){
@@ -172,12 +171,12 @@ class LitePDO implements IFace {
             //print "\n" . $this->db->format_query( $sql, $offset_row_id, $ts, $limit );
             $rs = $this->execute($sql, $offset_row_id, $ts, $limit );
             $offset_row_id = 0;
-            while( $row = $rs->fetch(\PDO::FETCH_ASSOC) ) {
+            while( $row = $rs->fetch() ) {
                 $list[] = Souk\Util::composeId( $shard, $row['row_id'] );
                 $limit--;
                 if( $limit < 1 ) break;
             }
-            $rs->closeCursor();
+            $rs->free();
             
         }
         return $list;
@@ -205,7 +204,7 @@ class LitePDO implements IFace {
                     );
             
             // should have affected 1 row. if not, blow up.
-            if( $rs->rowCount() < 1 ) {
+            if( $rs->affected() < 1 ) {
                 throw new Exception('failed', $db );
             }
     
@@ -247,14 +246,14 @@ class LitePDO implements IFace {
             
             // grab the rows returned and populate the result as Souk\listings.
             $row_ids = array();
-            while(  $row = $rs->fetch(\PDO::FETCH_ASSOC) ){
+            while(  $row = $rs->fetch() ){
                 $row_id = $row_ids[] = $row['row_id'];
                 unset( $row['row_id'] );
                 $listing = Souk\Util::listing( $row );
                 $listing->id = Souk\Util::composeId( $shard, $row_id );
                 $result[ $listing->id ] = $listing;
             }
-            $rs->closeCursor();
+            $rs->free();
             
             // did we get any rows back? if not, move on to the next shard.
             if( count( $row_ids ) < 1 ) continue;
@@ -270,11 +269,11 @@ class LitePDO implements IFace {
             $rs = $this->execute($sql, $row_ids);
             
             // no rows? no problem, just skip it. that is expected.
-            if( $rs->rowCount() < 1 ) continue;
+            if( $rs->affected() < 1 ) continue;
             
             // someone stored attributes! merge them in.
             // stored as json in the db. deserialize and layer on top of the listing object.
-            while( $row = $rs->fetch(\PDO::FETCH_ASSOC) ){
+            while( $row = $rs->fetch() ){
                 $id = Souk\Util::composeId( $shard, $row['row_id'] );
                 if( ! isset( $result[ $id ] ) ) continue;
                 $attributes = json_decode($row['attributes'], TRUE);
@@ -286,7 +285,7 @@ class LitePDO implements IFace {
                 }
             }
             // free the query result.
-            $rs->closeCursor();
+            $rs->free();
             
         }
         
@@ -415,7 +414,7 @@ class LitePDO implements IFace {
             // we are making the key of the id list contain the 
             // value of what we sort by, so we can do a keysort later, and order the
             // result in php since we have to span many shards.
-            while( $row = $rs->fetch(\PDO::FETCH_ASSOC)){
+            while( $row = $rs->fetch()){
                 $id = Souk\Util::composeId( $shard, $row['row_id'] );
                 switch( $sort ){
                     case 'low_price':
@@ -438,7 +437,7 @@ class LitePDO implements IFace {
                 $ids[ $key ] = $id;
                 
             }
-            $rs->closeCursor();
+            $rs->free();
         }
         
         // now that we are all done fetching the rows, sort.
@@ -483,7 +482,7 @@ class LitePDO implements IFace {
                     $row_id);
         
         // should have affected a row. if it didn't toss an exception.
-        if( $rs->rowCount() < 1 ) {
+        if( $rs->affected() < 1 ) {
             throw new Exception('failed', $this->db );
         }
     }
@@ -495,8 +494,8 @@ class LitePDO implements IFace {
     protected function execute( $query /*, .... */ ){
         $args = func_get_args();
         array_shift( $args );
-        $rs = $this->db->query( $qs = $this->db->format_query_args( $query, $args ) );
-        if( ! $rs ) throw new Exception('database error', array('db'=> $this->db, 'query'=>$qs, 'error'=>$this->db->errorInfo()) );
+        $rs = $this->db->execute( $qs = $this->db->format_query_args( $query, $args ) );
+        if( ! $rs ) throw new Exception('database error', array('db'=> $this->db, 'query'=>$qs, 'error'=>$this->db->error()) );
         return $rs;
     }
 }

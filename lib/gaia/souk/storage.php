@@ -45,23 +45,11 @@ class Storage {
     protected static function loadDefault( Iface $souk, $dsn ){
         $db = Connection::instance( $dsn );
         if( ! $db instanceof \Gaia\DB\Iface ) throw new Exception('invalid db driver', $db );
-        if( $db->isa('mysqli') ){
-            $classname = 'Gaia\Souk\Storage\MySQLi';
-        } elseif( $db->isa('pdo') ){
-            switch( $db->getAttribute(\PDO::ATTR_DRIVER_NAME) ){
-                case 'mysql': 
-                    $driver = 'MyPDO';
-                    break;
-                
-                case 'sqlite':
-                    $driver = 'LitePDO';
-                    break;
-                
-                default:
-                    throw new Exception('invalid db driver', $db );
-
-            }
-            $classname = 'Gaia\Souk\Storage\\' . $driver;
+        if( ! $db instanceof \Gaia\DB ) $db = new \Gaia\DB( $db );
+        if( $db->isa('mysql') ){
+            $classname = 'Gaia\Souk\Storage\MySQL';
+        } elseif( $db->isa('sqlite') ){
+            $classname = 'Gaia\Souk\Storage\SQLite';
         } else {
             throw new Exception('invalid db driver', $db );
         }
