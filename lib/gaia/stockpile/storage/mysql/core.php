@@ -45,7 +45,7 @@ class Core implements Iface {
         if( ! Transaction::atStart() ) Transaction::add( $this->db );
         $args = func_get_args();
         array_shift( $args );
-        $rs = $this->db->execute( $qs = $this->db->format_query_args( $query, $args ) );
+        $rs = $this->db->execute( $qs = $this->db->prep_args( $query, $args ) );
         if( ! $rs ) throw new Exception('database error', array('db'=> $this->db, 'query'=>$qs, 'error'=>$this->db->error()) );
         return $rs;
     }
