@@ -34,10 +34,11 @@ $storage->set( $username, $auth->hashPassword( $username, $password ), $ttl );
 $storage->set( 'bazz', 'quux', $ttl = 3600 );
 
 
-
+// if not authenticated, send the usual unauthorized header, along with 
+// a challenge header.
 if( ! $is_authenticated = $auth->authenticate( $storage ) ){
-    $headers = $auth->challenge();
-    foreach($headers as $header ) header( $header );
+    header('HTTP/1.1 401 Unauthorized' );
+    header( $auth->challenge() );
 }
 ?>
 <?php if( ! $is_authenticated ): ?>
