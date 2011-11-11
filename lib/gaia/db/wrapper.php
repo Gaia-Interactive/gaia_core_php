@@ -27,12 +27,12 @@ class Wrapper implements IFace {
         return call_user_func_array( array($this->core, 'execute'), $args );
     }
     
-    public function format_query($query){
-        return $this->core->format_query( $query );
+    public function prep($query){
+        return $this->core->prep( $query );
     }
     
-    public function format_query_args( $query, array $args ){
-        return $this->core->format_query_args( $query, $args );
+    public function prep_args( $query, array $args ){
+        return $this->core->prep_args( $query, $args );
     }
     
     public function isa( $name ){

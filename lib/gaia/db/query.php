@@ -3,7 +3,7 @@ namespace Gaia\DB;
 
 class Query {
     
-    public static function format($query, array $args, $escape = NULL) {
+    public static function prepare($query, array $args, $escape = NULL) {
         if( ! $args || count( $args ) < 1 ) return $query;
         if( ! $escape ) $escape = function( $v ) { return "'" . addslashes( $v ) . "'"; };
         $modify_funcs = array(
