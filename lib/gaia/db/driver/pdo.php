@@ -19,7 +19,7 @@ class PDO extends \PDO implements \Gaia\DB\Iface {
     public function execute( $query /*, ... */ ){
         $args = func_get_args();
         array_shift($args);
-        $query = $this->format_query_args( $query, $args );
+        $query = $this->prep_args( $query, $args );
         //print "#    $query\n";
         return $this->query( $query );
     }
@@ -87,16 +87,16 @@ class PDO extends \PDO implements \Gaia\DB\Iface {
         return FALSE;
     }
     
-    public function format_query( $query /*, ... */ ){
+    public function prep( $query /*, ... */ ){
         $args = func_get_args();
         array_shift($args);
-        return $this->format_query_args( $query, $args );
+        return $this->prep_args( $query, $args );
     }
 
-    public function format_query_args($query, array $args) {
+    public function prep_args($query, array $args) {
         if( ! $args || count( $args ) < 1 ) return $query;
         $conn = $this;
-        return \Gaia\DB\Query::format( 
+        return \Gaia\DB\Query::prepare( 
             $query, 
             $args, 
             function($v) use( $conn ){ return $conn->quote( $v ); }

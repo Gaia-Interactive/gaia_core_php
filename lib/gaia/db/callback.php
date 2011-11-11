@@ -60,15 +60,15 @@ class Callback implements IFace {
         return $res;
     }
     
-    public function format_query( $query /*, ... */ ){
+    public function prep( $query /*, ... */ ){
         $args = func_get_args();
         array_shift($args);
-        return $this->format_query_args( $query, $args );
+        return $this->prep_args( $query, $args );
     }
 
-    public function format_query_args($query, array $args) {
+    public function prep_args($query, array $args) {
         $f = strtolower( __FUNCTION__);
-        if( ! isset( $this->callbacks[ $f ] ) ) return Query::format( $query, $args );
+        if( ! isset( $this->callbacks[ $f ] ) ) return Query::prepare( $query, $args );
         return $this->__call( $f, array( $query, $args ) );
     }
     

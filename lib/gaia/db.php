@@ -22,11 +22,11 @@ class DB implements Iface {
         }
         */
         if( $core instanceof \PDO ){            
-           $this->callbacks = include __DIR__ . '/db/adapter/pdo.php';
+           $this->callbacks = DB\Inject\PDO::callbacks( $core );
         } elseif( $core instanceof \MySQLi ) {     
-           $this->callbacks = include __DIR__ . '/db/adapter/mysqli.php';
+           $this->callbacks = DB\Inject\MySQLi::callbacks( $core );
         } elseif( $core instanceof \CI_DB_driver) {
-           $this->callbacks = include __DIR__ . '/db/adapter/ci.php';
+           $this->callbacks = DB\Inject\CI::callbacks( $core );
         } else {
             trigger_error('invalid db object', E_USER_ERROR);
             exit(1);
@@ -77,7 +77,7 @@ class DB implements Iface {
         if( $this->lock ) return FALSE;
         $args = func_get_args();
         array_shift( $args );
-        $sql = $this->format_query_args( $query, $args );
+        $sql = $this->prep_args( $query, $args );
         $f = $this->callbacks[ __FUNCTION__ ];
         $res = $f( $sql );
         if( $res ) return $res;
@@ -103,13 +103,13 @@ class DB implements Iface {
         return $f();
     }
     
-    public function format_query( $query /*, ... */ ){
+    public function prep( $query /*, ... */ ){
         $args = func_get_args();
         array_shift($args);
-        return $this->format_query_args( $query, $args );
+        return $this->prep_args( $query, $args );
     }
 
-    public function format_query_args($query, array $args) {
+    public function prep_args($query, array $args) {
         $f = $this->callbacks[ __FUNCTION__ ];
         return $f( $query, $args );
     }

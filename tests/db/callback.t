@@ -83,19 +83,19 @@ $db = new DB\Callback();
 
 
 
-$query = $db->format_query('%s', array('dummy', 'rummy'));
+$query = $db->prep('%s', array('dummy', 'rummy'));
 Tap::is($query, "'dummy', 'rummy'", 'format query handles arrays of strings');
 
-$query = $db->format_query('%i', array(1,2,3));
+$query = $db->prep('%i', array(1,2,3));
 Tap::is($query, '1, 2, 3', 'format query handles arrays of integers');
 
-$query = $db->format_query('%f', array(1.545,2.2,3));
+$query = $db->prep('%f', array(1.545,2.2,3));
 Tap::is($query, '1.545, 2.2, 3', 'format query handles arrays of floats');
 
 Tap::is($db->start(), FALSE, 'begin returns false if no callback specified');
 Tap::is($db->rollback(), FALSE, 'rollback returns false if no callback specified');
 Tap::is($db->commit(), FALSE, 'commit returns false if no callback specified');
-$query = $db->format_query('test %%s ?, (?,?)', array(1, 2), 3, 4);
+$query = $db->prep('test %%s ?, (?,?)', array(1, 2), 3, 4);
 Tap::is($query, "test %s '1', '2', ('3','4')", 'format query question mark as string');
 
 $db = new DB\Callback(array('isa'=>function(){return FALSE;}));
