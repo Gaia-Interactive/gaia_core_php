@@ -11,7 +11,7 @@ class MySQLi extends \MySQLi implements \Gaia\DB\Iface {
     public function execute( $query /*, ... */ ){
         $args = func_get_args();
         array_shift($args);
-        return $this->query( $this->format_query_args( $query, $args ) );
+        return $this->query( $this->prep_args( $query, $args ) );
     }
     
     public function query( $query, $mode = MYSQLI_STORE_RESULT ){
@@ -96,16 +96,16 @@ class MySQLi extends \MySQLi implements \Gaia\DB\Iface {
         return $res;
     }
     
-    public function format_query( $query /*, ... */ ){
+    public function prep( $query /*, ... */ ){
         $args = func_get_args();
         array_shift($args);
-        return $this->format_query_args( $query, $args );
+        return $this->prep_args( $query, $args );
     }
 
-    public function format_query_args($query, array $args) {
+    public function prep_args($query, array $args) {
         if( ! $args || count( $args ) < 1 ) return $query;
         $conn = $this;
-        return \Gaia\DB\Query::format( 
+        return \Gaia\DB\Query::prepare( 
             $query, 
             $args, 
             function($v) use( $conn ){ return "'" . $conn->real_escape_string( $v ) . "'"; }

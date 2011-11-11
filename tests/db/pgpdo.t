@@ -31,16 +31,16 @@ Tap::is( $rs->fetch(PDO::FETCH_ASSOC), array('test'=>'1112.122445543333333333'),
 $rs = $db->execute('SELECT %f as test', 'dummy');
 Tap::is( $rs->fetch(PDO::FETCH_ASSOC), array('test'=>'0'), 'query execute sanitizes non float');
 
-$query = $db->format_query('%s', array('dummy', 'rummy'));
+$query = $db->prep('%s', array('dummy', 'rummy'));
 Tap::is($query, "'dummy', 'rummy'", 'format query handles arrays of strings');
 
-$query = $db->format_query('%i', array(1,2,3));
+$query = $db->prep('%i', array(1,2,3));
 Tap::is($query, '1, 2, 3', 'format query handles arrays of integers');
 
-$query = $db->format_query('%f', array(1.545,2.2,3));
+$query = $db->prep('%f', array(1.545,2.2,3));
 Tap::is($query, '1.545, 2.2, 3', 'format query handles arrays of floats');
 
-$query = $db->format_query('test %%s ?, (?,?)', array(1, 2), 3, 4);
+$query = $db->prep('test %%s ?, (?,?)', array(1, 2), 3, 4);
 Tap::is($query, "test %s '1', '2', ('3','4')", 'format query question mark as string');
 
 $db = new DB\Except( $db );
