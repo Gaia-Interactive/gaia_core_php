@@ -2,13 +2,13 @@
 ob_start();
 include __DIR__ . '/../../common.php';
 use Gaia\Http\AuthDigest;
-use Gaia\Container;
+use Gaia\Store\KVP;
 
 
 
 // instead of a container object you should use a persistent storage option like
 // Store\DBA; This just shows proof of concept.
-$storage = new Container;
+$storage = new KVP;
 
 // instantiate hte digest
 $auth = new AuthDigest( $realm = 'Restricted Area', $domain = '/' );
