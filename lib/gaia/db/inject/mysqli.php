@@ -8,26 +8,18 @@ class MySQLi {
     public static function callbacks( \MySQLi $db ){
     
         $_ = array();
-        
-        $_['__tostring'] = function() use ( $db ) {
+        $lastquery = '';
+
+        $_['__tostring'] = function() use ( $db, & $lastquery ) {
+            if( $db->connect_error ){ 
+                $error = ($db->connect_error) ? $db->connect_errno . ': connection error ... ' . $db->connect_error : '';
+            } else {
+                $error = ($db->error) ?  $db->errno . ': ' . $db->error : '';
+            }
             @ $res ='(Gaia\DB\MySQLi object - ' . "\n" .
-                '  [affected_rows] => ' . $db->affected_rows . "\n" .
-                '  [client_info] => ' . $db->client_info . "\n" .
-                '  [client_version] => ' . $db->client_version . "\n" .
-                '  [connect_errno] => ' . $db->connect_errno . "\n" .
-                '  [connect_error] => ' . $db->connect_error . "\n" .
-                '  [errno] => ' . $db->errno . "\n" .
-                '  [error] => ' . $db->error . "\n" .
-                '  [field_count] => ' . $db->field_count . "\n" .
-                '  [host_info] => ' . $db->host_info . "\n" .
-                '  [info] => ' . $db->info . "\n" .
-                '  [insert_id] => ' . $db->insert_id . "\n" .
-                '  [server_info] => ' . $db->server_info . "\n" .
-                '  [server_version] => ' . $db->server_version . "\n" .
-                '  [sqlstate] => ' . $db->sqlstate . "\n" .
-                '  [protocol_version] => ' . $db->protocol_version . "\n" .
-                '  [thread_id] => ' . $db->thread_id . "\n" .
-                '  [warning_count] => ' . $db->warning_count . "\n" .
+                '  [connection] => ' . $db->host_info . "\n" .
+                '  [error] => ' . $error . "\n" .
+                '  [lastquery] => ' . $lastquery . "\n" .
                 ')';
             return $res;
         };
@@ -42,7 +34,9 @@ class MySQLi {
         
         };
                 
-        $_['execute'] = function( $query ) use ( $db ){
+        $_['execute'] = function( $query ) use ( $db, & $lastquery ){
+            $lastquery = $query;
+            if( strlen( $lastquery ) > 500 ) $lastquery = substr($lastquery, 0, 485) . ' ...[trucated]';
             $res = $db->query( $query );
             if( ! $res ) return FALSE;
             $_ = array();
