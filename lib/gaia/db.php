@@ -98,6 +98,11 @@ class DB implements Iface {
         return $f();
     }
     
+    public function insertid(){
+        $f = $this->callbacks[ __FUNCTION__ ];
+        return $f();
+    }
+    
     public function format_query( $query /*, ... */ ){
         $args = func_get_args();
         array_shift($args);
