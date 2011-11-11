@@ -115,6 +115,7 @@ class CI implements \Gaia\DB\Iface {
     public function isa( $name ){
         if( $this instanceof $name ) return TRUE;
         if( $this->core instanceof $name ) return TRUE;
+        if( $this->core->dbdriver == $name ) return TRUE;
         return FALSE;
     }
     
@@ -124,10 +125,14 @@ class CI implements \Gaia\DB\Iface {
     }
     
     public function __get( $k ){
+        if( $k == 'lock' ) return $this->lock;
+        if( $k == 'txn' ) return $this->txn;
         return $this->core->$k;
     }
     
     public function __set( $k, $v ){
+        if( $k == 'lock' ) return $this->lock = (bool) $v;
+        if( $k == 'txn' ) return $this->txn = (bool) $v;
         return $this->core->$k = $v;
     }
     

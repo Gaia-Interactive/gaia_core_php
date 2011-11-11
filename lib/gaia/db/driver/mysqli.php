@@ -115,7 +115,7 @@ class MySQLi extends \MySQLi implements \Gaia\DB\Iface {
     public function isa( $name ){
         if( $this instanceof $name ) return TRUE;
         $name = strtolower( $name );
-        //if( strpos($name, 'mysqli') !== FALSE ) return TRUE;
+        if( $name == 'mysql' ) return TRUE;
         return FALSE;
     }
     
@@ -144,5 +144,15 @@ class MySQLi extends \MySQLi implements \Gaia\DB\Iface {
         return $res;
     }
     
-    protected $modifiers;
+    public function __get( $k ){
+        if( $k == 'lock' ) return $this->lock;
+        if( $k == 'txn' ) return $this->txn;
+        return NULL;
+    }
+    
+    public function __set( $k, $v ){
+        if( $k == 'lock' ) return $this->lock = (bool) $v;
+        if( $k == 'txn' ) return $this->txn = (bool) $v;
+        return NULL;
+    }
 }
