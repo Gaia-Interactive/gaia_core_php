@@ -3,9 +3,9 @@ namespace Gaia\DB;
 
 $db = $this->core();
 
-$cb = array();
+$_ = array();
 
-$cb['__tostring'] = function() use ( $db ) {
+$_['__tostring'] = function() use ( $db ) {
     @ $res ='(Gaia\DB\MySQLi object - ' . "\n" .
         '  [affected_rows] => ' . $db->affected_rows . "\n" .
         '  [client_info] => ' . $db->client_info . "\n" .
@@ -28,7 +28,7 @@ $cb['__tostring'] = function() use ( $db ) {
     return $res;
 };
 
-$cb['format_query_args'] = $format_args = function($query, array $args ) use ( $db ){
+$_['format_query_args'] = $format_args = function($query, array $args ) use ( $db ){
     if( ! $args || count( $args ) < 1 ) return $query;
     return \Gaia\DB\Query::format( 
         $query, 
@@ -38,59 +38,52 @@ $cb['format_query_args'] = $format_args = function($query, array $args ) use ( $
 
 };
         
-$cb['execute'] = function( $query ) use ( $db ){
+$_['execute'] = function( $query ) use ( $db ){
     $res = $db->query( $query );
     if( ! $res ) return FALSE;
-    $affected = $db->affected_rows;
-    $cb = array();
+    $_ = array();
     
     if( is_object( $res ) ){
-        $cb['fetch'] = function() use( $res ){
+        $_['fetch'] = function() use( $res ){
             return $res->fetch_assoc();
         };
-        $cb['free'] = function() use( $res ){
+        $_['free'] = function() use( $res ){
             $res->free_result();
         };
     }
+    $_['affected'] = $db->affected_rows;
+    $_['insertid'] = $db->insert_id;
     
-    $cb['affected'] = function() use( $affected ){
-        return $affected;
-    };
-    
-    return new Result( $cb );
+    return new Result( $_ );
 };
             
-$cb['start'] = function ($auth = NULL) use ( $db ){
+$_['start'] = function ($auth = NULL) use ( $db ){
     if( $db instanceof Iface ) return $db->start($auth);
     return $db->query('START TRANSACTION');
 };
 
-$cb['rollback'] = function ($auth = NULL) use ( $db ){
+$_['rollback'] = function ($auth = NULL) use ( $db ){
     if( $db instanceof Iface ) return $db->rollback($auth);
     return $db->query('ROLLBACK');
 };
 
-$cb['commit'] = function ($auth = NULL) use ( $db ){
+$_['commit'] = function ($auth = NULL) use ( $db ){
     if( $db instanceof Iface ) return $db->commit($auth);
     return $db->query('COMMIT');
 };
 
-$cb['lastinsertid'] = function() use ( $db ){
-    return $db->insert_id;
-};
-
-$cb['error'] = function() use ( $db ){
+$_['error'] = function() use ( $db ){
     return $db->error;
 };
 
-$cb['errorcode'] = function() use ( $db ){
+$_['errorcode'] = function() use ( $db ){
     return $db->errno;
 };
 
-$cb['isa'] = function($name) use ( $db ){
+$_['isa'] = function($name) use ( $db ){
     if( $db instanceof $name) return TRUE;
     if( $name == 'mysql' ) return TRUE;
     return FALSE;
 };
 
-return $cb;
+return $_;
