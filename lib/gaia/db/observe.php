@@ -31,12 +31,12 @@ class Observe implements IFace {
         return $this->__call( __FUNCTION__, $args );
     }
     
-    public function format_query( $query /*, ... */ ){
+    public function prep( $query /*, ... */ ){
         $args = func_get_args();
         return $this->__call( __FUNCTION__, $args );
     }
 
-    public function format_query_args($query, array $args) {
+    public function prep_args($query, array $args) {
         $args = func_get_args();
         return $this->__call( __FUNCTION__, $args );
     }
