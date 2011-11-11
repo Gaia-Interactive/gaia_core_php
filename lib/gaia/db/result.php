@@ -1,7 +1,7 @@
 <?php
 namespace Gaia\DB;
 
-class Result { //implements Traversable {
+class Result {
 
     protected $_ = array();
     
@@ -18,7 +18,6 @@ class Result { //implements Traversable {
         if( ! isset( $this->_[ __FUNCTION__ ] ) ) return NULL;
         return $this->_[ __FUNCTION__ ];
     }
-    
     
     public function free(){
         if( ! isset( $this->_[ __FUNCTION__ ] ) ) return;
@@ -39,6 +38,10 @@ class Result { //implements Traversable {
     }
     
     public function __toString(){
-        return '(Gaia\DB\CallbackResult object)';
+        @ $res ='(Gaia\DB\Result object - ' . "\n" .
+            '  [affected] => ' . $this->affected() . "\n" .
+            '  [insertid] => ' . $this->insertId() . "\n" .
+            ')';
+        return $res;
     }
 }
