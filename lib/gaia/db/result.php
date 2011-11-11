@@ -3,27 +3,32 @@ namespace Gaia\DB;
 
 class Result { //implements Traversable {
 
-    protected $callbacks = array();
+    protected $_ = array();
     
-    public function __construct( array $callbacks ){
-        $this->callbacks = $callbacks;
+    public function __construct( array $map ){
+        $this->_ = $map;
     }
     
     public function affected(){
-        if( ! isset( $this->callbacks[ __FUNCTION__ ] ) ) return 0;
-        $f = $this->callbacks[ __FUNCTION__ ];
-        return $f();
+        if( ! isset( $this->_[ __FUNCTION__ ] ) ) return 0;
+        return $this->_[ __FUNCTION__ ];
     }
     
+    public function insertid(){
+        if( ! isset( $this->_[ __FUNCTION__ ] ) ) return NULL;
+        return $this->_[ __FUNCTION__ ];
+    }
+    
+    
     public function free(){
-        if( ! isset( $this->callbacks[ __FUNCTION__ ] ) ) return;
-        $f = $this->callbacks[ __FUNCTION__ ];
+        if( ! isset( $this->_[ __FUNCTION__ ] ) ) return;
+        $f = $this->_[ __FUNCTION__ ];
         return $f();
     }
     
     public function fetch(){
-        if( ! isset( $this->callbacks[ __FUNCTION__ ] ) ) return FALSE;
-        $f = $this->callbacks[ __FUNCTION__ ];
+        if( ! isset( $this->_[ __FUNCTION__ ] ) ) return FALSE;
+        $f = $this->_[ __FUNCTION__ ];
         return $f();
     }
     
