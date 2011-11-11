@@ -6,14 +6,22 @@ use Gaia\DB\Result;
 class CI {
 
     public static function callbacks( \CI_DB_driver $db ){
-        $_ = array();        
+        $_ = array();
+        $lastquery = '';
         
-        $_['__tostring'] = function () use ( $db ){
-            @ $res = print_r( $db, TRUE);
+        $_['__tostring'] = function () use ( $db, & $lastquery){
+            $errmsg = $db->_error_message();
+            $error = ( $errmsg ) ? $db->_error_number() . ': ' . $errmsg : '';
+            $res ='(Gaia\DB\CI object - ' . "\n" .
+                '  [driver] => ' . $db->dbdriver . "\n" .
+                '  [connection] => ' . $db->hostname  . "\n" .
+                '  [error] => ' . $error . "\n" .
+                '  [lastquery] => ' . $lastquery . "\n" .
+                ')';
             return $res;
         };
         
-        $_['prep_args'] = $format_args = function($query, array $args ) use ( $db ){
+        $_['prep_args'] = $format_args = function($query, array $args ) use ( $db, & $lastquery ){
             if( ! $args || count( $args ) < 1 ) return $query;
             return \Gaia\DB\Query::prepare( 
                 $query, 
@@ -22,7 +30,9 @@ class CI {
                );
         };
         
-         $_['execute'] = function( $query ) use ( $db ){
+         $_['execute'] = function( $query ) use ( $db, & $lastquery ){
+            $lastquery = $query;
+            if( strlen( $lastquery ) > 500 ) $lastquery = substr($lastquery, 0, 485) . ' ...[trucated]';
             try {
                 $res = $db->query($query);
                 
@@ -40,6 +50,7 @@ class CI {
                 
                 $_['affected'] = $db->affected_rows();
                 $_['insertid'] = $db->insert_id();
+
                 return new Result( $_ );
         
             } catch( Exception $e ){
