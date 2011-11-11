@@ -43,7 +43,7 @@ const SQL_MAXPOS =
         $batch = array();
         foreach( $item_ids as $item_id ){
             $pos = bcadd($pos, 1);
-            $batch[] = $this->db->format_query('(%i, %i, %i)', $this->user_id, $item_id, $pos );
+            $batch[] = $this->db->prep('(%i, %i, %i)', $this->user_id, $item_id, $pos );
         }
         $rs = $this->execute(sprintf( $this->sql( $ignore_dupes ? 'INSERT_IGNORE' : 'INSERT'), implode(",\n ", $batch )));
         return $rs->affected();

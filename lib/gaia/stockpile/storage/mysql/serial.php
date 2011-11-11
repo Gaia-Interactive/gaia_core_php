@@ -45,7 +45,7 @@ WHERE `user_id` = %i AND `item_id` = %i AND `serial` IN ( %i )';
     public function add( $item_id, $quantity ){
         $batches = array();
         foreach( $quantity->all() as $serial => $properties ){
-            $batches[] = $this->db->format_query('(%i, %i, %i, %s, 0)', $this->user_id, $serial, $item_id, json_encode( $properties ));
+            $batches[] = $this->db->prep('(%i, %i, %i, %s, 0)', $this->user_id, $serial, $item_id, json_encode( $properties ));
         }
         $rs = $this->execute( sprintf( $this->sql('ADD'), implode(",\n", $batches)) );
         return TRUE;
