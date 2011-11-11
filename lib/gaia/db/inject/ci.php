@@ -1,5 +1,5 @@
 <?php
-namespace Gaia\DB\Adapter;
+namespace Gaia\DB\Inject;
 use Gaia\DB\Iface;
 use Gaia\DB\Result;
 

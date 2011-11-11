@@ -22,11 +22,11 @@ class DB implements Iface {
         }
         */
         if( $core instanceof \PDO ){            
-           $this->callbacks = DB\Adapter\PDO::callbacks( $core );
+           $this->callbacks = DB\Inject\PDO::callbacks( $core );
         } elseif( $core instanceof \MySQLi ) {     
-           $this->callbacks = DB\Adapter\MySQLi::callbacks( $core );
+           $this->callbacks = DB\Inject\MySQLi::callbacks( $core );
         } elseif( $core instanceof \CI_DB_driver) {
-           $this->callbacks = DB\Adapter\CI::callbacks( $core );
+           $this->callbacks = DB\Inject\CI::callbacks( $core );
         } else {
             trigger_error('invalid db object', E_USER_ERROR);
             exit(1);
