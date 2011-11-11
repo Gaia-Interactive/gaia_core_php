@@ -176,7 +176,7 @@ class MySQL implements IFace {
             $table = $this->table( $shard );
             if( \Gaia\Souk\Storage::isAutoSchemaEnabled() ) $this->create( $table );
             $sql = "SELECT row_id FROM $table WHERE row_id > %i AND closed = 0 AND expires < %i ORDER BY expires ASC LIMIT %i";
-            //print "\n" . $this->db->format_query( $sql, $offset_row_id, $ts, $limit );
+            //print "\n" . $this->db->prep( $sql, $offset_row_id, $ts, $limit );
             $rs = $this->execute($sql, $offset_row_id, $ts, $limit );
             $offset_row_id = 0;
             while( $row = $rs->fetch() ) {
@@ -318,22 +318,22 @@ class MySQL implements IFace {
         
         
         // are we looking for auctions that are still in progress or already finished?
-        $clauses[] = $this->db->format_query('closed = ?', $options->closed ? 1 : 0);
+        $clauses[] = $this->db->prep('closed = ?', $options->closed ? 1 : 0);
         
         // if we have a specific item id we are looking for, query for that.
-        if( isset( $options->item_id ) ) $clauses[] = $this->db->format_query('item_id = %i', $options->item_id );
+        if( isset( $options->item_id ) ) $clauses[] = $this->db->prep('item_id = %i', $options->item_id );
         
         // do we know the seller?
-        if( isset( $options->seller ) ) $clauses[] = $this->db->format_query('seller = %i', $options->seller );
+        if( isset( $options->seller ) ) $clauses[] = $this->db->prep('seller = %i', $options->seller );
         
         // sometimes, rarely we are looking for an auction purchased by a specific buyer.
         // obviously these auctions are already closed. should i sanity check the closed param?
-        if( isset( $options->buyer ) ) $clauses[] = $this->db->format_query('buyer = %i', $options->buyer );
+        if( isset( $options->buyer ) ) $clauses[] = $this->db->prep('buyer = %i', $options->buyer );
         
         // we can narrow by the person who is currently the leading bidder. can't search by past
         // bidders since that is more of a bid history search.
         // haven't written that yet.
-        if( isset( $options->bidder ) ) $clauses[] = $this->db->format_query('bidder = %i', $options->bidder );
+        if( isset( $options->bidder ) ) $clauses[] = $this->db->prep('bidder = %i', $options->bidder );
         
         // are we looking for a bid-only auction?
         if( $options->only == 'bid' ) $clauses[] = 'price = 0';
@@ -342,10 +342,10 @@ class MySQL implements IFace {
         if( $options->only == 'buy' ) $clauses[] = 'step = 0';
         
         // look for items only above a given price range.
-        if( $options->floor && ctype_digit( $options->floor ) ) $clauses[] = $this->db->format_query('pricesort >= %i', $options->floor );
+        if( $options->floor && ctype_digit( $options->floor ) ) $clauses[] = $this->db->prep('pricesort >= %i', $options->floor );
         
         // look for items only below a given price range.
-        if( $options->ceiling && ctype_digit( $options->ceiling )) $clauses[] = $this->db->format_query('pricesort <= %i', $options->ceiling );
+        if( $options->ceiling && ctype_digit( $options->ceiling )) $clauses[] = $this->db->prep('pricesort <= %i', $options->ceiling );
         
         // how do we want the result set sorted?
         $sort = $options->sort;
@@ -365,12 +365,12 @@ class MySQL implements IFace {
                 
         
             case 'expires_soon':
-                $clauses[] = $this->db->format_query('expires > %i', Souk\Util::now());
+                $clauses[] = $this->db->prep('expires > %i', Souk\Util::now());
                 $order = 'expires ASC';
                 break;
                 
             case 'expires_soon_delay':
-                $clauses[] = $this->db->format_query('expires > %i', Souk\Util::now() + Souk\UTIL::MIN_EXPIRE );
+                $clauses[] = $this->db->prep('expires > %i', Souk\Util::now() + Souk\UTIL::MIN_EXPIRE );
                 $order = 'expires ASC';
                 break;
                 
@@ -503,7 +503,7 @@ class MySQL implements IFace {
     protected function execute( $query /*, .... */ ){
         $args = func_get_args();
         array_shift( $args );
-        $rs = $this->db->execute( $qs = $this->db->format_query_args( $query, $args ) );
+        $rs = $this->db->execute( $qs = $this->db->prep_args( $query, $args ) );
         if( ! $rs ) throw new Exception('database error', array('db'=> $this->db, 'query'=>$qs, 'error'=>$this->db->error()) );
         return $rs;
     }
