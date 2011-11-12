@@ -4,7 +4,7 @@ use Gaia\Store;
 use Gaia\Time;
 
 if( ! isset( $skip_expiration_tests ) ) $skip_expiration_tests = FALSE;
-Tap::plan(19);
+Tap::plan(21);
 
 $data = array();
 for( $i = 1; $i <= 3; $i++){
@@ -73,3 +73,7 @@ Tap::cmp_ok( $cache->replace( $k, 'test1' ), '===', TRUE, 'replacing a key retur
 Tap::cmp_ok( $cache->{$k} = '11', '===', '11', 'setting using the magic method property approach returns value');
 unset( $cache->{$k} );
 Tap::cmp_ok( $cache->add($k, 'fun'), '===', TRUE, 'adding a key returns (bool) TRUE');
+
+Tap::is( $cache->set( $k, NULL ), TRUE, 'setting a key to null returns true');
+Tap::cmp_ok( $cache->get( array( $k ) ), '===', array(), 'after setting the key to null, key is deleted');
+
