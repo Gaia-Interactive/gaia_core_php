@@ -9,7 +9,7 @@ class PgPDO implements Iface {
     protected $db;
     protected $cache;
     
-    public function __construct($app, \PDO $db, Store\Iface $cache = NULL ){
+    public function __construct($app, \PDO $db, Store\Iface $cache ){
         $driver = $db->getAttribute(\PDO::ATTR_DRIVER_NAME);
         if( $driver !== 'pgsql' ) {
             trigger_error('invalid pdo', E_USER_ERROR);
@@ -18,8 +18,7 @@ class PgPDO implements Iface {
         $this->db = $db;
         if( ! preg_match('/^[a-z0-9_]+$/', $app) ) throw new Exception('invalid-app');
         $this->app = $app; 
-        if( ! $cache ) $cache = new Store\KVP;
-        $this->cache = new Store\Prefix( $cache, __CLASS__ . '/' . $app);
+        $this->cache = $cache;
 
     }
 
@@ -50,7 +49,7 @@ class PgPDO implements Iface {
     }
     
     public function init(){
-        $key = 'createtable';
+        $key = __CLASS__ . '/' . $this->app . '/createtable';
         if( $this->cache->get($key )) return;
         if( ! $this->cache->add($key, 1, 5)) return;
         $stmt = $this->db->prepare('SELECT sequence_name FROM information_schema.sequences WHERE sequence_name = ?');
