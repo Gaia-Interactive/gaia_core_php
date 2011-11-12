@@ -9,7 +9,7 @@ class PgPDO implements Iface {
     protected $db;
     protected $cache;
     
-    public function __construct($app, \PDO $db, Store\Iface $cache = NULL ){
+    public function __construct($app, \PDO $db, Store\Iface $cache ){
         $driver = $db->getAttribute(\PDO::ATTR_DRIVER_NAME);
         if( $driver !== 'pgsql' ) {
             trigger_error('invalid pdo', E_USER_ERROR);
@@ -18,7 +18,6 @@ class PgPDO implements Iface {
         $this->db = $db;
         if( ! preg_match('/^[a-z0-9_]+$/', $app) ) throw new Exception('invalid-app');
         $this->app = $app; 
-        if( ! $cache ) $cache = new Store\KVP;
         $this->cache = $cache;
 
     }

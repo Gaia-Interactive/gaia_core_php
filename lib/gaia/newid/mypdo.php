@@ -5,7 +5,7 @@ class MyPDO extends MySQL implements Iface {
     
     protected $dbinfo;
     
-    public function __construct( $app, \PDO $db, $cache = NULL ){
+    public function __construct( $app, \PDO $db, $cache ){
         $driver = $db->getAttribute(\PDO::ATTR_DRIVER_NAME);
         if( $driver !== 'mysql' ) {
             trigger_error('invalid pdo', E_USER_ERROR);

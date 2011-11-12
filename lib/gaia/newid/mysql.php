@@ -19,11 +19,10 @@ abstract class MySQL implements Iface {
     protected $db;
     protected $cache;
     
-    public function __construct( $app, $db, Store\Iface $cache = NULL ){
+    public function __construct( $app, $db, Store\Iface $cache ){
         if( ! preg_match('/^[a-z0-9_]+$/', $app) ) throw new Exception('invalid-app');
         $this->app = $app;
         $this->db = $db;
-        if( ! $cache ) $cache = new Store\KVP;
         $this->cache = $cache;
     }
     
