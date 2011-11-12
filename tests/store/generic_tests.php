@@ -4,7 +4,7 @@ use Gaia\Store;
 use Gaia\Time;
 
 if( ! isset( $skip_expiration_tests ) ) $skip_expiration_tests = FALSE;
-Tap::plan(24);
+Tap::plan(36);
 
 $data = array();
 for( $i = 1; $i <= 3; $i++){
@@ -81,3 +81,28 @@ Tap::cmp_ok( $cache->get( array( $k ) ), '===', array(), 'after setting the key 
 Tap::is( $cache->set( $k, $v = '0' ), TRUE, 'setting a key to zero returns true');
 Tap::cmp_ok( $cache->get( $k ), '===', $v, 'after setting the key to 0, get returns zero value');
 Tap::cmp_ok( $cache->get( array( $k ) ), '===', array($k=>$v), 'multi-get returns the key with zero value');
+
+Tap::ok( $cache->set( $k, 1, 10000000000), 'setting with a huge timeout');
+Tap::cmp_ok( strval($cache->get( $k )), '===', '1', 'get returns correct value');
+
+$incr = 1000000;
+
+
+Tap::ok( $cache->increment( $k, $incr), 'incrementing with a large number');
+Tap::cmp_ok( strval($cache->get( $k )), '===', strval($incr + 1), 'get returns correct value');
+
+Tap::ok( $cache->decrement( $k, $incr), 'decrementing with a large number');
+Tap::cmp_ok( strval($cache->get( $k )), '===', '1', 'get returns correct value');
+
+Tap::ok( $cache->set( $k, $v = 100000000000), 'setting a huge number');
+Tap::cmp_ok( strval($cache->get( $k )), '===', strval($v), 'get returns correct value');
+
+$v = $v + 1;
+Tap::cmp_ok( strval($cache->increment($k, 1)), '===', strval($v),  'increment a huge number by 1');
+Tap::cmp_ok( strval($cache->get( $k )), '===', strval( $v ), 'get returns correct value');
+
+$cache->set( $k, $v);
+
+$v = $v - 1;
+Tap::cmp_ok( strval($cache->decrement($k, 1)), '===', strval($v),  'decrement a huge number by 1');
+Tap::cmp_ok( strval($cache->get( $k )), '===', strval( $v ), 'get returns correct value');

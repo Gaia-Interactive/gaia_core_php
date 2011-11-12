@@ -59,7 +59,7 @@ class Closure implements Iface {
         }
         $ret = $this->get( $key );
         if( ! $ret || ! ctype_digit( strval( $ret ) ) ) return FALSE;
-        if( ! $this->set( $key, $ret = bcadd( $ret, $value ) ) ) return FALSE;
+        if( ! $this->set( $key, $ret += $value ) ) return FALSE;
         return $ret;
     }
     
@@ -72,7 +72,7 @@ class Closure implements Iface {
         }
         $ret = $this->get( $key );
         if( ! $ret || ! ctype_digit( strval( $ret ) ) ) return FALSE;
-        if( ! $this->set( $key, $ret = bcsub( $ret, $value ) ) ) return FALSE;
+        if( ! $this->set( $key, $ret -= $value ) ) return FALSE;
         return $ret;
     }
     
