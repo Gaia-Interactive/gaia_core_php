@@ -121,7 +121,7 @@ class Tap {
         }
         $have = self::stringify( $have );
         $want = self::stringify( $want );
-        return self::_proclaim($pass, $desc, /* todo */ false, $have, "$have $op $want");
+        return self::_proclaim($pass, $desc, /* todo */ false, $have, "$op $want");
     }
     
     public static function diag($message)
@@ -196,7 +196,7 @@ class Tap {
               $have = self::stringify($have);
               $want = self::stringify($want);
               self::diag(
-                  sprintf(" Failed%stest '%s'\n in %s at line %d\n have: %s\n  want: %s",
+                  sprintf(" Failed%stest '%s'\n in %s at line %d\n have: %s\n want: %s",
                       $todo ? ' TODO ' : ' ',
                       $desc,
                       $call['file'],
