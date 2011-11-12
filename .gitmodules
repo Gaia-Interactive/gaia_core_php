@@ -1,3 +1,12 @@
+[submodule "vendor/CodeIgniter"]
+	path = vendor/CodeIgniter
+	url = http://github.com/EllisLab/CodeIgniter.git
+[submodule "vendor/facebook/php-sdk"]
+	path = vendor/facebook/php-sdk
+	url = http://github.com/facebook/php-sdk.git
+[submodule "vendor/predis"]
+	path = vendor/predis
+	url = http://github.com/nrk/predis.git
 [submodule "vendor/pheanstalk"]
 	path = vendor/pheanstalk
 	url = http://github.com/pda/pheanstalk.git
