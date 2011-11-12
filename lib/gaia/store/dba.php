@@ -60,7 +60,9 @@ class DBA implements Iface {
         if( $v === NULL ) return FALSE;
         $v = strval( $v );
         if( ! ctype_digit( $v ) ) return FALSE;
-        return $this->replace( $k, bcadd( $v, $step ));
+        $v += $step;
+        if( ! $this->replace( $k, $v ) ) return FALSE;
+        return $v;
     }
     
     public function decrement( $k, $step = 1){
@@ -68,7 +70,9 @@ class DBA implements Iface {
         if( $v === NULL ) return FALSE;
         $v = strval( $v );
         if( ! ctype_digit( $v ) ) return FALSE;
-        return $this->set( $k, bcsub( $v, $step ));
+        $v -= $step;
+        if( ! $this->replace( $k, $v ) ) return FALSE;
+        return $v;
     }
     
     public function delete( $k ){
