@@ -55,6 +55,7 @@ class Memcache implements Iface {
     }
     
     public function set( $k, $v, $ttl = NULL ){
+        if( $v === NULL ) return $this->delete( $k );
         if( $this->core instanceof \Memcache ){
             return $this->core->set($k, $v, self::should_compress( $v ), $ttl );
         }

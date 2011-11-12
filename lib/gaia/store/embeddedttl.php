@@ -6,6 +6,7 @@ class EmbeddedTTL extends Wrap {
 
     public function set( $k, $v, $ttl = 0 ){
         if( $v === FALSE ) return FALSE;
+        if( $v === NULL ) return $this->delete( $k );
         if( $ttl < 1 ){
             $ttl = 0;
         } else {
