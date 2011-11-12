@@ -1,6 +1,8 @@
 #!/usr/bin/env php
 <?php
-include_once __DIR__ . '/../common.php';
+include __DIR__ . '/../common.php';
+include __DIR__ . '/../assert/bcmath_installed.php';
+
 use Gaia\Test\Tap;
 use Gaia\NewID;
 Tap::plan(4);
