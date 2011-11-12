@@ -12,6 +12,7 @@ class KVP implements Iface {
     }
     
     public function set($name, $value){
+        if( $value === NULL ) return $this->delete( $name );
         $this->__d[ $name ] = $value;
         return TRUE;
     }
