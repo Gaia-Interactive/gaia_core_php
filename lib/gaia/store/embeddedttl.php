@@ -22,7 +22,7 @@ class EmbeddedTTL extends Wrap {
         if( ! $this->_isValid( $k, $res ) ) return FALSE;
         $res[0] = strval( $res[0] );
         if( ! ctype_digit( $res[0] ) ) return FALSE;
-        $res[0] = bcadd( $res[0], $step );
+        $res[0] += $step;
         $this->core->set( $k, $res );
         return $res[0];
     }
@@ -33,7 +33,7 @@ class EmbeddedTTL extends Wrap {
         if( ! $this->_isValid( $k, $res ) ) return FALSE;
         $res[0] = strval( $res[0] );
         if( ! ctype_digit( $res[0] ) ) return FALSE;
-        $res[0] = bcsub( $res[0], $step );
+        $res[0] -= $step;
         $this->core->set( $k, $res );
         return $res[0];
     }
