@@ -1,6 +1,7 @@
 #!/usr/bin/env php
 <?php
 include __DIR__ . '/../common.php';
+include __DIR__ . '/../assert/mbstring_installed.php';
 
 use Gaia\Test\Tap;
 use Gaia\Filter;
