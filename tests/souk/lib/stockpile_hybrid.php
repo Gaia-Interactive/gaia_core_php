@@ -1,4 +1,6 @@
 <?php
+include __DIR__ . '/../../assert/bcmath_installed.php';
+
 use Gaia\Test\Tap;
 
 
