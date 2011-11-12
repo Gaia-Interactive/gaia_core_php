@@ -5,6 +5,7 @@ use Gaia\NewID;
 use Gaia\Store;
 
 include __DIR__ . '/../common.php';
+include __DIR__ . '/../assert/bcmath_installed.php';
 include __DIR__ . '/../assert/mysqli_installed.php';
 include __DIR__ . '/../assert/mysql_running.php';
 
