@@ -23,6 +23,7 @@ class Apc implements Iface {
     }
     
     public function set($k, $v, $expires = 0 ){
+        if( $v === NULL ) return $this->delete( $k );
         if( $this->core ) return $this->core->set( $k, $v, $expires );
         return apc_store( $k, $v, $expires );
     }
@@ -50,7 +51,8 @@ class Apc implements Iface {
     
     public function delete( $k ){
         if( $this->core ) return $this->core->delete( $k );
-        return apc_delete( $k );
+        apc_delete( $k );
+        return TRUE;
     }
     
     public function flush(){
