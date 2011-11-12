@@ -76,7 +76,7 @@ $elapsed = number_format( microtime(TRUE) - $start, 3);
 
 Tap::cmp_ok( $elapsed, '>', 1, "waited around for more jobs to run but didn't find any (waited for $elapsed s)");
 
-Tap::cmp_ok( $elapsed, '<', 3, "hit the timeout before too long");
+Tap::cmp_ok( $elapsed, '<', 4, "hit the timeout before too long");
 
 
 Tap::debug( $stats );
