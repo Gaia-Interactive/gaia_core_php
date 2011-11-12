@@ -39,14 +39,14 @@ class Tier extends Wrap {
     public function increment( $key, $value = 1 ){
         $res = $this->core->increment( $key, $value );
         if( ! $res ) return $res;
-        $this->tier1->set( $key, $value, $this->tier1_expires() );
+        $this->tier1->set( $key, $res, $this->tier1_expires() );
         return $res;
     }
     
     public function decrement( $key, $value = 1 ){
         $res = $this->core->decrement( $key, $value );
         if( ! $res ) return $res;
-        $this->tier1->set( $key, $value, $this->tier1_expires() );
+        $this->tier1->set( $key, $res, $this->tier1_expires() );
         return $res;
     }
     

@@ -84,7 +84,7 @@ class Cookie implements Iface {
         if( $v === NULL ) return FALSE;
         $v = strval( $v );
         if( ! ctype_digit( $v ) ) return FALSE;
-        $v = bcadd( $v, $step );
+        $v += $step;
         if( ! $this->set( $k, $v ) ) return FALSE;
         return $v;
     }
@@ -94,7 +94,7 @@ class Cookie implements Iface {
         if( $v === NULL ) return FALSE;
         $v = strval( $v );
         if( ! ctype_digit( $v ) ) return FALSE;
-        $v = bcsub( $v, $step );
+        $v -= $step;
         if( ! $this->set( $k, $v) ) return FALSE;
         return $v;
     }
