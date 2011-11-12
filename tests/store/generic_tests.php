@@ -4,7 +4,7 @@ use Gaia\Store;
 use Gaia\Time;
 
 if( ! isset( $skip_expiration_tests ) ) $skip_expiration_tests = FALSE;
-Tap::plan(21);
+Tap::plan(24);
 
 $data = array();
 for( $i = 1; $i <= 3; $i++){
@@ -77,3 +77,7 @@ Tap::cmp_ok( $cache->add($k, 'fun'), '===', TRUE, 'adding a key returns (bool) T
 Tap::is( $cache->set( $k, NULL ), TRUE, 'setting a key to null returns true');
 Tap::cmp_ok( $cache->get( array( $k ) ), '===', array(), 'after setting the key to null, key is deleted');
 
+
+Tap::is( $cache->set( $k, $v = '0' ), TRUE, 'setting a key to zero returns true');
+Tap::cmp_ok( $cache->get( $k ), '===', $v, 'after setting the key to 0, get returns zero value');
+Tap::cmp_ok( $cache->get( array( $k ) ), '===', array($k=>$v), 'multi-get returns the key with zero value');
