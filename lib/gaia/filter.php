@@ -50,8 +50,6 @@ class Filter
     }
     
     public static function safe( $value, $default = NULL ){
-        // convert to utf8 safe string
-        $value = self::utf8( $value );
         $unsafe = array('<', '>', '"', "'", '#', '&', '%', '{', '(');
         if( is_array( $value ) ){
             foreach( $value as $k=>$v ) $value[ $k ] = str_replace($unsafe, '', strval($v));
@@ -59,7 +57,6 @@ class Filter
         } else {
             $value = str_replace($unsafe, '', strval($value));
         }
-        
         
         // set to default value if there is nothing left after filtering
         return $value !== '' ? $value : $default;
