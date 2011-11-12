@@ -24,7 +24,7 @@ abstract class MySQL implements Iface {
         $this->app = $app;
         $this->db = $db;
         if( ! $cache ) $cache = new Store\KVP;
-        $this->cache = new Store\Prefix( $cache, __CLASS__ . '/' . $app);
+        $this->cache = $cache;
     }
     
     public function id(){
@@ -51,7 +51,7 @@ abstract class MySQL implements Iface {
 
 
     public function init(){
-        $key = 'createtable';
+        $key = __CLASS__ . '/' . $this->app . '/createtable';
         if( $this->cache->get($key )) return;
         if( ! $this->cache->add($key, 1, 5)) return;
         $table = $this->table();
