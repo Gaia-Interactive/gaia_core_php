@@ -1,4 +1,20 @@
 #!/usr/bin/env bash
+prove_installed=`which prove`
+
+if [ ! "$prove_installed" ]
+then
+    echo "prove executable not found. please install perl-Test-Harness."
+    exit 1;
+fi
+
+php_installed=`which php`
+
+if [ ! "$php_installed" ]
+then
+    echo "php executable not found. please install php5.3 or greater."
+    exit 1;
+fi
+
 
 version=`/usr/bin/env php -r "echo phpversion();"`
 versioncheck=`/usr/bin/env php -r "echo version_compare(phpversion(), '5.3');"`
