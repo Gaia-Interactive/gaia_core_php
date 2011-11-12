@@ -119,7 +119,7 @@ class Replica implements Iface {
         $repair = array();
         foreach( $replicas as $cache){
             $r = $cache->$method($k, $v );
-            if( $r ) {
+            if( $r && $method == 'increment') {
                 $res = $r;
                 $method = 'set';
                 $v = $res;
@@ -134,14 +134,14 @@ class Replica implements Iface {
     }
     
     function decrement($k, $v = 1){
-                $res = FALSE;
+        $res = FALSE;
         $replicas = $this->replicas;
         shuffle( $replicas );
         $method = 'decrement';
         $repair = array();
         foreach( $replicas as $cache){
             $r = $cache->$method($k, $v );
-            if( $r ) {
+            if( $r && $method == 'decrement') {
                 $res = $r;
                 $method = 'set';
                 $v = $res;
