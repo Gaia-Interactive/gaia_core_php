@@ -49,7 +49,7 @@ class CI {
                 }
                 
                 $_['affected'] = $db->affected_rows();
-                $_['insertid'] = $db->insert_id();
+                if( preg_match('#^insert#i', $query )) $_['insertid'] = $db->insert_id();
 
                 return new Result( $_ );
         
