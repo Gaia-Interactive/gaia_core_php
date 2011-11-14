@@ -185,5 +185,5 @@ while( $listings = Souk( $app )->pending(0, 5, $id ) ){
         //Tap::debug('pending: ' . $id );
     }
 }
-Tap::cmp_ok( $ct, '>', 1, "found at least 1 item in pending: $ct found");
+Tap::cmp_ok( $ct, '>=', 1, "found at least 1 item in pending: $ct found");
 //print "\n\n";
