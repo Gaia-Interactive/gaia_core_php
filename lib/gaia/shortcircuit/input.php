@@ -22,5 +22,12 @@ class Input extends \Gaia\Container
         $v = \Gaia\Filter::against( parent::get( $key ), $filter );
         if( $v === NULL ) $v = $default;
         return $v;
+
+    }
+    
+    public function __call( $filter, $args ){
+        $key = $args[0];
+        $default = isset( $args[1] ) ? $args[1] : NULL;
+        return $this->get( $key, $filter, $default );
     }
 }
