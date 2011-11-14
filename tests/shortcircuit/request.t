@@ -4,7 +4,7 @@ include_once __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\ShortCircuit\Request;
 use Gaia\ShortCircuit\Input;
-Tap::plan(8);
+Tap::plan(9);
 
 $_REQUEST = array('test'=>'1');
 $r = new Request;
@@ -14,6 +14,7 @@ Tap::is( $r->test, 1, 'request imports $_REQUEST into a container');
 $r = new Request( array('test'=>'2') );
 
 Tap::is( $r->test, 2, 'request imports array into a container');
+Tap::cmp_ok( $r->get('test', 'alpha', 100), '===', 100, 'applied alpha filter, got got a default. original value excluded');
 
 $r = new Request( array('var1'=> 'hello<script>world</script>') );
 

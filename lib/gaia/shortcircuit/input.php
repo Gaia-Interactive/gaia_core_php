@@ -7,7 +7,8 @@ class Input extends \Gaia\Container
         if( is_array( $key ) ){
             $res = array();
             foreach( parent::get($key) as $k =>$v ){
-                $v = \Gaia\Filter::against( $v, $filter, $default );
+                $v = \Gaia\Filter::against( $v, $filter );
+                if( $v === NULL ) $v = $default;
                 if( $v === NULL ) continue;
                 $res[ $k ] = $v;
             }
@@ -18,6 +19,8 @@ class Input extends \Gaia\Container
             }
             return $res;
         }
-        return \Gaia\Filter::against( parent::get( $key ), $filter, $default );
+        $v = \Gaia\Filter::against( parent::get( $key ), $filter );
+        if( $v === NULL ) $v = $default;
+        return $v;
     }
 }
