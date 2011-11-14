@@ -1,5 +1,6 @@
 <?php
 namespace Gaia\Store;
+use Gaia\Time;
 
 /**
 * make APC conform to our cache interface. Works pretty well except for the replace call, since apc
@@ -25,15 +26,18 @@ class Apc implements Iface {
     public function set($k, $v, $expires = 0 ){
         if( $v === NULL ) return $this->delete( $k );
         if( $this->core ) return $this->core->set( $k, $v, $expires );
+        if( $expires > Wrap::TTL_30_DAYS ) $expires -= Time::now();
         return apc_store( $k, $v, $expires );
     }
     
     public function add( $k, $v, $expires = 0 ){
+        if( $expires > Wrap::TTL_30_DAYS ) $expires -= Time::now();
         if( $this->core ) return $this->core->add( $k, $v, $expires );
         return apc_add( $k, $v, $expires );
     }
     
     public function replace( $k, $v, $expires = 0 ){
+        if( $expires > Wrap::TTL_30_DAYS ) $expires -= Time::now();
         if( $this->core ) return $this->core->replace( $k, $v, $expires );
         if( ! $this->get( $k ) ) return FALSE;
         return $this->set( $k, $v, $expires );

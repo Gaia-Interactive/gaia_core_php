@@ -9,7 +9,7 @@ class EmbeddedTTL extends Wrap {
         if( $v === NULL ) return $this->delete( $k );
         if( $ttl < 1 ){
             $ttl = 0;
-        } else {
+        } elseif( $ttl < Time::now() + Wrap::TTL_30_DAYS ) {
             $ttl = Time::now() + $ttl;
         }
         $this->core->set( $k, array( $v, $ttl ));
