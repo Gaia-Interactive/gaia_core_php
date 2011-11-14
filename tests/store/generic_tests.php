@@ -82,7 +82,8 @@ Tap::is( $cache->set( $k, $v = '0' ), TRUE, 'setting a key to zero returns true'
 Tap::cmp_ok( $cache->get( $k ), '===', $v, 'after setting the key to 0, get returns zero value');
 Tap::cmp_ok( $cache->get( array( $k ) ), '===', array($k=>$v), 'multi-get returns the key with zero value');
 
-Tap::ok( $cache->set( $k, 1, 10000000000), 'setting with a huge timeout');
+
+Tap::ok( $cache->set( $k, 1, $ttl = (3600 * 24 * 30)), 'setting with a huge timeout');
 Tap::cmp_ok( strval($cache->get( $k )), '===', '1', 'get returns correct value');
 
 $incr = 1000000;
@@ -94,7 +95,13 @@ Tap::cmp_ok( strval($cache->get( $k )), '===', strval($incr + 1), 'get returns c
 Tap::ok( $cache->decrement( $k, $incr), 'decrementing with a large number');
 Tap::cmp_ok( strval($cache->get( $k )), '===', '1', 'get returns correct value');
 
-Tap::ok( $cache->set( $k, $v = 100000000000), 'setting a huge number');
+$huge_number = 9223372036854775806;
+
+if( ! is_int( $huge_number ) ) $huge_number = 2147483646;
+
+Tap::Debug( "testing with $huge_number" );
+
+Tap::ok( $cache->set( $k, $v = $huge_number), 'setting a huge number');
 Tap::cmp_ok( strval($cache->get( $k )), '===', strval($v), 'get returns correct value');
 
 $v = $v + 1;

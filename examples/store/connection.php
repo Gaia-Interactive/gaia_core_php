@@ -5,7 +5,7 @@ use Gaia\Test\Tap;
 
 include __DIR__ . '/../common.php';
 include __DIR__ . '/../../tests/assert/memcache_installed.php';
-
+include __DIR__ . '/../../tests/assert/memcache_running.php';
 
 // @see https://github.com/gaiaops/gaia_core_php/wiki/cache-connection
 
