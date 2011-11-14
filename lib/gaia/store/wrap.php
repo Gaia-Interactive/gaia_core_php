@@ -11,6 +11,7 @@ namespace Gaia\Store;
 class Wrap implements Iface {
     protected $core;
     const UNDEF = "\0__undef__\0";
+    const TTL_30_DAYS = 2592000;
 
     public function __construct( Iface $core ){
         $this->core = $core;
