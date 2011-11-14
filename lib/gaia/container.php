@@ -16,7 +16,8 @@ class Container extends KVP implements \Iterator {
     
     public function load( $input ){
         if( $input === NULL ) return;
-        if( is_array( $input ) || $input instanceof Iterator ) {
+        
+        if( is_array( $input ) || $input instanceof \Iterator ) {
             foreach( $input as $k=>$v ) $this->__set( $k, $v);
         }
         // all done.
