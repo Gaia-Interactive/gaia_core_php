@@ -1,11 +1,11 @@
 <?php
-namespace Gaia\DB\Inject;
+namespace Gaia\DB\Closure;
 use Gaia\DB\Iface;
 use Gaia\DB\Result;
 
 class CI {
 
-    public static function callbacks( \CI_DB_driver $db ){
+    public static function closures( \CI_DB_driver $db ){
         $_ = array();
         $lastquery = '';
         
