@@ -16,7 +16,7 @@ if( strlen( $raw ) < 1 ){
 
 
 $db = new DB\Driver\MySQLi('127.0.0.1', NULL, NULL, 'test', '3306');
-
+$db->execute("SET NAMES 'utf8'");
 Tap::plan(153);
 $lines = explode("\n", $raw);
 $sql = "CREATE TEMPORARY TABLE t1utf8 (`i` INT UNSIGNED NOT NULL PRIMARY KEY, `line` VARCHAR(5000) ) ENGINE=InnoDB DEFAULT CHARACTER SET utf8";
@@ -38,8 +38,13 @@ while( $row = $rs->fetch_assoc() ){
 }
 $rs->free_result();
 
-Tap::cmp_ok( $readlines, '===', $lines, 'inserted all the rows and read them back, worked as expected');
-//Tap::debug( $readlines );
+Tap::ok( $cmp = ($readlines === $lines), 'inserted all the rows and read them back, worked as expected');
+if( ! $cmp ){
+    $diff = array();
+    foreach( $readlines as $i => $line ){
+        if( $line !== $lines[ $i ] ) Tap::debug("line $i:\n> $line\n< " . $lines[ $i ]);
+    }
+}
 
 $raw = file_get_contents(__DIR__ . '/../sample/UTF-8-test.txt');
 
