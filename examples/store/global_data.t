@@ -6,6 +6,7 @@ use Gaia\Store;
 use Gaia\Test\Tap;
 
 include __DIR__ . '/../common.php';
+include __DIR__ . '/../../tests/assert/date_configured.php';
 include __DIR__ . '/connection.php';
 
 // @see https://github.com/gaiaops/gaia_core_php/wiki/cache-global-data
