@@ -1,5 +1,7 @@
 <?php
 require __DIR__ . '/../../common.php';
+include __DIR__ . '/../../assert/date_configured.php';
+
 include __DIR__ . '/functions.php';
 Gaia\DB\Resolver::load( array('test0'=>'test', 'test1'=>'test') );
 
