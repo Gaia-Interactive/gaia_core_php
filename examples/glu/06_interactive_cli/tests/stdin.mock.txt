@@ -1,0 +1,5 @@
+hello
+help
+now
+non_matching_command
+quit

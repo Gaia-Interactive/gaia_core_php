@@ -1,0 +1,1 @@
+<a href="<?php echo $this->href;?>"<?php echo  $this->id ? ' id="' . $this->id . '"' : '';?><?php echo  $this->class ? ' class="' . $this->class . '"' : '';?><?php echo  $this->title ? ' title="' . $this->title . '"' : '';?>><?php echo $this->body ?></a>
