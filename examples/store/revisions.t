@@ -7,6 +7,8 @@ use Gaia\Test\Tap;
 
 include __DIR__ . '/../common.php';
 include __DIR__ . '/connection.php';
+include __DIR__ . '/../../tests/assert/date_configured.php';
+
 // @see https://github.com/gaiaops/gaia_core_php/wiki/cache-revisions
 
 class UserRev {
