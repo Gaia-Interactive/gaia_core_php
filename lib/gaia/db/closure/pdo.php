@@ -1,10 +1,10 @@
 <?php
-namespace Gaia\DB\Inject;
+namespace Gaia\DB\Closure;
 use Gaia\DB\Iface;
 use Gaia\DB\Result;
 
 class PDO {
-    public static function callbacks( \PDO $db ){
+    public static function closures( \PDO $db ){
         $_ = array();
         
         $lastquery = '';

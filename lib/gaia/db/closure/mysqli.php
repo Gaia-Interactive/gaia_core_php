@@ -1,11 +1,11 @@
 <?php
-namespace Gaia\DB\Inject;
+namespace Gaia\DB\Closure;
 use Gaia\DB\Iface;
 use Gaia\DB\Result;
 
 class MySQLi {
 
-    public static function callbacks( \MySQLi $db ){
+    public static function closures( \MySQLi $db ){
     
         $_ = array();
         $lastquery = '';
