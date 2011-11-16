@@ -3,6 +3,7 @@ namespace Gaia\Job;
 use Gaia\Job;
 use Gaia\Debugger;
 use Gaia\Http;
+use Gaia\Time;
 
 // +---------------------------------------------------------------------------+
 // | This file is part of the Job Framework.                                   |
@@ -95,14 +96,18 @@ class Runner {
     */
     public function __construct( Http\Pool $pool = NULL ){
         $this->pool = ( $pool ) ? $pool : new Http\Pool;
-        $this->pool->attach( array( $this, 'handle' ) );
+        $runner = $this;
+        $closure = function( Http\Request $job ) use ($runner ) { 
+            return $runner->handle( $job ); 
+        };
+        $this->pool->attach( $closure );
     }
     
     /**
     * add a task.
     */
-    public function addTask( $cb ){
-        if( is_callable( $cb ) ) $this->tasks[] = $cb;
+    public function addTask( \Closure $closure ){
+        $this->tasks[] = $closure;
     }
     
     /**
@@ -117,7 +122,7 @@ class Runner {
     */
     public function process(){
         $this->active = TRUE;
-        if( ! $this->start ) $this->start = time();
+        if( ! $this->start ) $this->start = Time::now();
         $this->populate();
         while( $this->active ){
             
@@ -125,23 +130,23 @@ class Runner {
                 return $this->shutdown();
             }
         
-            $time = time();
+            $time = Time::now();
     
-            if( $this->timelimit && $this->start + $this->timelimit < $time ){
+            if( $this->timelimit && ($this->start + $this->timelimit) < $time ){
                 return $this->shutdown();
             }
                 
             if( ( $time - 2 ) >= $this->lastrun ) {
-                if( $this->debug ) call_user_func( $this->debug, 'maintenance tasks');
-                if( $this->debug) call_user_func( $this->debug, 'jobs running: ' . count( $this->pool->requests() ) );
+                 $this->debug('maintenance tasks');
+                if( $this->debug) $this->debug('jobs running: ' . count( $this->pool->requests() ) );
         
                 $this->lastrun = $time;
                 try {
                     $this->populate();            
-                    foreach( $this->tasks as $cb ) call_user_func( $cb, $this );
+                    foreach( $this->tasks as $closure ) $closure( $this );
                     
                 } catch( Exception $e ){
-                    call_user_func( $this->debug,  $e->__toString());
+                    $this->debug( $e->__toString());
                 }
             }
             if( $this->active && ! $this->pool->select(0.2) ) {
@@ -165,7 +170,7 @@ class Runner {
     */
     public function stats(){
         return array(
-            'uptime'=> time() - $this->start,
+            'uptime'=> Time::now() - $this->start,
             'status'=> ($this->active ? 'running' : 'shutdown'),
             'running'=> count( $this->pool->requests() ),
             'queued' => count( $this->queue ),
@@ -194,19 +199,30 @@ class Runner {
             $block_patterns[] = $pattern;
         }
         $debug = $this->debug;
-        $block = function( $tube ) use ($block_patterns, $debug ){
-            if( ! $block_patterns ) return FALSE;
+        $pattern = $this->buildTubePattern( $this->watch );
+        //print "\n$pattern\n";
+        $allow = function( $tube ) use ($pattern, $block_patterns, $debug ){
+            if( ! preg_match( $pattern, $tube, $match ) ) return FALSE;
+            $queue = $match[1];
+            $date = array_pop($match);
+            $now = Time::now();
+            $max_date = date('Ymd', $now);
+            $min_date = date('Ymd', $now - (86400 * 3));        
+            if( $date > $max_date ) return FALSE;
+            if( $date < $min_date ) return FALSE;
+            if( ! $block_patterns ) return TRUE;
             foreach( $block_patterns as $pattern ){
-                if( fnmatch( $pattern, $tube ) ) {
+                if( fnmatch( $pattern, $queue ) ) {
                     if( $debug ) call_user_func( $debug, "blocking $tube"); 
-                    return TRUE;
+                    return FALSE;
                 }
             }
-            return FALSE;
+            return TRUE;
         };
         
         foreach( $conn->listTubes() as $tube ) {
-            if( fnmatch($config->queuePrefix() . $this->watch, $tube) && ! $block( $tube ) ) {
+           
+            if( $allow( $tube ) ) {
                 $watch[] =  $tube;
             } else {
                $ingore[] = true; 
@@ -224,20 +240,11 @@ class Runner {
     * remove all of the jobs from a given queue.
     *
     */
-    public function flush( $pattern = '*' ){
-        $tubes = array();
+    public function flush( $pattern = '*', $start = NULL, $end = NULL ){
+        $tubes = $this->shardsByRange( $pattern, $start, $end );
+        $ct = 0;
         $config = Job::config();
         $conns = $config->connections();
-        foreach( $conns as $conn ){
-            foreach( $conn->listTubes() as $tube ) {
-                if( fnmatch($config->queuePrefix() . $pattern, $tube) ) {
-                    $tubes[ $tube ] = true;
-                }
-            }
-        }
-        
-        $tubes = array_keys( $tubes );
-        $ct = 0;
         foreach( $conns as $conn ){
             foreach( $tubes as $tube ){
                 foreach( array( 'buried', 'delayed', 'ready' ) as $type ){
@@ -252,6 +259,31 @@ class Runner {
             }
         }
         return $ct;
+    }
+    
+    public function shardsByRange( $pattern, $start = NULL, $end = NULL ){
+        if( $end  && $end < $start ) $end = $start;
+        $start = ( $start ) ? date('Ymd', strtotime($start) ) : '';
+        $end = ( $end ) ? date('Ymd', strtotime($end) ) : '';
+        $tubes = array();
+        $config = Job::config();
+        $conns = $config->connections();
+        $pattern = $this->buildTubePattern( $pattern );
+        foreach( $conns as $conn ){
+            foreach( $conn->listTubes() as $tube ) {
+                if( preg_match($pattern, $tube, $match ) ) {
+                    $date = array_pop($match);
+                    if( $start && $start > $date ) continue;
+                    if( $end && $date >= $end ) continue;
+                    $tubes[ $tube ] = true;
+                }
+            }
+        }
+        return array_keys( $tubes );
+    }
+    
+    public function flushOld( $pattern = '*' ){
+        return $this->flush( $pattern, NULL, Time::now() - Job::config()->ttl() );
     }
     
     
@@ -287,7 +319,7 @@ class Runner {
     */
     public function populate(){
         try {
-            if( ! $this->active && count( $this->pool->requests() ) == 0 ){
+            if( ! $this->active && ! $this->pool->requests() ){
                 return TRUE;
             }
             
@@ -297,7 +329,7 @@ class Runner {
                         
             if( $this->active && count( $this->queue ) < $this->max ){
                 $ct = $this->max;
-                if( $this->debug) call_user_func( $this->debug, 'starting dequeue: '.count( $this->queue ));
+                if( $this->debug) $this->debug('starting dequeue: '.count( $this->queue ));
                 $config = Job::config();
                 $conns = $config->connections();
                 $keys = array_keys( $conns );
@@ -319,24 +351,24 @@ class Runner {
                         if( $ct-- < 1 ) break 2;
                     }
                 }                
-                if( $this->debug) call_user_func( $this->debug, 'ending dequeue: ' . count( $this->queue ) );
+                if( $this->debug) $this->debug('ending dequeue: ' . count( $this->queue ) );
             }
             
             while( count( $this->pool->requests() ) <  $this->max ){
                 if( ! ( $job = array_shift( $this->queue ) ) ) break;
                 if( ! $job instanceof Job ) {
-                    if( $this->debug ) call_user_func( $this->debug,  $job );
+                     $this->debug( $job );
                     continue;
                 }
                 try { 
                     $this->pool->add( $job );
                 } catch( Exception $e ){
-                    if( $this->debug ) call_user_func( $this->debug,  $e );
+                     $this->debug( $e );
                 }
             }
             return TRUE;
          } catch( Exception $e ){
-            call_user_func( $this->debug,  $e );
+            $this->debug( $e );
             return FALSE;
          }
     }
@@ -349,9 +381,9 @@ class Runner {
 		if( ! $this->active ) return;
 		$this->active = FALSE;
 		while( $job = array_pop( $this->queue ) ) $this->pool->add( $job );
-		if( $this->debug ) call_user_func( $this->debug, 'calling http\pool::finish');
+		 $this->debug('calling http\pool::finish');
 		$this->pool->finish();
-		if( $this->debug ) call_user_func( $this->debug, 'http\pool::finish done');
+		$this->debug('http\pool::finish done');
 	}
 	
 	/**
@@ -372,8 +404,18 @@ class Runner {
 	/**
 	* attach a debugger.
 	*/
-	public function attachDebugger( $debug ){
-	    if( is_callable( $debug ) ) $this->debug = $debug;
+	public function attachDebugger( \Closure $debug ){
+	    $this->debug = $debug;
+	}
+	
+	protected function debug( $message ){
+	    if( ! $call = $this->debug ) return;
+	    return $call( $message );
+	}
+	
+	protected function buildTubePattern( $v ){
+	    $prefix = Job::config()->queuePrefix();
+        return '#^' . preg_quote($prefix, '#') . '(' . str_replace('\*', '([^\n]+)?', preg_quote($v, '#')) . ')' . '_([\d]{8})$#';
 	}
 }
 // EOC
