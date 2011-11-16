@@ -19,6 +19,8 @@ class Config extends Container
     
     protected $queue_rates = array();
     
+    protected $ttl = 86400;
+    
     public function setConnections( array $conns ){
         $this->connections = array();
         $this->addConnections( $conns );
@@ -49,12 +51,12 @@ class Config extends Container
         return $this->builder;
     }
     
-    public function setHandler( $handler ){
-        if( is_callable( $handler ) ) return $this->handler = $handler;
+    public function setHandler( \Closure $handler ){
+        return $this->handler = $handler;
     }
     
-    public function setBuilder( $builder ){
-        if( is_callable( $builder ) ) return $this->builder = $builder;
+    public function setBuilder( \Closure $builder ){
+        return $this->builder = $builder;
     }
     
     public function setRefreshInterval( $v ){
@@ -91,6 +93,14 @@ class Config extends Container
     
     public function setQueueRates( array $patterns ){
         $this->queue_rates = $patterns;
+    }
+    
+    public function setTTL( $v ){
+        return $this->ttl = $v;
+    }
+    
+    public function ttl(){
+        return $this->ttl;
     }
     
 }

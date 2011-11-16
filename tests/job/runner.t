@@ -66,11 +66,8 @@ Tap::is( $stats['noreplies'], 0, 'no cases of no-reply reported');
 $runner->flush($queue);
 
 $runner->setLimit( $total_jobs + 1 );
-
 $start = microtime(TRUE);
 $runner->process();
-
-$stats = $runner->stats();
 $elapsed = number_format( microtime(TRUE) - $start, 3);
 
 
@@ -79,4 +76,4 @@ Tap::cmp_ok( $elapsed, '>', 1, "waited around for more jobs to run but didn't fi
 Tap::cmp_ok( $elapsed, '<', 4, "hit the timeout before too long");
 
 
-Tap::debug( $stats );
+Tap::debug( $runner->stats() );

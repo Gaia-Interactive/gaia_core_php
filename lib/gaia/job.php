@@ -4,7 +4,6 @@ use Gaia\Exception;
 use Gaia\Pheanstalk;
 use Gaia\HTTP\Request;
 use Gaia\Job\Config;
-use Gaia\Job\Connections;
 
 /**
  * @package Unknown
@@ -102,16 +101,17 @@ class Job extends Request implements \Iterator {
     * @return boolean
     */
     public function store(){
-        $delay = $this->delay;
-        $this->start = time() + $delay;
-        if( ! $this->expires ) $this->expires = $this->start  + 300;
+        $now = Time::now();
+        $delay = $this->__d['delay'];
+        $start = $this->__d['start'] = $now + $delay;
         $config = self::config();
-        $tube = $config->queuePrefix() . $this->queue;
+        if( ! isset( $this->__d['expires']) ) $this->__d['expires'] = $start  + $config->ttl();
+        $tube = $config->queuePrefix() . $this->__d['queue'] . '_' . date('Ymd', $start );
         $try= $config->retries() + 1;
         $keys = FALSE;
         $conns = $config->connections();
-        if( $this->id ){
-            list( $server ) = explode('-', $this->id, 2);
+        if( $id = $this->__d['id'] ){
+            list( $server ) = explode('-', $id, 2);
             if( isset( $conns[ $server ] ) ){
                 $keys = array( $server );
                 foreach( array_keys( $conns ) as $k ){
@@ -128,7 +128,7 @@ class Job extends Request implements \Iterator {
         foreach( $keys as $key ){
             $conn = $conns[ $key ];
             if( ! $try-- ) break;         
-            $res = $conn->putInTube( $tube,  json_encode( $this->all() ), $this->priority, $delay, $this->ttr );
+            $res = $conn->putInTube( $tube,  json_encode( $this->all() ), $this->__d['priority'], $delay, $this->__d['ttr'] );
             if( ! $res ) {
                 continue;
             }
@@ -184,7 +184,7 @@ class Job extends Request implements \Iterator {
     * mark the job as failed
     */
     public function fail(){
-        if( $this->expires < time() ) return $this->remove();
+        if( $this->expires < Time::now() ) return $this->remove();
         if( ! $this->id ) return FALSE;
         list( $server, $id ) = explode('-', $this->id, 2);
         if( ! $server ) return FALSE;
@@ -232,10 +232,9 @@ class Job extends Request implements \Iterator {
             $opts[CURLOPT_SSL_VERIFYPEER] = 0;
             $opts[CURLOPT_SSL_VERIFYHOST] = 0;
         }
-        $callback = self::config()->builder();
-        if( $callback ) {
-            $args = array( $this, & $opts );
-            call_user_func_array( $callback, $args );
+        $closure = self::config()->builder();
+        if( $closure ) {
+            $closure($this, $opts);
         }
         $ch = parent::build($opts);
         return $ch;
@@ -243,9 +242,9 @@ class Job extends Request implements \Iterator {
     
     public function handle( array $info ){
         $response = parent::handle( $info );
-        $callback = self::config()->handler();
-        if( $callback ) {
-            call_user_func( $callback, $this, $response );
+        $closure = self::config()->handler();
+        if( $closure ) {
+            $closure( $this, $response );
         }
         if( $response->http_code == 200 ) {
             $this->complete();

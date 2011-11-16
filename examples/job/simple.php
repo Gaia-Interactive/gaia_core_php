@@ -81,12 +81,11 @@ Job::config()->setHandler(
         $post = substr( (is_array( $request->post ) ? http_build_query( $request->post  ) : $request->post ),0, 75);
         $out .= '  ' . $post;
         if( strlen( $post )  >= 75 ) $out .= ' ...';
-        if(  strlen( $info->response_header ) < 1 ) {
+        if(  strlen( $info->raw ) < 1 ) {
             $out .= " - NO RESPONSE";
         } else {
             $out .= "\n------\n";
-            $out .= "\n" . $info->request_header;
-            $out .= "\n" . $info->response_header . $info->body;
+            $out .= "\n" . $info->raw;
             $out .= "\n------\n";
         }
         $debugger( $out );
