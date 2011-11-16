@@ -17,9 +17,9 @@ class Pool {
     protected $requests = array();
     
   /**
-    * callback triggers for handling the job
+    * callback triggers for handling the http response
     */
-    protected $callbacks = array();
+    protected $handlers = array();
     
     /**
 	 * The curl multi handle.
@@ -42,17 +42,17 @@ class Pool {
         curl_multi_close($this->handle);
 	}
 
-    public function attach( $callback ){
-        if( is_callable( $callback ) ) $this->callbacks[] = $callback;
+    public function attach( \Closure $handler ){
+        $this->handlers[] = $handler;
     }
     
     /**
-    * when an http request is done, trigger a callback.
+    * when an http request is done, trigger any attached handlers.
     * if you want customized callbacks per request, you can attach a callback
     * to examine a local variable in the http object and perform a callback on that.
     */
     public function handle( Request $request ){
-        foreach( $this->callbacks as $cb ) call_user_func( $cb, $request );
+        foreach( $this->handlers as $handler ) $handler( $request );
     }
     
     /**
