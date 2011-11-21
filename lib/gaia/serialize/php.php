@@ -12,14 +12,17 @@ class PHP implements Iface {
     }
 
     public function serialize($v){
+        $scalar = is_scalar( $v );
+        if( is_bool($v) || ! $scalar ) return $this->prefix . serialize( $v );
+        if( $scalar && ctype_digit( (string) $v ) ) return $v;
         if( ! $this->len ) return serialize( $v );
-        if( is_bool($v) || ! is_scalar( $v ) ) return $this->prefix . serialize( $v );
         return $v;
     }
     
     public function unserialize( $v ){
         if( $v === NULL ) return NULL;
         if( ! is_scalar( $v ) ) return $v;
+        if(  ctype_digit( (string) $v ) ) return $v;
         if( $this->len < 1 ) return unserialize( $v );
         if( substr( $v, 0, $this->len) != $this->prefix) return $v;
         return unserialize(substr( $v, $this->len) );
