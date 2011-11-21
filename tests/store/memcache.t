@@ -8,7 +8,7 @@ include __DIR__ . '/../assert/memcache_installed.php';
 include __DIR__ . '/../assert/memcache_running.php';
 
 
-Tap::plan(24);
+Tap::plan(25);
 
 $cache = new Store\Memcache();
 
@@ -17,6 +17,10 @@ Tap::ok( $cache instanceof Store\Memcache, 'instantiated memcache cache object')
 $result = $cache->addServer('127.0.0.1', '11211');
 
 Tap::ok( $result, 'connected to localhost server');
+
+$cache = new Store\Memcache('127.0.0.1:11211:2');
+Tap::is( $cache->servers(), array(array('host'=>'127.0.0.1', 'port'=>'11211', 'weight'=>'2')), 'connected to localhost server by passing a string to the constructor');
+
 
 $data = array();
 for( $i = 1; $i <= 3; $i++){
