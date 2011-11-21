@@ -34,7 +34,7 @@ Tap::is( $s->unserialize($v), $data, 'unserializes with scalar value correctly')
 Tap::cmp_ok( $v = $s->serialize( $data = TRUE ), '===', 'b:1;', 'serialize boolean without prefix');
 Tap::cmp_ok( $s->unserialize($v), '===', $data, 'unserializes boolean correctly');
 
-Tap::is( $v = $s->serialize( $data = 1245564433 ), 'i:1245564433;', 'serialize number value');
+Tap::is( $v = $s->serialize( $data = 1245564433 ), '1245564433;', 'serialize number value');
 Tap::is( $s->unserialize($v), $data, 'unserializes with number value correctly');
 
 Tap::is( $v = $s->serialize( $data = (object) array('foo'=>'bar')), 'O:8:"stdClass":1:{s:3:"foo";s:3:"bar";}', 'serialize object with no prefix');
