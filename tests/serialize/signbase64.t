@@ -15,7 +15,7 @@ Tap::is( $s->unserialize($v), $data, 'unserializes with scalar value correctly')
 Tap::cmp_ok( $v = $s->serialize( $data = TRUE ), '===', 'RXfvQFH9-k4MguJW6mhWY_Q7ZUuprHD89h1UIg-RIos.YjoxOw', 'serialize boolean');
 Tap::cmp_ok( $s->unserialize($v), '===', $data, 'unserializes boolean correctly');
 
-Tap::is( $v = $s->serialize( $data = 1245564433 ), 'bKoSvosaa5nPHV7m7atUOmqZJ7Pf6640-pS1PVgodlA.aToxMjQ1NTY0NDMzOw', 'serialize number value');
+Tap::is( $v = $s->serialize( $data = 1245564433 ), 'jAHdg9UrSFJcgjJpvWUL0uOtjNaZ_BHZ0K30hGBT2YI.MTI0NTU2NDQzMw', 'serialize number value');
 Tap::is( $s->unserialize($v), $data, 'unserializes with number value correctly');
 
 
