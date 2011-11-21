@@ -19,14 +19,21 @@ class Serialize extends Wrap {
 
     public function get( $request ){
         if( is_scalar( $request ) ) {
-            return $this->unserialize( $this->core->get( $request ) );
+            $res = $this->core->get( $request );
+            if( $res === NULL || $res === FALSE ) return NULL;
+            $res = $this->unserialize( $res );
+            if( $res === NULL || $res === FALSE ) return NULL;
+            return $res;
         }
         if( ! is_array( $request ) ) return NULL;
         if( count( $request ) < 1 ) return array();
         $res = $this->core->get( $request );
         if( ! is_array( $res ) ) return array();
         foreach($res as $key => $value ){
-            $res[ $key ] = $this->unserialize($value);
+            if( $value === NULL || $value === FALSE ) continue;
+            $value = $this->unserialize($value);
+            if( $value === NULL || $value === FALSE ) continue;
+            $res[ $key ] = $value;
         }
         return  $res;
     }
@@ -36,6 +43,7 @@ class Serialize extends Wrap {
     }
     
     public function set( $k, $v, $ttl = NULL ){
+        if( $v === NULL ) return $this->core->delete( $k );
         return $this->core->set($k, $this->serialize($v), $ttl);
     }
     

@@ -4,7 +4,7 @@ use Gaia\Store;
 use Gaia\Time;
 
 if( ! isset( $skip_expiration_tests ) ) $skip_expiration_tests = FALSE;
-Tap::plan(36);
+Tap::plan(38);
 
 $data = array();
 for( $i = 1; $i <= 3; $i++){
@@ -113,3 +113,9 @@ $cache->set( $k, $v);
 $v = $v - 1;
 Tap::cmp_ok( strval($cache->decrement($k, 1)), '===', strval($v),  'decrement a huge number by 1');
 Tap::cmp_ok( strval($cache->get( $k )), '===', strval( $v ), 'get returns correct value');
+
+$k = 'gaia/cache/test/' . microtime(TRUE) . '/' . mt_rand(1, 10000);
+$v = '我能吞下玻璃而不傷身體';
+Tap::ok( $cache->set( $k, $v), 'setting a string with utf-8 chars in it');
+Tap::cmp_ok( strval($cache->get( $k )), '===',  $v, 'get returns correct value');
+
