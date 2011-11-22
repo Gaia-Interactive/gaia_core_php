@@ -7,6 +7,8 @@ include __DIR__ . '/../common.php';
 include __DIR__ . '/../assert/memcache_installed.php';
 include __DIR__ . '/../assert/curl_installed.php';
 include __DIR__ . '/../assert/couchbase_running.php';
+include __DIR__ . '/../assert/memcache_running.php';
+
 
 function waitforRebuild(){
     print "# waiting for rebuild ";
