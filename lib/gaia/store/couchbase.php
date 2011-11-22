@@ -18,7 +18,15 @@ class Couchbase extends Wrap {
     protected $http;
     
     // a simple wrapper that matches on the design name prefix.
-    const MAP_TPL = "function(doc){ if( doc._id.substr(0, %d) == '%s') { var inner = %s; inner(doc);}}";
+    const MAP_TPL = "
+    function(doc){ 
+        if( doc._id.substr(0, %d) == '%s') { 
+            var d = eval(uneval(doc));
+            d._id = doc._id.substr(%d);
+            var inner = %s; 
+            inner(d);  
+        }
+    }";
     
     public function __construct($design,  $url = null, $core = null){
         $design = trim($design, '/ ');
@@ -35,16 +43,16 @@ class Couchbase extends Wrap {
         $this->resturl = $url;
     }
     
-    public function getView( $view, $params = NULL ){
+    public function view( $view, $params = NULL ){
         $params = new Container( $params );
         $show_metadata = $params->show_metadata;
         unset( $params->show_metadata );
         if( ! $params->limit ) $params->limit = 10;
          if( ! $params->limit ) $params->skip = 0;
+         if( $params->startkey ) $params->startkey = json_encode($params->startkey );
+         if( $params->endkey ) $params->startkey = json_encode($params->endkey );
          if( ! $params->connection_timeout ) $params->connection_timeout = 60000;
-        $url = $this->resturl;
-        $http = $this->http = new Http\Request( $url . '_design/' . $this->design . '_view/' . $view . '/?' . http_build_query( $params->all()) );
-        $http->serializer = $this->s;
+        $http = $this->request( '_design/' . $this->design . '_view/' . $view . '/?' . http_build_query( $params->all()) );
         $response = $http->exec();
         if( $response->http_code != '200' ) throw new Exception('query failed', $http );
         if( ! is_array( $response->body ) ) throw new Exception('invalid response', $http );
@@ -77,10 +85,8 @@ class Couchbase extends Wrap {
         return  array('total_rows'=> $response->body['total_rows'], 'rows'=>$rows );
     }
     
-    public function createView($name, $map, $reduce ='' ){
-        $url = $this->resturl;
-        $http = $this->http = new Http\Request( $url . '_design/' . $this->design);
-        $http->serializer = $this->s;
+    public function saveView($name, $map, $reduce ='' ){
+        $http = $this->request( '_design/' . $this->design);
         $response = $http->exec();
         $result = $response->body;
         if( ! in_array( $response->http_code, array(200, 201, 404) )  ) throw new Exception('query failed', $http );
@@ -97,9 +103,8 @@ class Couchbase extends Wrap {
             unset( $result['views'][$name] );
         } else {
             $len = strlen( $this->design );
-            if( $len > 0 ){
-                $map = sprintf( self::MAP_TPL, $len, $this->design, $map );
-            }
+            $map = sprintf( self::MAP_TPL, $len, $this->design, $len, $map );
+            
             $result['views'][$name] = array('map'=>$map);
             if( $reduce ) $result['views'][$name]['reduce'] = $reduce;
         }
@@ -113,9 +118,7 @@ class Couchbase extends Wrap {
     
     
      public function deleteAllViews(){
-        $url = $this->resturl;
-        $http = $this->http = new Http\Request( $url . '_design/' . $this->design);
-        $http->serializer = $this->s;
+        $http = $this->request( '_design/' . $this->design);
         $response = $http->exec();
         $result = $response->body;
         if( $response->http_code == 404 ) return TRUE;
@@ -131,7 +134,7 @@ class Couchbase extends Wrap {
     
     
     public function deleteView( $name ){
-        return $this->createView( $name, $map = NULL, $reduce = NULL );
+        return $this->saveView( $name, $map = NULL, $reduce = NULL );
     }
     
     public function flush(){
@@ -140,5 +143,12 @@ class Couchbase extends Wrap {
     
     public function http(){
         return $this->http;
+    }
+    
+    
+    public function request($path){
+        $http = $this->http = new Http\Request( $this->resturl . $path );
+        $http->serializer = $this->s;
+        return $http;
     }
 }
