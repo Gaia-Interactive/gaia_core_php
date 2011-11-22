@@ -22,7 +22,7 @@ try {
 
     $view = 'test' . time() . '-' . mt_rand(1, 100000);
     
-    $cb = new Store\Couchbase($design = 'dev_v' . time() . '/', 'http://127.0.0.1:5984/default/', '127.0.0.1:11211');
+    $cb = new Store\Couchbase(array( 'app'=> 'dev_v' . time(), 'rest'=>'http://127.0.0.1:5984/default/', 'core'=>'127.0.0.1:11211'));
     Tap::ok( $cb instanceof Store\Couchbase, 'instantiated couchbase');
     
     $res = $cb->saveView($view, 'function(doc){ emit(doc._id, doc);}', '');

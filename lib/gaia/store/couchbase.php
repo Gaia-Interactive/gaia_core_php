@@ -12,9 +12,9 @@ use Gaia\Exception;
 
 class Couchbase extends Wrap {
     
-    protected $resturl = '';
+    protected $rest = '';
     protected $s;
-    protected $design;
+    protected $app;
     protected $http;
     
     // a simple wrapper that matches on the design name prefix.
@@ -28,19 +28,31 @@ class Couchbase extends Wrap {
         }
     }";
     
-    public function __construct($design,  $url = null, $core = null){
-        $design = trim($design, '/ ');
-        if( strlen( $design ) < 1 || ! preg_match('#^[a-z0-9_]+$#i', $design ) ) {
-            throw new Exception('invalid design', $design );
+    public function __construct(array $params ){
+        if( ! isset( $params['app'] ) ) {
+            trigger_error('must specify app to instantiate ' . __CLASS__, E_USER_ERROR);
+            exit;
         }
-        $design .= '/';
-        if( $url === NULL ) $url = 'http://127.0.0.1:5984/default/';
+    
+        $app = trim($params['app'], '/ ');
+        if( strlen( $app ) < 1 || ! preg_match('#^[a-z0-9_]+$#i', $app ) ) {
+            trigger_error('invalid app name for ' . __CLASS__, E_USER_ERROR);
+            exit;
+        }
+        
+        $this->app = $app .'/';
+
+        if( ! isset( $params['rest'] ) ) {
+            trigger_error('must specify rest to instantiate ' . __CLASS__.'. example: http://127.0.0.1:5984/default/', E_USER_ERROR);
+            exit;
+        }
+        
+        $this->rest = $params['rest'];
         $this->s = new Json('');
-        $this->design = $design;
+        $core = isset( $params['core'] ) ? $params['core'] : NULL;
         if( ! $core instanceof Memcache ) $core = new Memcache( $core );
-        $core = new Prefix( new Serialize($core, $this->s), $this->design);
+        $core = new Prefix( new Serialize($core, $this->s), $this->app);
         parent::__construct( $core );
-        $this->resturl = $url;
     }
     
     public function view( $view, $params = NULL ){
@@ -52,12 +64,12 @@ class Couchbase extends Wrap {
          if( $params->startkey ) $params->startkey = json_encode($params->startkey );
          if( $params->endkey ) $params->startkey = json_encode($params->endkey );
          if( ! $params->connection_timeout ) $params->connection_timeout = 60000;
-        $http = $this->request( '_design/' . $this->design . '_view/' . $view . '/?' . http_build_query( $params->all()) );
+        $http = $this->request( '_design/' . $this->app . '_view/' . $view . '/?' . http_build_query( $params->all()) );
         $response = $http->exec();
         if( $response->http_code != '200' ) throw new Exception('query failed', $http );
         if( ! is_array( $response->body ) ) throw new Exception('invalid response', $http );
         $rows = array();
-        $len = strlen( $this->design );
+        $len = strlen( $this->app );
         foreach($response->body['rows'] as $data ){
             $fields = array();
             if( isset( $data['id'] ) ) {
@@ -86,7 +98,7 @@ class Couchbase extends Wrap {
     }
     
     public function saveView($name, $map, $reduce ='' ){
-        $http = $this->request( '_design/' . $this->design);
+        $http = $this->request( '_design/' . $this->app);
         $response = $http->exec();
         $result = $response->body;
         if( ! in_array( $response->http_code, array(200, 201, 404) )  ) throw new Exception('query failed', $http );
@@ -102,8 +114,8 @@ class Couchbase extends Wrap {
         if( $map === NULL ){
             unset( $result['views'][$name] );
         } else {
-            $len = strlen( $this->design );
-            $map = sprintf( self::MAP_TPL, $len, $this->design, $len, $map );
+            $len = strlen( $this->app );
+            $map = sprintf( self::MAP_TPL, $len, $this->app, $len, $map );
             
             $result['views'][$name] = array('map'=>$map);
             if( $reduce ) $result['views'][$name]['reduce'] = $reduce;
@@ -118,7 +130,7 @@ class Couchbase extends Wrap {
     
     
      public function deleteAllViews(){
-        $http = $this->request( '_design/' . $this->design);
+        $http = $this->request( '_design/' . $this->app);
         $response = $http->exec();
         $result = $response->body;
         if( $response->http_code == 404 ) return TRUE;
@@ -147,7 +159,7 @@ class Couchbase extends Wrap {
     
     
     public function request($path){
-        $http = $this->http = new Http\Request( $this->resturl . $path );
+        $http = $this->http = new Http\Request( $this->rest . $path );
         $http->serializer = $this->s;
         return $http;
     }
