@@ -57,44 +57,49 @@ class Couchbase extends Wrap {
     
     public function view( $view, $params = NULL ){
         $params = new Container( $params );
-        $show_metadata = $params->show_metadata;
-        unset( $params->show_metadata );
         if( ! $params->limit ) $params->limit = 10;
          if( ! $params->limit ) $params->skip = 0;
          if( $params->startkey ) $params->startkey = json_encode($params->startkey );
          if( $params->endkey ) $params->startkey = json_encode($params->endkey );
+         if( $params->key ) $params->key = json_encode($params->key );
          if( ! $params->connection_timeout ) $params->connection_timeout = 60000;
         $http = $this->request( '_design/' . $this->app . '_view/' . $view . '/?' . http_build_query( $params->all()) );
         $response = $http->exec();
         if( $response->http_code != '200' ) throw new Exception('query failed', $http );
         if( ! is_array( $response->body ) ) throw new Exception('invalid response', $http );
+        $result = $response->body;
         $rows = array();
         $len = strlen( $this->app );
-        foreach($response->body['rows'] as $data ){
-            $fields = array();
-            if( isset( $data['id'] ) ) {
-                $key = substr( $data['id'], $len );
-            } else {
-                $key = NULL;
-            }
-            if( is_array( $data['value'] ) ){
-                foreach( $data['value'] as $k => $v ){
-                    if( ! $show_metadata ){
-                        $firstchar = substr($k, 0, 1);
-                        if( $firstchar == '_' || $firstchar == '$' ) continue;
-                    } else {
-                        if( $k == '_id' ) $v = $key;
-                    }
-                    $fields[ $k ] = $v;
-                }
-            }
-            if( $key === NULL ) {
-                $rows[] = $fields;
-            } else {
-                $rows[ $key ] = $fields;
+        $rows = $response->body['rows'];
+        foreach($rows as $i => $row ){
+            if( isset( $row['id'] ) ) {
+                $rows[$i]['id'] = substr( $row['id'], $len );
             }
         }
-        return  array('total_rows'=> $response->body['total_rows'], 'rows'=>$rows );
+        $result['rows'] = $rows;
+        //print_r( $result );
+        return $result;
+    }
+    
+    public function preview( $view, $params = NULL ){
+        $result = $this->view( $view, $params );
+        $rows = array();
+        foreach( $result['rows'] as $row ){
+            $key = isset( $row['id'] ) ? $row['id'] : NULL;
+            if( is_array( $row['value'] ) ){
+                foreach( $row['value'] as $k => $v ){
+                    $firstchar = substr($k, 0, 1);
+                    if( $firstchar == '_' || $firstchar == '$' ) unset( $row['value'][$k]);
+                }
+            }
+            if( $key !== NULL ){
+                $rows[$key] = $row['value'];
+            } else {
+                $rows[] = $row['value'];
+            }
+        }
+        $result['rows'] = $rows;
+        return $result;
     }
     
     public function saveView($name, $map, $reduce ='' ){
