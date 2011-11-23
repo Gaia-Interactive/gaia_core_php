@@ -67,7 +67,7 @@
  *
  * Let's create our first view:
  *
- *      $cb->saveView('mammals', 'function(doc){ if( doc.type=="mammal" ){ emit(doc._id, doc); }}');
+ *      $cb->view()->set('mammals', 'function(doc){ if( doc.type=="mammal" ){ emit(doc._id, doc); }}');
  *
  * this is a very simple javascript map function that we'll use to find all the mammals in our app.
  * Views are just documents like any other object stored in couchbase.  We can take a look at it by 
@@ -96,7 +96,7 @@
  *
  * Now we are ready to query our new view:
  *
- *    $result = $cb->view('mammals', array('full_set'=>'true'));
+ *    $result = $cb->view()->get('mammals', array('full_set'=>'true'));
  *    print_r( $result );
  *
  * This will output something similar to:
@@ -137,30 +137,12 @@
  *    tests/store/couchbase.t
  */
 namespace Gaia\Store;
-use Gaia\Http;
 use Gaia\Serialize\Json;
-use Gaia\Container;
-use Gaia\Exception;
 
 class Couchbase extends Wrap {
     
     protected $rest = '';
-    protected $s;
     protected $app = '';
-    protected $http;
-    
-    // a simple wrapper that matches on the design name prefix.
-    const MAP_TPL = "
-    function(doc){ 
-        if( doc._id.substr(0, %d) == '%s') { 
-            var d = eval(uneval(doc));
-            d._id = doc._id.substr(%d);
-            var inner = %s; 
-            inner(d);  
-        }
-    }";
-    
-    
     
     /**
     * Instantiate the couchbase object. pass in a set of named params.
@@ -177,10 +159,9 @@ class Couchbase extends Wrap {
         if( strlen( $app ) > 0 ) $this->app = $app .'/';
         if( ! isset( $params['rest'] ) )  $params['rest'] = '';
         $this->rest = $params['rest'];
-        $this->s = new Json('');
         $core = isset( $params['socket'] ) ? $params['socket'] : NULL;
         if( ! $core instanceof Memcache ) $core = new Memcache( $core );
-        $core = new Prefix( new Serialize($core, $this->s), $this->app);
+        $core = new Prefix( new Serialize($core, new Json('')), $this->app);
         parent::__construct( $core );
     }
     
@@ -195,99 +176,11 @@ class Couchbase extends Wrap {
     *       'skip'=>0,
     *       'full_set'=>'true',
     *    );
-    *    $result = $cb->view('mammals' $params);
+    *    $result = $cb->view()->get('mammals' $params);
     *
     */
-    public function view( $view, $params = NULL ){
-        $params = new Container( $params );
-        foreach( $params as $k => $v ) {
-            if( ! is_scalar( $v ) || preg_match('#key#i', $k) ){
-                $params->$k = json_encode( $v );
-            }
-        }
-        $len = strlen( $this->app );
-        $app = ( $len > 0 ) ? $this->app : 'default/';
-        $http = $this->request( '_design/' . $app . '_view/' . $view . '/?' . http_build_query( $params->all()) );
-        $response = $this->validateResponse( $http->exec(), array(200) );
-        $result = $response->body;
-        if( $len < 1 ) return $result;
-        foreach($result['rows'] as & $row ){
-            if( isset( $row['id'] ) ) {
-                $row['id'] = substr( $row['id'], $len );
-            }
-        }
-        
-        //print_r( $result );
-        return $result;
-    }
-    
-    /*
-    * create or overwrite a view.
-    * Example:
-    *
-    *    $res = $cb->saveView('amount', 'function(doc){ emit(doc._id, doc.amount);}', '_sum');
-    *
-    * This uses the built-in _sum reduce function that can give you the sum of all the results.
-    * or just specify a map function:
-    *
-    *    $res = $cb->saveView('full', 'function(doc){ emit(doc._id, {foo: doc.foo});}');
-    *
-    * returns an ok status along with a document rev id.
-    */
-    public function saveView($name, $map, $reduce ='' ){
-        $len = strlen( $this->app );
-        $app = ( $len > 0 ) ? $this->app : 'default/';
-        $http = $this->request( '_design/' . $app);
-        $response = $this->validateResponse( $http->exec(), array(200, 201, 404) );
-        $result = $response->body;
-        if( ! is_array( $result ) ) $result = array();
-        if( isset( $result['error'] ) ){
-            if( $result['error']  == 'not_found' ){
-                $result = array();
-            } else {
-                throw new Exception('query failed', $http );
-            }
-        }
-        if( ! isset ( $result['views'] ) ) $result['views'] = array();
-        if( $map === NULL ){
-            unset( $result['views'][$name] );
-        } else {
-            if( $len ) $map = sprintf( self::MAP_TPL, $len, $this->app, $len, $map );
-            $result['views'][$name] = array('map'=>$map);
-            if( $reduce ) $result['views'][$name]['reduce'] = $reduce;
-        }
-        $http->post = $result;
-        $http->method = 'PUT';
-        $response = $this->validateResponse( $http->exec(), array(200, 201) );
-        return $response->body;
-    }
-    
-    /**
-    * deletes all of the views created in a given app namespace.
-    */
-    public function deleteAllViews(){
-        $len = strlen( $this->app );
-        $app = ( $len > 0 ) ? $this->app : 'default/';
-        $http = $this->request( '_design/' . $app);
-        $response = $this->validateResponse( $http->exec(), array(404, 200) );
-        $result = $response->body;
-        if( $response->http_code == 404 ) return TRUE;
-        $http->url = $http->url . '?rev=' . $result['_rev'];
-        $http->method = 'DELETE';
-        $response = $this->validateResponse( $http->exec(), array(200, 201) );
-        return $response->body;
-    }
-
-    /**
-    * deletes a specific view in a given app namespace.
-    * Example:
-    *
-    *   $cb->deleteView('amount');
-    *
-    * throws an exception on error, returns an ok status and rev id on success.
-    */
-    public function deleteView( $name ){
-        return $this->saveView( $name, $map = NULL, $reduce = NULL );
+    public function view(){
+        return new CouchbaseView( $this->rest, $this->app );
     }
         
     /**
@@ -296,30 +189,5 @@ class Couchbase extends Wrap {
     */
     public function flush(){
         
-    }
-    
-    /*
-    * temporary debug method, do not use.
-    */
-    public function http(){
-        return $this->http;
-    }
-    
-    /*
-    * temporary debug method, do not use.
-    */
-    public function request($path){
-        $http = $this->http = new Http\Request( $this->rest . $path );
-        $http->serializer = $this->s;
-        return $http;
-    }
-    
-    /**
-    * handle a response.
-    */
-    protected function validateResponse( \Gaia\Container $response, array $allowed_codes ){
-        if( ! in_array( $response->http_code, $allowed_codes )  ) throw new Exception('query failed', $response );
-        if( ! is_array( $response->body ) ) throw new Exception('invalid response', $response );
-        return $response;
     }
 }
