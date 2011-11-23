@@ -1,19 +1,11 @@
 #!/usr/bin/env bash
-prove_installed=`which prove`
 
-if [ ! "$prove_installed" ]
-then
-    echo "prove executable not found. please install perl-Test-Harness."
-    exit 1;
-fi
+hash prove 2>&- || { echo >&2 "prove executable not found. please install perl-Test-Harness."; exit 1; }
+
 
 php_installed=`which php`
 
-if [ ! "$php_installed" ]
-then
-    echo "php executable not found. please install php5.3 or greater."
-    exit 1;
-fi
+hash php 2>&- || { echo >&2 "php executable not found. please install php5.3 or greater."; exit 1; }
 
 
 version=`/usr/bin/env php -r "echo phpversion();"`
@@ -31,10 +23,10 @@ echo "-----------------------------------"
 
 f=`dirname $0`
 
-execsupported=$(prove -? | grep "\--exec")
+execsupported=`prove -? | grep "\--exec"`
 
 if [ "$execsupported" ]; then
     /usr/bin/env prove -r --exec=php $* $f
 else
-    /usr/bin/env prove -r $* $f
+    /usr/bin/env prove -r $* "$f/examples/" "$f/tests/"
 fi
