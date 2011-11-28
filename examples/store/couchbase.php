@@ -21,9 +21,9 @@ $cb = new Store\Couchbase( array(
 
 
 
-$cb->view()->set('mammals', 'function(doc){ if( doc.type=="mammal" ){ emit(doc._id, doc); }}');
+$cb->view()->set('mammals', array('map'=>'function(doc){ if( doc.type=="mammal" ){ emit(doc._id, doc); }}'));
 
-$http = new \Gaia\Http\Request("http://192.168.96.128:5984/default/_design/dev_jloehrer-zoo/");
+$http = new \Gaia\Http\Request("http://127.0.0.1:5984/default/_design/dev_jloehrer-zoo/");
 $result = json_decode( $http->exec()->body, TRUE);
 Tap::debug( $result['views']['mammals']['map'] );
 
@@ -31,4 +31,4 @@ $cb->set('bear', array('type'=>'mammal', 'eats'=>'meat', 'legs'=>4 ) );
 
 Tap::debug( $cb->get('bear') );
 
-Tap::debug($cb->view()->get('mammals', array('full_set'=>'true')));
+Tap::debug($cb->view()->query('mammals', array('full_set'=>'true', 'connection-timeout'=>6000)));

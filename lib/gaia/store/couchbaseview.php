@@ -18,8 +18,8 @@ class CouchbaseView {
         if( doc._id.substr(0, %d) == '%s') { 
             var d = eval(uneval(doc));
             d._id = doc._id.substr(%d);
-            var inner = %s; 
-            inner(d);  
+            var __inner = %s; 
+            __inner(d);  
         }
     }";
     
@@ -50,10 +50,10 @@ class CouchbaseView {
     *       'skip'=>0,
     *       'full_set'=>'true',
     *    );
-    *    $result = $view->get('mammals' $params);
+    *    $result = $view->query('mammals' $params);
     *
     */
-    public function get( $view, $params = NULL ){
+    public function query( $view, $params = NULL ){
         $params = new Container( $params );
         foreach( $params as $k => $v ) {
             if( ! is_scalar( $v ) || preg_match('#key#i', $k) ){
@@ -73,21 +73,43 @@ class CouchbaseView {
         }
         return $result;
     }
+ /*
+    * read a view's info
+    * returns an ok status along with a document rev id.
+    */
+    public function get( $name ){
+        $len = strlen( $this->app );
+        $app = ( $len > 0 ) ? $this->app : 'default/';
+        $http = $this->request( '_design/' . $app);
+        $response = $this->validateResponse( $http->exec(), array(200,404) );
+        $result = $response->body;
+        if( ! isset( $result['views'] ) ) return FALSE;
+        if( ! isset( $result['views'][ $name ] ) ) return FALSE;
+        if( ! isset( $result['views'][ $name ]['map'] ) ) return FALSE;
+        $pattern = "#var[\s]__inner[\s]\=[\s]([\s\S]+);[\s]+__inner\(d\);#";
+        
+        if( preg_match($pattern, $result['views'][$name]['map'], $matches ) )  {
+            $result['views'][$name]['map'] = $matches[1];
+        }
+        return $result['views'][$name];
+    }
+    
+
     
     /*
     * create or overwrite a view.
     * Example:
     *
-    *    $res = $view->set('amount', 'function(doc){ emit(doc._id, doc.amount);}', '_sum');
+    *    $res = $view->set('amount', array('map'=>'function(doc){ emit(doc._id, doc.amount);}', 'reduce'=>'_sum'));
     *
     * This uses the built-in _sum reduce function that can give you the sum of all the results.
     * or just specify a map function:
     *
-    *    $res = $view->set('full', 'function(doc){ emit(doc._id, {foo: doc.foo});}');
+    *    $res = $view->set('full', array('map'=>'function(doc){ emit(doc._id, {foo: doc.foo});}'));
     *
     * returns an ok status along with a document rev id.
     */
-    public function set($name, $map, $reduce ='' ){
+    public function set($name, array $view = NULL ){
         $len = strlen( $this->app );
         $app = ( $len > 0 ) ? $this->app : 'default/';
         $http = $this->request( '_design/' . $app);
@@ -102,12 +124,11 @@ class CouchbaseView {
             }
         }
         if( ! isset ( $result['views'] ) ) $result['views'] = array();
-        if( $map === NULL ){
+        if( $view === NULL ){
             unset( $result['views'][$name] );
         } else {
-            if( $len ) $map = sprintf( self::MAP_TPL, $len, $this->app, $len, $map );
-            $result['views'][$name] = array('map'=>$map);
-            if( $reduce ) $result['views'][$name]['reduce'] = $reduce;
+            if( isset( $view['map'] ) && $len ) $view['map'] = sprintf( self::MAP_TPL, $len, $this->app, $len, $view['map'] );
+            $result['views'][$name] = $view;
         }
         $http->post = $result;
         $http->method = 'PUT';
@@ -140,7 +161,7 @@ class CouchbaseView {
     * throws an exception on error, returns an ok status and rev id on success.
     */
     public function delete( $name ){
-        return $this->set( $name, $map = NULL, $reduce = NULL );
+        return $this->set( $name, $view = NULL );
     }
     
     /*
