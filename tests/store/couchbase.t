@@ -32,7 +32,7 @@ $extract_data = function( $result ){
     return $rows;
 };
 
-Tap::plan(22);
+Tap::plan(25);
 try {    
     $cb = new Store\Couchbase(array( 'app'=> 'app-v.' . time(), 'rest'=>'http://127.0.0.1:5984/default/', 'socket'=>'127.0.0.1:11211'));
     Tap::ok( $cb instanceof Store\Couchbase, 'instantiated couchbase');
@@ -51,30 +51,36 @@ try {
     }
     Tap::ok( $status, 'set all the data in without problems');
     
-    $res = $cb->view()->set('full', 'function(doc){ emit(doc._id, {foo: doc.foo, bazz: doc.bazz, amount: doc.amount, ts: doc.ts});}', '');
+    $res = $cb->view()->set('full', $v = array('map'=>'function(doc){ emit(doc._id, {foo: doc.foo, bazz: doc.bazz, amount: doc.amount, ts: doc.ts});}'));
     Tap::ok( $res['ok'], 'created a full view');
     
-    $res = $cb->view()->set('nokey', 'function(doc){ emit(doc._id, null);}', '');
-    Tap::ok( $res['ok'], 'created a view with no data result');
+    Tap::is( $cb->view()->get('full'), $v, 'get full returns same view we wrote into couchbase' );
 
-    $res = $cb->view()->set('2keys', 'function(doc){ emit([doc._id, doc.ts], {foo: doc.foo, bazz: doc.bazz, amount: doc.amount, ts: doc.ts});}', '');
+    
+    $res = $cb->view()->set('nokey', $v = array('map'=>'function(doc){ emit(doc._id, null);}'));
+    Tap::ok( $res['ok'], 'created a view with no data result');
+    
+    Tap::is( $cb->view()->get('nokey'), $v, 'get nokey returns same view we wrote into couchbase' );
+
+    $res = $cb->view()->set('2keys', $v = array('map'=>'function(doc){ emit([doc._id, doc.ts], {foo: doc.foo, bazz: doc.bazz, amount: doc.amount, ts: doc.ts});}'));
     Tap::ok( $res['ok'], 'created a view emitting two keys');
     
-    $res = $cb->view()->set('2keys', 'function(doc){ emit([doc._id, doc.ts], {foo: doc.foo, bazz: doc.bazz, amount: doc.amount, ts: doc.ts});}', '');
-    Tap::ok( $res['ok'], 'created a view emitting two keys');
-    
-    
-    $res = $cb->view()->set('amount', 'function(doc){ emit(doc._id, doc.amount);}', '_sum');
+    Tap::is( $cb->view()->get('2keys'), $v, 'get 2keys returns same view we wrote into couchbase' );
+     
+    $res = $cb->view()->set('amount', $v = array('map'=>'function(doc){ emit(doc._id, doc.amount);}', 'reduce'=> '_sum'));
     Tap::ok( $res['ok'], 'created a view summing the amount');
     
+    Tap::is( $cb->view()->get('amount'), $v, 'get amount returns same view we wrote into couchbase' );
+
+    
     waitforRebuild(10);
-    $res = $cb->view()->get('full', array('limit'=>20, 'full_set'=>'true'));
+    $res = $cb->view()->query('full', array('limit'=>20, 'full_set'=>'true'));
     $result_set = $extract_data( $res );
     Tap::ok( is_array( $res ), 'got back a view of the data');
     Tap::is($result_set,$rows, 'all the rows results match what we put in');
     Tap::is( $res['total_rows'], $i, 'total_rows matches how many rows we inserted');
     
-    $res = $cb->view()->get('full', array('limit'=>20, 'show_metadata'=>'1'));
+    $res = $cb->view()->query('full', array('limit'=>20, 'show_metadata'=>'1'));
     $result_set = $extract_data( $res );
     Tap::ok( is_array( $res ), 'got back a view with metadata');
     
@@ -86,19 +92,19 @@ try {
     Tap::ok( $res['ok'], 'deleted the the view');
     
     
-    $res = $cb->view()->get('nokey', array('limit'=>20, 'full_set'=>'true'));
+    $res = $cb->view()->query('nokey', array('limit'=>20, 'full_set'=>'true'));
     $result_set = $extract_data( $res );
     Tap::ok( is_array( $res ), 'got back a view of the keys');
     Tap::is($result_set, array_fill_keys(array_keys($rows), array()), 'got back the results with empty arrays as placeholders');
     
     
     $keys = array_keys( $rows );
-    $res = $cb->view()->get('2keys', array('limit'=>20, 'full_set'=>'true', 'startkey'=>array($keys[0]), 'endkey'=>array($keys[1])));
+    $res = $cb->view()->query('2keys', array('limit'=>20, 'full_set'=>'true', 'startkey'=>array($keys[0]), 'endkey'=>array($keys[1])));
     $result_set = $extract_data( $res );
     Tap::ok( is_array( $res ), 'got back a view of the data for 2 keys');
     //Tap::debug( $res );
     
-    $res = $cb->view()->get('amount');
+    $res = $cb->view()->query('amount');
     $result_set = $extract_data( $res );
     Tap::ok( is_array( $res ), 'got back a view of the data for summing an amount');
     Tap::is( $result_set[0], $total, 'total matches up');
@@ -110,7 +116,7 @@ try {
     $cb = new Store\Couchbase(array( 'rest'=>'http://127.0.0.1:5984/default/', 'socket'=>'127.0.0.1:11211'));
     Tap::ok( $cb instanceof Store\Couchbase, 'instantiated couchbase without the app prefix');
     
-    $res = $cb->view()->set('test', 'function(doc){ emit(doc._id, doc); }');
+    $res = $cb->view()->set('test', array('map'=>'function(doc){ emit(doc._id, doc); }'));
     Tap::ok(is_array( $res ), 'created a view in the default design');
     $res = $cb->view()->delete('test');
     Tap::ok( $res['ok'], 'deleted the the view');
@@ -121,6 +127,5 @@ try {
 
 } catch( \Exception $e ){
     Tap::debug($e);
-    print_R( $cb->http() );
     Tap::fail('fatal exception thrown');
 }

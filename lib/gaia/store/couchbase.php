@@ -176,7 +176,7 @@ class Couchbase extends Wrap {
     *       'skip'=>0,
     *       'full_set'=>'true',
     *    );
-    *    $result = $cb->view()->get('mammals' $params);
+    *    $result = $cb->view()->query('mammals' $params);
     *
     */
     public function view(){
