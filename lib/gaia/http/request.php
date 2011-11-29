@@ -82,7 +82,7 @@ class Request extends Container {
             }   
         }
         $opts[ CURLOPT_URL ] = $url;
-        if( $this->post ) {
+        if( isset( $this->post ) ) {
             $opts[CURLOPT_POST] = 1;
             $s = $this->serializer;
             $post = $this->post;
