@@ -44,6 +44,9 @@ class Request extends Container {
         if( is_string( $data ) && function_exists('json_decode') && ( $v = @json_decode( $data, TRUE ) ) ) $data = $v;
         if( is_object( $data ) ){
             foreach( array_keys($this->__d ) as $k ) $this->$k = ( isset( $data->$k ) ) ? $data->$k : NULL;
+        } elseif(is_resource( $data ) && get_resource_type($data) == 'curl'){
+            $this->handle = $data;
+            if( ! $this->url ) $this->url = curl_getinfo($this->handle, CURLINFO_EFFECTIVE_URL);
         }elseif( is_array( $data ) ){
             foreach(  array_keys($this->__d ) as $k ) $this->$k = ( isset( $data[$k] ) ) ? $data[$k] : NULL;
         } elseif( is_string( $data ) ){
@@ -56,6 +59,13 @@ class Request extends Container {
     * @param array    curl opts.
     */
     public function build( array $opts = array() ){
+        if( $this->handle && get_resource_type($this->handle) == 'curl' ){
+            $ch = $this->handle;
+            if( ! $this->url ) $this->url = curl_getinfo($this->handle, CURLINFO_EFFECTIVE_URL);
+        } else {
+            $ch = $this->handle = curl_init();
+        }
+        
         // if no host is specified, try localhost loopback address.
         $url = substr( $this->url, 0, 1) == '/'  ? 'http://127.0.0.1' . $this->url : $this->url;
         
@@ -65,11 +75,6 @@ class Request extends Container {
         $uri = isset( $parts['path'] ) ? $parts['path'] : '/';
         if( isset( $parts['query'] ) ) $uri .= '?' . $parts['query'];
         if( ! isset( $parts['host'] ) ) throw new Exception('invalid-uri');
-        if( $this->handle && get_resource_type($this->handle) == 'curl' ){
-            $ch = $this->handle;
-        } else {
-            $ch = $this->handle = curl_init();
-        }
         if( ! isset($opts[CURLOPT_HTTPHEADER]) )$opts[CURLOPT_HTTPHEADER] = array();
         $headers = $this->headers;
         if( is_array( $headers ) || $headers instanceof iterator ){

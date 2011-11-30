@@ -7,7 +7,7 @@ include __DIR__ . '/../common.php';
 include __DIR__ . '/../assert/curl_installed.php';
 include __DIR__ . '/../assert/webservice_started.php';
 
-Tap::plan(11);
+Tap::plan(14);
 
 $request = new Request('http://127.0.0.1:11299/http_json_echo.php');
 $response = $request->exec();
@@ -42,6 +42,19 @@ $response = $request->exec();
 
 Tap::like( $response->raw, '#DELETE \/http_json_echo\.php#i', 'successfully sent a DELETE request');
 Tap::is( $response->headers->{'X-Request-Method'}, 'DELETE', 'response header shows the DELETE request came through');
+
+
+$ch = curl_init($url = 'http://127.0.0.1:11299/http_json_echo.php?test=1');
+
+$request = new Request($ch);
+
+Tap::cmp_ok( $request->handle, '===', $ch, 'passed in a curl handle to constructor ... set up as the request handle');
+
+Tap::cmp_ok( $request->url, '===', $url, 'url extracted out of the curl handle and set in as the request url');
+
+$response = $request->exec();
+Tap::is( trim($response->body), '{"test":"1"}', 'sent request with the request constructed from the curl handle and got expected result');
+
 
 //Tap::debug( $response );
 //print_r( $response );
