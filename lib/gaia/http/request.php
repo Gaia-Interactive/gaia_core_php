@@ -134,6 +134,10 @@ class Request extends Container {
         unset( $info['response'] );
         unset( $info['request_header'] );
         $this->response = new \Gaia\Container( $info );
+        if( $this->handler instanceof \Closure ) {
+            $cb = $this->handler;
+            $cb( $this->response );
+        }
         return $this->response;
     }
     
