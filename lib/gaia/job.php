@@ -67,28 +67,19 @@ use Gaia\Job\Config;
  *   $job->post = '<body><test>1</test></body>';
  *   $job->store();
  */
-class Job extends Request implements \Iterator {
+class Job extends Request {
 
-   /**
-    * Internal variables.
-    *
-    */
-    protected $__d = array(
-                    'id'=>NULL,
-                    'flag'=>FALSE,
-                    'url'=>'',
-                    'post'=>'',
-                    'delay'=>0,
-                    'response'=>NULL,
-                    'proxyhost'=>FALSE,
-                    'attempts'=>0,
-                    'callback'=>'',
-                    'queue'=>'',
-                    'expires'=>NULL,
-                    'priority'=>1000,
-                    'ttr'=>30,
-                    'start'=>NULL,
-    );
+    protected $id = NULL;
+    protected $flag = FALSE;
+    protected $delay = 0;
+    protected $proxyhost = FALSE;
+    protected $attempts = FALSE;
+    protected $callback = '';
+    protected $queue = '';
+    protected $expires = NULL;
+    protected $priority = 1000;
+    protected $ttr = 30;
+    protected $start = NULL;
                             
     protected static $config;
     
@@ -102,15 +93,15 @@ class Job extends Request implements \Iterator {
     */
     public function store(){
         $now = Time::now();
-        $delay = $this->__d['delay'];
-        $start = $this->__d['start'] = $now + $delay;
+        $delay = $this->delay;
+        $start = $this->start = $now + $delay;
         $config = self::config();
-        if( ! isset( $this->__d['expires']) ) $this->__d['expires'] = $start  + $config->ttl();
-        $tube = $config->queuePrefix() . $this->__d['queue'] . '_' . date('Ymd', $start );
+        if( ! isset( $this->expires) ) $this->expires = $start  + $config->ttl();
+        $tube = $config->queuePrefix() . $this->queue . '_' . date('Ymd', $start );
         $try= $config->retries() + 1;
         $keys = FALSE;
         $conns = $config->connections();
-        if( $id = $this->__d['id'] ){
+        if( $id = $this->id ){
             list( $server ) = explode('-', $id, 2);
             if( isset( $conns[ $server ] ) ){
                 $keys = array( $server );
@@ -128,11 +119,11 @@ class Job extends Request implements \Iterator {
         foreach( $keys as $key ){
             $conn = $conns[ $key ];
             if( ! $try-- ) break;         
-            $res = $conn->putInTube( $tube,  json_encode( $this->all() ), $this->__d['priority'], $delay, $this->__d['ttr'] );
+            $res = $conn->putInTube( $tube,  json_encode( (array) $this ), $this->priority, $delay, $this->ttr );
             if( ! $res ) {
                 continue;
             }
-            return $this->__d['id'] = $conn->hostInfo() . '-' . $res;
+            return $this->id = $conn->hostInfo() . '-' . $res;
         }
         throw new Exception('storage error', $conns);
     }
@@ -240,8 +231,8 @@ class Job extends Request implements \Iterator {
         return $ch;
     }
     
-    public function handle( array $info ){
-        $response = parent::handle( $info );
+    public function handle(){
+        $response = parent::handle();
         $closure = self::config()->handler();
         if( $closure ) {
             $closure( $this, $response );
@@ -261,16 +252,15 @@ class Job extends Request implements \Iterator {
     * return mixed
     */
     public function __set( $k, $v ){
-        //if( ! array_key_exists( $k, $this->__d ) )  return FALSE;
         switch( $k ){
             case 'id' : 
                 if( preg_match("/^[a-z_0-9\.]+:[0-9]+-[0-9]+$/", $v)){
-                    return $this->__d[$k] = (string) $v;
+                    return $this->$k = (string) $v;
                 }
-                return $this->__d[$k] = NULL;
+                return $this->$k = NULL;
                 
             case 'flag':
-                return $this->__d[$k] = ( $v ) ? TRUE : FALSE;
+                return $this->$k = ( $v ) ? TRUE : FALSE;
             
             case 'delay':
             case 'expires':
@@ -278,23 +268,31 @@ class Job extends Request implements \Iterator {
             case 'priority':
             case 'ttr':
                 if( ! preg_match("/^[0-9]+$/", $v)) return FALSE;
-                return $this->__d[$k] = $v;
+                return $this->$k = $v;
                 
             case 'queue' :
                 if( ! ctype_alnum( $v ) ) return FALSE;
-                return $this->__d[$k] = strtolower($v);
+                return $this->$k = strtolower($v);
                 
            case 'proxyhost':
                 if( ! preg_match("/^[a-z][a-z0-9_\-\.\:]+$/i", $v)) return FALSE;
-                return $this->__d[$k] = $v;
+                return $this->$k = $v;
                 
             case 'url' :
             case 'callback': 
                 if( strlen( $v ) < 1 ) break;
                 break;
                 
-            }
-        return parent::__set( $k, $v );
+        }
+        return $this->$k = $v;
+    }
+    
+    public function __get( $k ){
+        return isset( $this->$k ) ? $this->$k : NULL;
+    }
+    
+    public function __isset( $k ){
+        return isset( $this->$k ) ? TRUE : FALSE;
     }
 }
 // EOC
