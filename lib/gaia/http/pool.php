@@ -16,52 +16,37 @@ class Pool {
     */
     protected $requests = array();
     
-  /**
-    * callback triggers for handling the http response
-    */
-    protected $handlers = array();
-    
     /**
 	 * The curl multi handle.
 	 */
-	protected $handle = NULL;
+	protected $resource = NULL;
 
 	/**
 	 * Initializes the curl multi request.
 	 */
 	public function __construct(){
-		$this->handle = curl_multi_init();
+		$this->resource = curl_multi_init();
 	}
 	
+	/**
+	* clean up the pool, removing any attached curl resources and close the multi.
+	*/
 	public function __destruct(){
 		foreach ($this->requests as $i => $http){
 			unset( $this->requests[ $i ] );
-		    if( ! $http->handle ) continue;
-			curl_multi_remove_handle($this->handle, $http->handle);
+		    if( ! $http->resource ) continue;
+			curl_multi_remove_handle($this->resource, $http->resource);
 		}
-        curl_multi_close($this->handle);
+        curl_multi_close($this->resource);
 	}
-
-    public function attach( \Closure $handler ){
-        $this->handlers[] = $handler;
-    }
-    
-    /**
-    * when an http request is done, trigger any attached handlers.
-    * if you want customized callbacks per request, you can attach a callback
-    * to examine a local variable in the http object and perform a callback on that.
-    */
-    public function handle( Request $request ){
-        foreach( $this->handlers as $handler ) $handler( $request );
-    }
     
     /**
     * add a new request to the pool.
     */
     public function add( Request $request, array $opts = array() ){
         $ch = $request->build($opts);
-        $this->requests[(int)$request->handle] = $request;
-        curl_multi_add_handle($this->handle, $request->handle);
+        $this->requests[(int)$request->resource] = $request;
+        curl_multi_add_handle($this->resource, $request->resource);
         return $request;
     }
     
@@ -77,7 +62,7 @@ class Pool {
     */
 	public function select($timeout = 1.0){
 	    if( ! $this->poll() ) return FALSE;
-        curl_multi_select($this->handle, $timeout);
+        curl_multi_select($this->resource, $timeout);
 		return $this->poll();
 	}
 	
@@ -100,23 +85,18 @@ class Pool {
 	public function poll(){
 		$still_running = 0; // number of requests still running.
 		do {
-			$result = curl_multi_exec($this->handle, $still_running);
+			$result = curl_multi_exec($this->resource, $still_running);
 			if ($result != CURLM_OK) continue;
             do {
                 $messages_in_queue = 0;
-                $info = curl_multi_info_read($this->handle, $messages_in_queue);
+                $info = curl_multi_info_read($this->resource, $messages_in_queue);
                 if( ! $info ) continue;
                 if( !  isset($info['handle']) ) continue;
                 if( ! isset($this->requests[(int)$info['handle']]) ) continue;
-                $curl_data = curl_multi_getcontent($info['handle']);
-                $curl_info = curl_getinfo($info['handle']);
-                if( ! is_array( $curl_info ) ) $curl_info = array();
-                $curl_info['response'] = $curl_data;
-                curl_multi_remove_handle($this->handle, $info['handle']);
+                curl_multi_remove_handle($this->resource, $info['handle']);
                 $request = $this->requests[ (int) $info['handle'] ];
                 unset( $this->requests[ (int) $info['handle'] ] );
-                $request->handle( $curl_info );
-                $this->handle( $request );
+                $request->handle();
             }
             while($messages_in_queue > 0);
 			

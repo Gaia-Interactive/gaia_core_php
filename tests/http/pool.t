@@ -16,13 +16,15 @@ $ct = 0;
 $iterations = 50;
 $requests = array();
 
-$pool->attach( 
-    function ( Request $request ) use ( & $ct ){
-        $ct++;
-    }
-);
+
+$counter = function () use ( & $ct ){
+    $ct++;
+};
+
 for( $i = 0; $i < $iterations; $i++){
-    $pool->add( $requests[] = new Request('http://127.0.0.1:11299/') );
+    $r = new Request('http://127.0.0.1:11299/');
+    $r->handle = $counter;
+    $pool->add( $requests[] =  $r);
 }
 
 $start = microtime(TRUE);
