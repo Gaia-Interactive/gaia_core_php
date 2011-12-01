@@ -118,8 +118,12 @@ class Job extends Request {
         
         foreach( $keys as $key ){
             $conn = $conns[ $key ];
-            if( ! $try-- ) break;         
-            $res = $conn->putInTube( $tube,  json_encode( (array) $this ), $this->priority, $delay, $this->ttr );
+            if( ! $try-- ) break;
+            $data = array();
+            foreach( $this as $k => $v ){
+                $data[ $k ] = $v;
+            }
+            $res = $conn->putInTube( $tube,  json_encode( $data ), $this->priority, $delay, $this->ttr );
             if( ! $res ) {
                 continue;
             }
@@ -137,7 +141,7 @@ class Job extends Request {
         $conn = $conns[ $server ];
         $res = $conn->peek( $id );
         if( ! $res ) throw new Exception('conn error', $conn );
-        $job = new self( $res->getData() );
+        $job = new self( @json_decode( $res->getData(), TRUE ) );
         if( ! $job->url ) {
             $conn->delete( $res );
             continue;

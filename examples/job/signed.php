@@ -84,7 +84,7 @@ $config->setHandler( function($job, $response ) use ($runner, $debugger) {
         return;
     }
     
-    $post = substr( (is_array( $job->post ) ? http_build_query( $job->post  ) : $job->post ),0, 75);
+    $post = substr( (is_array( $job->post ) ? \Gaia\Http\Util::buildQuery( $job->post  ) : $job->post ),0, 75);
     $out .= '  ' . $post;
     if( strlen( $post )  >= 75 ) $out .= ' ...';
     if(  strlen( $info->response_header ) < 1 ) {

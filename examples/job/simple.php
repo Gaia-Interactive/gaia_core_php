@@ -78,14 +78,15 @@ Job::config()->setHandler(
         $info = $request->response;
         if( $info->http_code != 200 ) $out .= '-ERR';
         $out .= ": " . $info->url;
-        $post = substr( (is_array( $request->post ) ? http_build_query( $request->post  ) : $request->post ),0, 75);
+        $post = substr( (is_array( $request->post ) ? \Gaia\Http\Util::buildQuery( $request->post  ) : $request->post ),0, 75);
         $out .= '  ' . $post;
         if( strlen( $post )  >= 75 ) $out .= ' ...';
-        if(  strlen( $info->raw ) < 1 ) {
+        if(  strlen( $info->response_header ) < 1 ) {
             $out .= " - NO RESPONSE";
         } else {
+            if( $post ) $post .= "\n";
             $out .= "\n------\n";
-            $out .= "\n" . $info->raw;
+            $out .= "\n" . $info->request_header . $post . $info->response_header;
             $out .= "\n------\n";
         }
         $debugger( $out );
