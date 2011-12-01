@@ -2,6 +2,7 @@
 <?php
 use Gaia\Test\Tap;
 use Gaia\Http\Request;
+use Gaia\Http\Util;
 
 include __DIR__ . '/../common.php';
 include __DIR__ . '/../assert/curl_installed.php';
@@ -31,7 +32,8 @@ $request->post = array('test'=>1);
 $request->method = 'PUT';
 $response = $request->exec();
 Tap::like( $response->request_header, '#PUT \/http_json_echo\.php#i', 'successfully sent a PUT request');
-Tap::is( $response->headers->{'X-Request-Method'}, 'PUT', 'response header shows the PUT request came through');
+$headers = Util::parseHeaders( $response->response_header );
+Tap::is( $headers['X-Request-Method'], 'PUT', 'response header shows the PUT request came through');
 Tap::is( trim($response->body), '{"__raw__":"test=1"}', 'post data echoed back as raw');
 
 
@@ -40,7 +42,8 @@ $request->method = 'DELETE';
 $response = $request->exec();
 
 Tap::like( $response->request_header, '#DELETE \/http_json_echo\.php#i', 'successfully sent a DELETE request');
-Tap::is( $response->headers->{'X-Request-Method'}, 'DELETE', 'response header shows the DELETE request came through');
+$headers = Util::parseHeaders( $response->response_header );
+Tap::is( $headers['X-Request-Method'], 'DELETE', 'response header shows the DELETE request came through');
 
 
 $ch = curl_init($url = 'http://127.0.0.1:11299/http_json_echo.php?test=1');

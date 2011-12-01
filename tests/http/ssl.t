@@ -2,6 +2,7 @@
 <?php
 use Gaia\Test\Tap;
 use Gaia\Http\Request;
+use Gaia\Http\Util;
 
 include __DIR__ . '/../common.php';
 include __DIR__ . '/../assert/curl_installed.php';
@@ -31,7 +32,8 @@ Tap::like( $response->request_header, '#GET / HTTP/1.1#i', 'request header sent 
 Tap::like( $response->request_header, '#Connection: Keep-Alive#i', 'found my connection keep-alive header in my request');
 Tap::like( $response->request_header, '#Keep-Alive: 300#i', 'found my keep-alive timeout header in my request');
 Tap::like( $response->body, '/VeriSign Authentication Services/i', 'got back the correct content');
-Tap::is( strtolower($response->headers->Connection), 'keep-alive', 'sent a keep-alive header and got back a keep-alive response');
+$headers = Util::parseHeaders( $response->response_header );
+Tap::is( strtolower($headers['Connection']), 'keep-alive', 'sent a keep-alive header and got back a keep-alive response');
 Tap::cmp_ok( strlen( $response->body ), '>', 1000, 'got back expected amount of content');
 //unset( $response->body );
 //print_r( $response );

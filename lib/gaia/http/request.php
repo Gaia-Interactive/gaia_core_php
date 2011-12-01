@@ -92,7 +92,7 @@ class Request extends \StdClass {
             $opts[CURLOPT_CUSTOMREQUEST] = strtoupper( $this->method );
         }
         $opts[CURLINFO_HEADER_OUT] = 1;
-        $this->response = $r = (object) array('request_header'=>'', 'response_header'=>'', 'body'=> '', 'headers'=> (object) array(), 'http_code'=>0);
+        $this->response = $r = (object) array('request_header'=>'', 'response_header'=>'', 'body'=> '', 'http_code'=>0);
         
         if( ! isset( $opts[CURLOPT_WRITEFUNCTION] ) ) {
             $opts[CURLOPT_WRITEFUNCTION ] = function ( $ch, $data ) use( $r ) {
@@ -122,10 +122,6 @@ class Request extends \StdClass {
     */
     public function handle(){  
         $response = $this->response;
-        $headers = $response->headers;
-        foreach( Util::parseHeaders($response->response_header ) as $k => $v ){
-            $headers->$k = $v;
-        }
         if( $info = $this->getInfo() ){
             foreach( $info as $k => $v ) $response->$k = $v;
         }
