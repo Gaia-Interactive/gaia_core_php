@@ -16,7 +16,7 @@ Tap::plan(10);
 
 $request = new Request('https://www.verisign.com/');
 $start = microtime(TRUE);
-$response = $request->exec(
+$response = $request->send(
     array(
     CURLOPT_CONNECTTIMEOUT=>5, 
     CURLOPT_TIMEOUT=>10, 

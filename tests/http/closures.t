@@ -24,7 +24,7 @@ $request->build = function( $request, array & $opts ) use( $writer ) {
     $opts[ CURLOPT_WRITEFUNCTION ] = $writer;
 };
 
-$res = $request->exec();
+$res = $request->send();
 $len = strlen( $buf );
 
 Tap::cmp_ok( $len, '>', 10000, "subverted the writing handler, got back a block of text: $len chars");
@@ -35,7 +35,7 @@ $write_ct = 0;
 
 $request = new Request('http://127.0.0.1:11299/bigdoc.php?size=100&iterations=500&usleep=100');
 print_r( $request );
-$res = $request->exec(array(CURLOPT_WRITEFUNCTION =>$writer));
+$res = $request->send(array(CURLOPT_WRITEFUNCTION =>$writer));
 $len = strlen( $buf );
 
 Tap::cmp_ok( $len, '>', 10000, "passed the CURLOPT_WRITEFUNCTION to exec , got back a block of text: $len chars");
