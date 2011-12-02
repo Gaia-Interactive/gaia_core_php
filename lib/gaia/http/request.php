@@ -10,7 +10,7 @@ namespace Gaia\Http;
 * Use this class to run curl calls easily.
 * $request = new \Gaia\Http\Request('http://news.yahoo.com/rss/');
 * $request->post = array('param1'=>1, 'param2'=>2);
-* $response = $request->exec();
+* $response = $request->send();
 * print PHP_EOL . "URL: " . $request->url;
 * print PHP_EOL . "RESPONSE: " $response->body;
 */
@@ -50,10 +50,14 @@ class Request extends \StdClass {
     * Allows you to run a curl call and get response back.
     * If you need to do multiple calls in parallel, look at the pool class.
     */
-    public function exec( array $opts = array() ){
+    public function send( array $opts = array() ){
         $this->build( $opts );
         curl_exec( $this->resource );
         return $this->handle();
+    }
+    
+    public function exec( array $opts = array() ){
+        return $this->send( $opts );
     }
         
    /**
