@@ -171,7 +171,9 @@ $sig_handler = function ($signo) use ($runner, $start, $debugger, $start){
              sleep(1);
              $runner->shutdown();
              $elapsed = number_format( microtime(TRUE) - $start, 3);
-             $debugger("DONE: $elapsed");
+             $s  = $runner->stats();
+             $processed = $s['processed'];
+             $debugger("$processed jobs processed in $elapsed secs");
              print "\n";
              exit;
              break;
@@ -195,6 +197,7 @@ $runner->process();
 
 $elapsed = number_format( microtime(TRUE) - $start, 3);
 
-
-$debugger( "DONE: $elapsed");
+$s  = $runner->stats();
+$processed = $s['processed'];
+$debugger("$processed jobs processed in $elapsed secs");
 print "\n";
