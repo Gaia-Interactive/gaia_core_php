@@ -38,5 +38,5 @@ print_r( $request );
 $res = $request->send(array(CURLOPT_WRITEFUNCTION =>$writer));
 $len = strlen( $buf );
 
-Tap::cmp_ok( $len, '>', 10000, "passed the CURLOPT_WRITEFUNCTION to exec , got back a block of text: $len chars");
+Tap::cmp_ok( $len, '>', 10000, "passed the CURLOPT_WRITEFUNCTION to send , got back a block of text: $len chars");
 Tap::cmp_ok($write_ct, '>', 10, "my write function callback was triggered more than 10 times: $write_ct");
