@@ -7,7 +7,7 @@ use Gaia\Store;
 include __DIR__ . '/../common.php';
 include __DIR__ . '/../assert/bcmath_installed.php';
 include __DIR__ . '/../assert/ci_installed.php';
-include __DIR__ . '/../assert/mysql_running.php';
+include __DIR__ . '/../assert/postgres_running.php';
 
 $db = DB( array(
         'dbdriver'	=> 'postgre',
