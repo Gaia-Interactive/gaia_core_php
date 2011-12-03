@@ -3,6 +3,7 @@
 use Gaia\Test\Tap;
 use Gaia\DB;
 include __DIR__ . '/../common.php';
+include __DIR__ . '/../assert/mysql_installed.php';
 include __DIR__ . '/../assert/mysql_running.php';
 include __DIR__ . '/../assert/ci_installed.php';
 
