@@ -40,3 +40,7 @@ Tap::like( $job->response->body, '/coca-cola/i', 'got back the cocacola page');
 $res = $job->complete();
 
 Tap::ok( $res, 'marked the job as complete');
+
+foreach( $job as $k => $v ){
+    var_dump( $k );
+}

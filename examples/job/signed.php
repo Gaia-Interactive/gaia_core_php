@@ -84,7 +84,7 @@ $config->setHandler( function($job, $response ) use ($runner, $debugger) {
         return;
     }
     
-    $post = substr( (is_array( $job->post ) ? http_build_query( $job->post  ) : $job->post ),0, 75);
+    $post = substr( (is_array( $job->post ) ? \Gaia\Http\Util::buildQuery( $job->post  ) : $job->post ),0, 75);
     $out .= '  ' . $post;
     if( strlen( $post )  >= 75 ) $out .= ' ...';
     if(  strlen( $info->response_header ) < 1 ) {
@@ -171,7 +171,9 @@ $sig_handler = function ($signo) use ($runner, $start, $debugger, $start){
              sleep(1);
              $runner->shutdown();
              $elapsed = number_format( microtime(TRUE) - $start, 3);
-             $debugger("DONE: $elapsed");
+             $s  = $runner->stats();
+             $processed = $s['processed'];
+             $debugger("$processed jobs processed in $elapsed secs");
              print "\n";
              exit;
              break;
@@ -195,6 +197,7 @@ $runner->process();
 
 $elapsed = number_format( microtime(TRUE) - $start, 3);
 
-
-$debugger( "DONE: $elapsed");
+$s  = $runner->stats();
+$processed = $s['processed'];
+$debugger("$processed jobs processed in $elapsed secs");
 print "\n";

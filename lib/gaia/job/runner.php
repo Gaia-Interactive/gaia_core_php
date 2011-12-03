@@ -339,7 +339,7 @@ class Runner {
                     if( ! $this->syncWatch( $conn ) ) continue;
                     while( $res = $conn->reserve(0) ){
                         $id = $conn->hostInfo() . '-' . $res->getId();
-                        $job = new Job( $res->getData() );
+                        $job = new Job( @json_decode($res->getData(), TRUE) );
                         if( ! $job->url ) {
                             $conn->delete( $res );
                             continue;
