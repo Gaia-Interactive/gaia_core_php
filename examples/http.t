@@ -47,7 +47,7 @@ class GoogleMaps {
     
     protected static function query( $qs, array $opts = array()){
         $http = new \Gaia\HTTP\Request( 'http://maps.googleapis.com/maps/api/directions/json?' . $qs );
-        $response = $http->exec( $opts );
+        $response = $http->send( $opts );
         if( $response->http_code !== 200 ) throw new Exception('curl error', $response );
         if( ! $response->body ) throw new Exception('curl error', $response );
         $data = json_decode($response->body, TRUE);
