@@ -2,7 +2,6 @@
 
 namespace Gaia\Store;
 use Gaia\Http;
-use Gaia\Serialize\Json;
 use Gaia\Container;
 use Gaia\Exception;
 
@@ -30,7 +29,7 @@ class CouchbaseView {
     * Example:
     *      $cb = new Couchbase( array(
     *                      'app'       => 'myapp',
-    *                      'rest'      => 'http://127.0.0.1:5984/default/',
+    *                      'rest'      => 'http://127.0.0.1:8092/default/',
     *                      'socket'    => '127.0.0.1:11211',
     *              ));
     */
@@ -62,7 +61,7 @@ class CouchbaseView {
         }
         $len = strlen( $this->app );
         $app = ( $len > 0 ) ? $this->app : 'default/';
-        $http = $this->request( '_design/' . $app . '_view/' . $view . '/?' . http_build_query( $params->all()) );
+        $http = $this->request( '_design/' . $app . '_view/' . $view . '/?' . \Gaia\Http\Util::buildQuery( $params->all()) );
         $response = $this->validateResponse( $http->exec(), array(200) );
         $result = $response->body;
         if( $len < 1 ) return $result;
@@ -130,7 +129,7 @@ class CouchbaseView {
             if( isset( $view['map'] ) && $len ) $view['map'] = sprintf( self::MAP_TPL, $len, $this->app, $len, $view['map'] );
             $result['views'][$name] = $view;
         }
-        $http->post = $result;
+        $http->post = json_encode($result);
         $http->method = 'PUT';
         $response = $this->validateResponse( $http->exec(), array(200, 201) );
         return $response->body;
@@ -176,14 +175,17 @@ class CouchbaseView {
     */
     public function request($path){
         $http = $this->http = new Http\Request( $this->rest . $path );
-        $http->serializer = new JSON('');
+        $http->handle = function ( $response ){
+            $body = @json_decode( $response->body, TRUE );
+            if( is_array( $body ) ) $response->body = $body;
+        };
         return $http;
     }
     
     /**
     * handle a response.
     */
-    protected function validateResponse( \Gaia\Container $response, array $allowed_codes ){
+    protected function validateResponse( $response, array $allowed_codes ){
         if( ! in_array( $response->http_code, $allowed_codes )  ) throw new Exception('query failed', $response );
         if( ! is_array( $response->body ) ) throw new Exception('invalid response', $response );
         return $response;

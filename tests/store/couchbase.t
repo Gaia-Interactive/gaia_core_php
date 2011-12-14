@@ -34,7 +34,7 @@ $extract_data = function( $result ){
 
 Tap::plan(25);
 try {    
-    $cb = new Store\Couchbase(array( 'app'=> 'app-v.' . time(), 'rest'=>'http://127.0.0.1:5984/default/', 'socket'=>'127.0.0.1:11211'));
+    $cb = new Store\Couchbase(array( 'app'=> 'app-v.' . time(), 'rest'=>'http://127.0.0.1:8092/default/', 'socket'=>'127.0.0.1:11211'));
     Tap::ok( $cb instanceof Store\Couchbase, 'instantiated couchbase');
     
     //Tap::debug( $res );
@@ -113,7 +113,7 @@ try {
     Tap::ok( $res['ok'], 'deleted all the views');
     
     
-    $cb = new Store\Couchbase(array( 'rest'=>'http://127.0.0.1:5984/default/', 'socket'=>'127.0.0.1:11211'));
+    $cb = new Store\Couchbase(array( 'rest'=>'http://127.0.0.1:8092/default/', 'socket'=>'127.0.0.1:11211'));
     Tap::ok( $cb instanceof Store\Couchbase, 'instantiated couchbase without the app prefix');
     
     $res = $cb->view()->set('test', array('map'=>'function(doc){ emit(doc._id, doc); }'));

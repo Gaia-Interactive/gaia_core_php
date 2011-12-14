@@ -31,7 +31,7 @@
  *
  *      $cb = new Couchbase( array(
  *                      'app'       => 'dev_jloehrer-zoo',
- *                      'rest'      => 'http://127.0.0.1:5984/default/',
+ *                      'rest'      => 'http://127.0.0.1:8092/default/',
  *                      'socket'    => '127.0.0.1:11211',
  *              ));
  *
@@ -73,7 +73,7 @@
  * Views are just documents like any other object stored in couchbase.  We can take a look at it by 
  * viewing the url:
  *
- *    $http = new \Gaia\Http\Request("http://127.0.0.1:5984/default/_design/dev_jloehrer-zoo/");
+ *    $http = new \Gaia\Http\Request("http://127.0.0.1:8092/default/_design/dev_jloehrer-zoo/");
  *    $result = json_decode( $http->exec()->body, TRUE);
  *    echo $result['views']['mammals']['map'];
 
@@ -130,7 +130,7 @@
  * If you don't specify an app, it doesn't do key prefixes for you, and all of the views are stuck in
  * the default design document:
  *
- *    http://127.0.0.1:5984/default/_design/default/
+ *    http://127.0.0.1:8092/default/_design/default/
  *
  * For more examples or details, see:
  *    
@@ -149,7 +149,7 @@ class Couchbase extends Wrap {
     * Example:
     *      $cb = new Couchbase( array(
     *                      'app'       => 'myapp',
-    *                      'rest'      => 'http://127.0.0.1:5984/default/',
+    *                      'rest'      => 'http://127.0.0.1:8092/default/',
     *                      'socket'    => '127.0.0.1:11211',
     *              ));
     */
