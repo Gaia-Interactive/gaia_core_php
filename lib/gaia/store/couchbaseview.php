@@ -129,7 +129,8 @@ class CouchbaseView {
             if( isset( $view['map'] ) && $len ) $view['map'] = sprintf( self::MAP_TPL, $len, $this->app, $len, $view['map'] );
             $result['views'][$name] = $view;
         }
-        $http->post = json_encode($result);
+        $result['views'] = (object) $result['views'];
+        $http->post = json_encode( (object) $result);
         $http->method = 'PUT';
         $response = $this->validateResponse( $http->exec(), array(200, 201) );
         return $response->body;
