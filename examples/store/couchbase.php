@@ -14,7 +14,7 @@ include __DIR__ . '/../common.php';
 
 $cb = new Store\Couchbase( array(
       'app'       => 'dev_jloehrer-zoo',
-      'rest'      => 'http://127.0.0.1:5984/default/',
+      'rest'      => 'http://127.0.0.1:8092/default/',
       'socket'    => '127.0.0.1:11211',
 ));
 
@@ -23,7 +23,7 @@ $cb = new Store\Couchbase( array(
 
 $cb->view()->set('mammals', array('map'=>'function(doc){ if( doc.type=="mammal" ){ emit(doc._id, doc); }}'));
 
-$http = new \Gaia\Http\Request("http://127.0.0.1:5984/default/_design/dev_jloehrer-zoo/");
+$http = new \Gaia\Http\Request("http://127.0.0.1:8092/default/_design/dev_jloehrer-zoo/");
 $result = json_decode( $http->exec()->body, TRUE);
 Tap::debug( $result['views']['mammals']['map'] );
 
