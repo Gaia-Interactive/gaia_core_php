@@ -13,7 +13,7 @@ include __DIR__ . '/../assert/memcache_running.php';
 function waitforRebuild($iterations = 10 ){
     print "# waiting for view rebuild ";
     for( $i = 0; $i < $iterations; $i++){
-        usleep(500000);
+        usleep(50);
         print ".";
     }
     print "\n";
@@ -73,8 +73,7 @@ try {
     Tap::is( $cb->view()->get('amount'), $v, 'get amount returns same view we wrote into couchbase' );
 
     
-    waitforRebuild(10);
-    $res = $cb->view()->query('full', array('limit'=>20, 'full_set'=>'true'));
+    $res = $cb->view()->query('full', array('limit'=>20, 'full_set'=>'true', 'timeout'=>'100000'));
     $result_set = $extract_data( $res );
     Tap::ok( is_array( $res ), 'got back a view of the data');
     Tap::is($result_set,$rows, 'all the rows results match what we put in');

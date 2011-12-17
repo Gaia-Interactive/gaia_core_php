@@ -141,8 +141,7 @@ use Gaia\Serialize\Json;
 
 class Couchbase extends Wrap {
     
-    protected $rest = '';
-    protected $app = '';
+    protected $view;
     
     /**
     * Instantiate the couchbase object. pass in a set of named params.
@@ -156,12 +155,12 @@ class Couchbase extends Wrap {
     public function __construct(array $params ){
         if( ! isset( $params['app'] ) ) $params['app'] = '';
         $app = isset( $params['app'] ) ? trim($params['app'], '/ ') : '';
-        if( strlen( $app ) > 0 ) $this->app = $app .'/';
+        if( strlen( $app ) > 0 ) $app = $app .'/';
         if( ! isset( $params['rest'] ) )  $params['rest'] = '';
-        $this->rest = $params['rest'];
         $core = isset( $params['socket'] ) ? $params['socket'] : NULL;
         if( ! $core instanceof Memcache ) $core = new Memcache( $core );
-        $core = new Prefix( new Serialize($core, new Json('')), $this->app);
+        $core = new Prefix( new Serialize($core, new Json('')), $app);
+        $this->view = new CouchbaseView( $params['rest'], $app );
         parent::__construct( $core );
     }
     
@@ -179,8 +178,15 @@ class Couchbase extends Wrap {
     *    $result = $cb->view()->query('mammals' $params);
     *
     */
+    public function query( $viewname, $params = NULL){
+        return $this->view->query( $viewname, $params );
+    }
+    
+    /**
+    * get the view object.
+    */
     public function view(){
-        return new CouchbaseView( $this->rest, $this->app );
+        return $this->view;
     }
         
     /**
