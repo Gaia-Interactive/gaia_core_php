@@ -81,7 +81,6 @@ class MySQLi extends \MySQLi implements \Gaia\DB\Iface {
         if( ! $this->txn ) return parent::query('ROLLBACK');
         if( $this->lock ) return TRUE;
         $rs = parent::query('ROLLBACK');
-        $this->close();
         $this->lock = TRUE;
         return $rs;
     }
