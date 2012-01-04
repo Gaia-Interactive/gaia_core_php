@@ -33,7 +33,7 @@ $rs = DB\Connection::instance('test')->query("CREATE TABLE $table( id int unsign
 if( ! $rs ) {
     Tap::plan('skip_all', 'unable to create table');
 }
-Tap::plan(6);
+Tap::plan(7);
 
 $db = DB\Transaction::instance('test');
 $db->query("INSERT into $table (id) VALUES(1)");
@@ -82,3 +82,13 @@ Tap::is( $rs->fetch_assoc(), array('id'=>4), 'after commiting both in a nested t
 
 DB\Connection::instance('test')->query("DROP TABLE IF EXISTS $table");
 
+// rollback shouldn't close a connection ... if you do, it causes problems accessing the mysql object for debug.
+// creates a php warning like this: Couldn't fetch Gaia\DB\Driver\MySQLi
+// this little line ensures no warning pops up, which will trip an error in the Tap test output.
+DB\Transaction::start();
+$db = DB\Transaction::instance('test');
+$db->query("INSERT into $table (id) VALUES(3)");
+DB\Transaction::rollback();
+$error = $db->error;
+
+Tap::is( error_get_last(), NULL, 'no php warning triggered by rollback');
