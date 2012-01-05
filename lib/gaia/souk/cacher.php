@@ -167,9 +167,12 @@ class Cacher extends Passthru {
     */
     protected function searchVectors( SearchOptions $options ){
         $keys = array();
-        if( $options->seller ) $keys[] = 'seller' . $options->seller;
-        if( $options->buyer ) $keys[] = 'buyer' . $options->buyer;
-        if( $options->bidder ) $keys[] = 'bidder' . $options->bidder;
+        foreach( array('seller', 'buyer', 'bidder') as $vector ){
+            if( ! isset( $options->$vector ) ) continue;
+            $data = $options->$vector;
+            if( ! is_array( $data ) ) $data = array( $data );
+            foreach( $data as $v ) $keys[] = $vector . $v;
+        }
         if( count( $keys ) < 1 ) return '';
         $cache = $this->cache( self::SEARCH_VECTOR_PREFIX );
         $res = $cache->get( $keys );

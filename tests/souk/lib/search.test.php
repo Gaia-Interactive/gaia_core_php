@@ -64,6 +64,11 @@ foreach( $ids as $id ){
 Tap::ok( $found, 'returned only rows we created');
 
 
+$ids_array_search = souk( $app )->search( array('sort'=>'just_added', 'item_id'=>array($item_id, 0), 'seller'=>array($seller_id, 0)) );
+
+Tap::is( $ids_array_search, $ids, 'item and seller array search works');
+
+
 $owned = TRUE;
 foreach( $ids as $id ){
     if( $listings[ $id ]->seller == $seller_id ) continue;

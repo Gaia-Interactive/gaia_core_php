@@ -312,19 +312,19 @@ class SQLite implements IFace {
         $clauses[] = $this->db->prep('closed = ?', $options->closed ? 1 : 0);
         
         // if we have a specific item id we are looking for, query for that.
-        if( isset( $options->item_id ) ) $clauses[] = $this->db->prep('item_id = %i', $options->item_id );
+        if( isset( $options->item_id ) ) $clauses[] = $this->db->prep('item_id IN (%i)', $options->item_id );
         
         // do we know the seller?
-        if( isset( $options->seller ) ) $clauses[] = $this->db->prep('seller = %i', $options->seller );
+        if( isset( $options->seller ) ) $clauses[] = $this->db->prep('seller IN (%i)', $options->seller );
         
         // sometimes, rarely we are looking for an auction purchased by a specific buyer.
         // obviously these auctions are already closed. should i sanity check the closed param?
-        if( isset( $options->buyer ) ) $clauses[] = $this->db->prep('buyer = %i', $options->buyer );
+        if( isset( $options->buyer ) ) $clauses[] = $this->db->prep('buyer IN (%i)', $options->buyer );
         
         // we can narrow by the person who is currently the leading bidder. can't search by past
         // bidders since that is more of a bid history search.
         // haven't written that yet.
-        if( isset( $options->bidder ) ) $clauses[] = $this->db->prep('bidder = %i', $options->bidder );
+        if( isset( $options->bidder ) ) $clauses[] = $this->db->prep('bidder IN (%i)', $options->bidder );
         
         // are we looking for a bid-only auction?
         if( $options->only == 'bid' ) $clauses[] = 'price = 0';
