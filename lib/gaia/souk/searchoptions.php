@@ -49,6 +49,7 @@ class SearchOptions {
     }
     
     public function __set( $k, $v ){
+        if( is_array( $v ) ) sort( $v );
         return $this->options[$k] = is_scalar( $v ) ? strval( $v ) : $v;
     }
     
