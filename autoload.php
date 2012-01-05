@@ -1,7 +1,14 @@
 <?php
 
-// gaia's core auto-loader and all the vendor libs.
-spl_autoload_register(function($class) {
+// load from phar if available.
+$lib_dir = __DIR__.'/lib/';
+$pharfile = __DIR__ . '/gaia_core_php.phar';
+if( extension_loaded('phar') ) $pharfile .= '.tar.gz';
+if( file_exists( $pharfile) ) $lib_dir = "phar://$pharfile/";
+
+
+// autoload all the vendor libs.
+spl_autoload_register(function($class) use( $lib_dir ) {
     // force classname to lowercase ... make sure we are standardizing it.
     $class = strtolower($class);
     
@@ -28,7 +35,7 @@ spl_autoload_register(function($class) {
     
     // load the gaia namespaced classes.
     if( substr( $class, 0, 5) == 'gaia\\' ) 
-        return include  __DIR__.'/lib/'.strtr($class, '\\', '/').'.php';   
+        return include  $lib_dir .strtr($class, '\\', '/').'.php';   
         
     // load predis namespaced classes.
     if( substr($class, 0, 7) == 'predis\\' ) 
