@@ -8,7 +8,7 @@ class Query {
         if( ! $escape ) $escape = function( $v ) { return "'" . addslashes( $v ) . "'"; };
         $modify_funcs = array(
                     '%s' => $escape,
-                    '%i' => function($v) { $v = strval($v); return preg_match('/^-?[1-9]([0-9]+)?$/', $v ) ? $v : 0; },
+                    '%i' => function($v) { if( is_float($v)) return number_format($v, 0, '.', ''); $v = strval($v); return preg_match('/^-?[1-9]([0-9]+)?$/', $v ) ? $v : 0;},
                     '%f' => function($v) {  $v = strval($v); return preg_match('/^-?[0-9]+(\.[0-9]+)?$/', $v ) ? $v : 0; }
                 );
                 
