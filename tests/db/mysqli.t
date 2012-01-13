@@ -24,7 +24,7 @@ try {
 } catch( Exception $e ){
     Tap::plan('skip_all', $e->__toString());
 }
-Tap::plan(14);
+Tap::plan(16);
 Tap::ok( DB\Connection::instance('test') === $db, 'db instance returns same object we instantiated at first');
 
 $rs = $db->execute('SELECT %s as foo, %s as bar', 'dummy\'', 'rummy');
@@ -33,6 +33,13 @@ Tap::is($rs->fetch_assoc(), array('foo'=>'dummy\'', 'bar'=>'rummy'), 'sql query 
 
 $rs = $db->execute('SELECT %i as test', '1112122445543333333333');
 Tap::is( $rs->fetch_assoc(), array('test'=>'1112122445543333333333'), 'query execute works injecting big integer in');
+
+$rs = $db->execute('SELECT %i as test', 3.70E+9);
+Tap::is( $rs->fetch_assoc(), array('test'=>'3700000000'), 'query execute works injecting scientific notation integer in');
+
+
+$rs = $db->execute('SELECT %i as test', -1.0E+18);
+Tap::is( $rs->fetch_assoc(), array('test'=>'-1000000000000000000'), 'query execute works injecting huge scientific notation integer in');
 
 $rs = $db->execute('SELECT %i as test', 'dummy');
 Tap::is( $rs->fetch_assoc(), array('test'=>'0'), 'query execute sanitizes non integer');
