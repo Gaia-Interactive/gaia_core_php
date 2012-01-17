@@ -36,6 +36,12 @@ class Tier extends Wrap {
         return $this->tier1->set( $key, $value, $this->tier1_expires( $expires ) );
     }
     
+    
+    public function delete( $key ){
+        $this->core->delete( $key );
+        return $this->tier1->delete( $key);
+    }
+    
     public function increment( $key, $value = 1 ){
         $res = $this->core->increment( $key, $value );
         if( ! $res ) return $res;
