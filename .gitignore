@@ -1,2 +1,5 @@
 .*
+ENABLE_*
+bin/*.phar
+bin/*.phar.tar.gz
 
