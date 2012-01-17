@@ -1,10 +1,10 @@
 .PHONY: build all test clean
 
 build:
-	./build_phar.sh
+	./bin/build.php
 
 test:
 	./test.sh
 
 clean:
-	rm -rf ./gaia_core_php.phar*
+	rm -rf ./bin/*.phar*
