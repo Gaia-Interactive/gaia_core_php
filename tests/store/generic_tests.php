@@ -4,7 +4,7 @@ use Gaia\Store;
 use Gaia\Time;
 
 if( ! isset( $skip_expiration_tests ) ) $skip_expiration_tests = FALSE;
-Tap::plan(38);
+Tap::plan(40);
 
 $data = array();
 for( $i = 1; $i <= 3; $i++){
@@ -93,7 +93,7 @@ Tap::ok( $cache->increment( $k, $incr), 'incrementing with a large number');
 Tap::cmp_ok( strval($cache->get( $k )), '===', strval($incr + 1), 'get returns correct value');
 
 Tap::ok( $cache->decrement( $k, $incr), 'decrementing with a large number');
-Tap::cmp_ok( strval($cache->get( $k )), '===', '1', 'get returns correct value');
+Tap::cmp_ok( intval($cache->get( $k )), '===', 1, 'get returns correct value');
 
 $huge_number = 9223372036854775806;
 
@@ -119,3 +119,5 @@ $v = '我能吞下玻璃而不傷身體';
 Tap::ok( $cache->set( $k, $v), 'setting a string with utf-8 chars in it');
 Tap::cmp_ok( strval($cache->get( $k )), '===',  $v, 'get returns correct value');
 
+Tap::ok( $cache->delete( $k ), 'deleting the key');
+Tap::cmp_ok( $cache->get( $k ), '===',  NULL, 'after deleting, get returns NULL');
