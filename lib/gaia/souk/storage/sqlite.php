@@ -32,7 +32,8 @@ class SQLite implements IFace {
         $row = $rs->fetch();
         $rs->free();
         if( ! $row ) {
-             $this->execute(
+             Transaction::onRollback( array($cache, 'delete'), array( $key ) );
+             $rs = $this->execute(
             "CREATE TABLE IF NOT EXISTS $table (
               `row_id` INTEGER PRIMARY KEY AUTOINCREMENT,
               `seller` BIGINT NOT NULL,
@@ -54,7 +55,6 @@ class SQLite implements IFace {
             )"
                     
             );
-            
             foreach( array('closed', 'created', 'expires', 'pricesort', 'item_id', 'step', 'seller', 'bidder', 'buyer') as $idx ){
                 $idx_name = $table . '_idx_' . $idx;
                 $this->execute("CREATE INDEX IF NOT EXISTS `$idx_name` ON `$table` (`$idx`)");
@@ -67,6 +67,7 @@ class SQLite implements IFace {
         $row = $rs->fetch();
         $rs->free();
         if( ! $row ) {
+             Transaction::onRollback( array($cache, 'delete'), array( $key ) );
              $this->execute(
             "CREATE TABLE IF NOT EXISTS $table_attr (
               `row_id` INTEGER NOT NULL,
