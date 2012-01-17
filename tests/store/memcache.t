@@ -99,33 +99,33 @@ $key = sha1('test' . microtime(TRUE) . __FILE__);
 
 $verify->set( $key, 1 );
 
-Tap::cmp_ok( $m->get( $key ), '===', 1, 'Write into memcache and verify the store\memcache class can read it');
+Tap::is( $m->get( $key ), 1, 'Write into memcache and verify the store\memcache class can read it');
 
 $m->set($key, 2);
 
-Tap::cmp_ok($verify->get($key), '===', 2, 'change the value with store\memcache and verify it changed in memcache');
+Tap::is($verify->get($key), 2, 'change the value with store\memcache and verify it changed in memcache');
 
 $m->increment($key);
 
-Tap::cmp_ok( $verify->get($key), '===', 3, 'incremented the key and verified correct value in memcache');
+Tap::is( $verify->get($key), 3, 'incremented the key and verified correct value in memcache');
 
 
 $m->increment($key, 2);
 
-Tap::cmp_ok( $verify->get($key), '===', 5, 'incremented the key by several and verified correct value in memcache');
+Tap::is( $verify->get($key), 5, 'incremented the key by several and verified correct value in memcache');
 
 $m->decrement($key);
 
-Tap::cmp_ok( $verify->get($key), '===', 4, 'decremented the key and verified correct value in memcache');
+Tap::is( $verify->get($key), 4, 'decremented the key and verified correct value in memcache');
 
 
 $m->decrement($key, 2);
 
-Tap::cmp_ok( $verify->get($key), '===', 2, 'decremented the key by serveral and verified correct value in memcache');
+Tap::is( $verify->get($key), 2, 'decremented the key by serveral and verified correct value in memcache');
 
 $m->replace( $key, 100);
 
-Tap::cmp_ok( $verify->get( $key ), '===', 100, 'replaced the value and verified correct value shows up in memcache');
+Tap::is( $verify->get( $key ), 100, 'replaced the value and verified correct value shows up in memcache');
 
 
 $m->delete($key);
@@ -140,9 +140,9 @@ Tap::cmp_ok( $verify->get( $key ), '===', FALSE, 'attempted replace after delete
 
 $m->add( $key, 100);
 
-Tap::cmp_ok( $verify->get( $key ), '===', 100, 'added the key after delete and verified it shows up in memcache');
+Tap::is( $verify->get( $key ), 100, 'added the key after delete and verified it shows up in memcache');
 
 $m->add( $key, 200);
 
-Tap::cmp_ok( $verify->get( $key ), '===', 100, 'added the key again with differrent value and verified nothing changes in memcache');
+Tap::is( $verify->get( $key ), 100, 'added the key again with differrent value and verified nothing changes in memcache');
 
