@@ -1,7 +1,7 @@
 .PHONY: build all test clean
 
 build:
-	./bin/build.php
+	php --define 'phar.readonly=0' ./bin/build.php
 
 test:
 	./test.sh
