@@ -42,6 +42,12 @@ file. In addition, it can be parsed by perl's prove harness to run all the tests
 
 Try it out by running ./test.sh 
 
+PHAR LIBRARY
+==============================
+The library has been packaged as a phar archive, to make it easier to distribute the code. This is still
+experimental, but seems to work fine on OS X and Centos. Still need to test on windoze and some other
+Linux distros. See the autoload.php function for an example on how to include the code using the phar
+archive.
 
 
 CONTACT
