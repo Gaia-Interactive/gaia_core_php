@@ -100,7 +100,7 @@ class KVP implements Iface {
     * @see http://www.php.net/oop5.magic
     */
     public function __isset( $k ){
-        return ( $this->get( $k ) !== NULL ) ? TRUE  : FALSE;
+        return isset( $this->__d[ $k ] );
     }
      
    /**
