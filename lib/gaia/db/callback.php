@@ -33,6 +33,7 @@ class Callback implements IFace {
         if( ! $this->txn ) return FALSE;
         if( $this->lock ) return TRUE;
         $rs = (bool) $this->__call( __FUNCTION__, array() );
+        var_dump($rs);
         $this->lock = TRUE;
         return $rs;
     }

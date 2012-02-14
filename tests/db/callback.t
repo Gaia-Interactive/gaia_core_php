@@ -7,7 +7,7 @@ include __DIR__ . '/../common.php';
 include __DIR__ . '/../assert/mysqli_installed.php';
 include __DIR__ . '/../assert/pdo_installed.php';
 
-Tap::plan(31);
+Tap::plan(28);
 
 DB\Connection::load( array(
     'test'=> function(){return new DB\Callback();}
@@ -92,9 +92,6 @@ Tap::is($query, '1, 2, 3', 'format query handles arrays of integers');
 $query = $db->prep('%f', array(1.545,2.2,3));
 Tap::is($query, '1.545, 2.2, 3', 'format query handles arrays of floats');
 
-Tap::is($db->start(), FALSE, 'begin returns false if no callback specified');
-Tap::is($db->rollback(), FALSE, 'rollback returns false if no callback specified');
-Tap::is($db->commit(), FALSE, 'commit returns false if no callback specified');
 $query = $db->prep('test %%s ?, (?,?)', array(1, 2), 3, 4);
 Tap::is($query, "test %s '1', '2', ('3','4')", 'format query question mark as string');
 
