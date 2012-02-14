@@ -42,7 +42,6 @@ class Transaction
     
     public static function block(){
         $status = TRUE;
-        if( ! self::$tran  ) return FALSE;
         foreach( self::$tran as $obj ){
             if( ! $obj->rollback(self::SIGNATURE) ) $status = FALSE;
         }
@@ -61,7 +60,7 @@ class Transaction
     }
 
     public static function started() {
-    	return ( self::$depth != 0 &&  ! empty(self::$tran) ) ? TRUE : FALSE;
+    	return ( self::$depth != 0 ) ? TRUE : FALSE;
     }
     
     public static function inProgress() {
@@ -75,7 +74,7 @@ class Transaction
             self::$depth--;
             return TRUE;
         }
-        $status = false;
+        $status = TRUE;
         foreach( self::$tran  as $k => $obj )
         {
             $status = $obj->commit(self::SIGNATURE);
@@ -130,7 +129,10 @@ class Transaction
     }
 
     protected static function hashCallback( $cb, $params ){
-        if( is_array( $cb ) && isset( $cb[0] ) && is_object( $cb[0] ) ) $cb[0] = spl_object_hash( $cb[0] );
+        if( $cb instanceof \Closure ){
+            $cb = new \ReflectionFunction( $cb );
+            $cb = $cb->__toString();
+        }elseif( is_array( $cb ) && isset( $cb[0] ) && is_object( $cb[0] ) ) $cb[0] = spl_object_hash( $cb[0] );
         foreach( $params as $k => $v ){
             if( is_object( $v ) ) $params[ $k ] = spl_object_hash( $v );
         }
