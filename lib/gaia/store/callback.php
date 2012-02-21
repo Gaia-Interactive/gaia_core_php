@@ -3,7 +3,8 @@ namespace Gaia\Store;
 
 class Callback extends Wrap
 {
-
+    protected $options;
+    
     public function __construct( $core, $options ){
         parent::__construct( $core );
         if( ! $options instanceof Iface ) $options = new KVP( $options );
