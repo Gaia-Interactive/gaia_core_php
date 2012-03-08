@@ -107,7 +107,7 @@ class Runner {
     * specify a pattern for which queues to watch.
     */
     public function watch( $pattern ){
-        $this->watch = $this->buildTubePattern( $pattern );
+        $this->watch = $pattern;
     }
     
     /**
@@ -178,15 +178,15 @@ class Runner {
             $block_patterns[$pattern] = $pattern;
         }
         $debug = $this->debug;
-        $pattern = $this->watch;
+        $pattern = $this->buildTubePattern( $this->watch );
         //print "\n$pattern\n";
-        return function( $tube ) use ($pattern, & $block_patterns, $debug ){
+        $now = Time::now();
+        $max_date = date('Ymd', $now);
+        $min_date = date('Ymd', $now - (86400 * 3)); 
+        return function( $tube ) use ($pattern, & $block_patterns, $debug, $min_date, $max_date ){
             if( ! preg_match( $pattern, $tube, $match ) ) return FALSE;
             $queue = $match[1];
-            $date = array_pop($match);
-            $now = Time::now();
-            $max_date = date('Ymd', $now);
-            $min_date = date('Ymd', $now - (86400 * 3));        
+            $date = array_pop($match);       
             if( $date > $max_date ) return FALSE;
             if( $date < $min_date ) return FALSE;
             if( ! $block_patterns ) return TRUE;
@@ -206,7 +206,7 @@ class Runner {
             if( $allow( $tube ) ) {
                 $watch[] =  $tube;
             } else {
-               $ingore[] = $tube; 
+               $ignore[] = $tube; 
             }
         }
         if( count( $watch ) < 1 ) return FALSE;
@@ -323,9 +323,7 @@ class Runner {
                 $conns = $config->connections();
                 $keys = array_keys( $conns );
                 shuffle( $keys ); 
-                
-                $block_patterns = array();
-                
+                                
                 $allow = $this->buildAllow( $block_patterns );
                 
                 foreach( $keys as $key ){
