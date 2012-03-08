@@ -225,7 +225,7 @@ class Runner {
             if( $allow( $tube ) ) {
                 $watch[] =  $tube;
             } else {
-               $ingore[] = true; 
+               $ignore[] = $tube; 
             }
         }
         if( count( $watch ) < 1 ) return FALSE;
