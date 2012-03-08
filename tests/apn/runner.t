@@ -18,11 +18,11 @@ Tap::plan(5 + $iterations);
 
 $config = Config::instance();
 $config->addConnection($server = '127.0.0.1:11300');
-$config->setQueuePrefix('runnertest');
+$config->setQueuePrefix('apndebug');
 
 $runner = new Runner($pool = new \Gaia\Stream\Pool);
 
-//$runner->attachDebugger( function( $data ){ Tap::debug( $data );});
+$runner->attachDebugger( function( $data ){ Tap::debug( $data );});
 
 Tap::ok( $runner instanceof Runner, 'instantiated the runner');
 
