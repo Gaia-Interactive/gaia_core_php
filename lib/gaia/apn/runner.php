@@ -325,14 +325,15 @@ class Runner {
                 shuffle( $keys ); 
                                 
                 $allow = $this->buildAllow( $block_patterns );
-                
                 foreach( $keys as $key ){
                     $conn = $conns[ $key ];
                     if( ! $this->syncWatch( $conn, $allow ) ) continue;
-                    
+                    $change_watch = FALSE;
+
                     while( $res = $conn->reserve(0) ){
                         $this->debug($res);
                         if( ! $this->syncWatch( $conn, $allow ) ) continue 2;
+                        $change_watch = FALSE;
                         try {
                             $notice = new AppNotice($res->getData());
                         } catch( Exception $e ){
@@ -355,6 +356,7 @@ class Runner {
                         $conn->delete( $res );
                         if( strlen( $stream->out ) > $this->max_bytes ) {
                             $block_patterns[$stream->app] = $stream->app;
+                            $change_watch = TRUE;
                         }
                         if( $this->limit && $this->processed >= $this->limit ) break 2;
                     }
