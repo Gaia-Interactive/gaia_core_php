@@ -128,14 +128,14 @@ class Runner {
                 return $this->shutdown();
             }
             $this->populate();
-            if( ( $time - 2 ) >= $this->lastrun ) {
-                $this->debug('maintenance tasks');        
+            if( $this->tasks && ( $time - 2 ) >= $this->lastrun ) {
+                $this->debug('running maintenance tasks', E_NOTICE);        
                 $this->lastrun = $time;
                 try {
                     foreach( $this->tasks as $closure ) $closure( $this );
                     
                 } catch( Exception $e ){
-                    $this->debug( $e->__toString());
+                    $this->debug( $e->__toString(), E_ERROR);
                 }
             }
             
@@ -170,7 +170,7 @@ class Runner {
     /**
     * make sure we are watching the right queues.
     */
-    protected function syncWatch($conn, array $block_patterns = array()){
+    protected function buildAllow( array & $block_patterns ){
         $watch = $ignore = array();
         $config = Config::instance();
         foreach( $config->queueRates() as $pattern => $rate){
@@ -180,7 +180,7 @@ class Runner {
         $debug = $this->debug;
         $pattern = $this->watch;
         //print "\n$pattern\n";
-        $allow = function( $tube ) use ($pattern, $block_patterns, $debug ){
+        return function( $tube ) use ($pattern, & $block_patterns, $debug ){
             if( ! preg_match( $pattern, $tube, $match ) ) return FALSE;
             $queue = $match[1];
             $date = array_pop($match);
@@ -192,27 +192,30 @@ class Runner {
             if( ! $block_patterns ) return TRUE;
             foreach( $block_patterns as $pattern ){
                 if( fnmatch( $pattern, $queue ) ) {
-                    if( $debug ) $debug("blocking $tube"); 
                     return FALSE;
                 }
             }
             return TRUE;
         };
-        
+    }
+    
+    protected function syncWatch( $conn, \Closure $allow ){
+        $watch = $ignore = array();
         foreach( $conn->listTubes() as $tube ) {
            
             if( $allow( $tube ) ) {
                 $watch[] =  $tube;
             } else {
-               $ingore[] = true; 
+               $ingore[] = $tube; 
             }
         }
         if( count( $watch ) < 1 ) return FALSE;
+        if( $this->debug ) $this->debug('watching tubes: ' . implode(',', $watch ), E_NOTICE);
         foreach( $watch as $tube ) $conn->watch( $tube );
         foreach( $ignore as $tube ) $conn->ignore( $tube );
         return TRUE;
     }
-    
+        
     
     
     /**
@@ -315,32 +318,42 @@ class Runner {
                         
             $free_bytes = $this->max_bytes - $queue_bytes;
             if( $this->active && $free_bytes > 0 ){
-                if( $this->debug) $this->debug('starting dequeue');
+                $ct = 0;
                 $config = Config::instance();
                 $conns = $config->connections();
                 $keys = array_keys( $conns );
                 shuffle( $keys ); 
+                
+                $block_patterns = array();
+                
+                $allow = $this->buildAllow( $block_patterns );
+                
                 foreach( $keys as $key ){
                     $conn = $conns[ $key ];
-                    if( ! $this->syncWatch( $conn, $block_patterns ) ) continue;
+                    if( ! $this->syncWatch( $conn, $allow ) ) continue;
+                    
                     while( $res = $conn->reserve(0) ){
                         $this->debug($res);
-                        if( ! $this->syncWatch( $conn, $block_patterns ) ) continue 2;
+                        if( ! $this->syncWatch( $conn, $allow ) ) continue 2;
                         try {
                             $notice = new AppNotice($res->getData());
                         } catch( Exception $e ){
                             $this->invalid++;
+                            if( $this->debug ) $this->debug($e, E_WARNING);
                             $conn->delete( $res );
                             continue;
                         }
                         if( ! $notice->getDeviceToken() || ! $notice->getApp() ) {
                             $this->invalid++;
+                            if( $this->debug ) $this->debug( new Exception('invalid notice', $notice), E_WARNING);
                             $conn->delete( $res );
                             continue;
                         }
                         $stream = $this->connection( $notice->getApp() );
                         $stream->out .= $notice->core()->serialize();
+                        if( $this->debug ) $this->debug($notice, E_NOTICE);
                         $this->processed++;
+                        $ct++;
                         $conn->delete( $res );
                         if( strlen( $stream->out ) > $this->max_bytes ) {
                             $block_patterns[$stream->app] = $stream->app;
@@ -348,11 +361,24 @@ class Runner {
                         if( $this->limit && $this->processed >= $this->limit ) break 2;
                     }
                 }                
-                if( $this->debug) $this->debug('ending dequeue');
+                if( $this->debug && $ct > 0) $this->debug("notices dequeued: $ct", E_NOTICE);
+                if( $ct < 1 ){
+                   $pending = FALSE;
+                   foreach( $this->pool->streams() as $stream ){
+                        if( $stream->out ) {
+                            $pending = TRUE;
+                            break;
+                        }
+                   }
+                   if( ! $pending ){
+                        if( $this->debug) $this->debug("nothing to process. waiting ...", E_NOTICE);
+                        sleep(1);
+                   }
+                }
             }
             return TRUE;
          } catch( Exception $e ){
-            $this->debug( $e );
+            $this->debug( $e, E_WARNING );
             return FALSE;
          }
     }
@@ -387,7 +413,7 @@ class Runner {
 	{
 		if( ! $this->active ) return;
 		$this->active = FALSE;
-		$this->debug('finishing');
+		$this->debug('initiating shutdown sequence ...', E_NOTICE);
 		while ($this->pool->select(1) === TRUE) { 
 		    foreach( $this->pool->streams() as $stream ){
 		        foreach( $stream->readResponses() as $response ){
@@ -399,7 +425,7 @@ class Runner {
 		        }
 		    }
 		}
-		$this->debug('finished');
+		$this->debug('shutdown completed');
 	}
 
 	/**
@@ -410,9 +436,9 @@ class Runner {
 	   // $this->pool->attachDebugger( $debug );
 	}
 	
-	public function debug( $message ){
+	public function debug( $message, $level = E_NOTICE ){
 	    if( ! $call = $this->debug ) return;
-	    return $call( $message );
+	    return $call( $message, $level );
 	}
 	
 	protected function buildTubePattern( $v ){
