@@ -45,10 +45,6 @@ $conn->add( $notice );
 
 $binary = $notice->serialize();
 
-file_put_contents( __DIR__ . '/binary.notice.out', $binary);
-
-
-
 Tap::is( $conn->out, $binary, 'add the message to the connection write queue');
 
 $conn->add( $notice );
