@@ -73,6 +73,10 @@ class Notice {
         }
     }
     
+    public function __call( $method, array $args ){
+        return call_user_func_array( array( $this->getMessage(), $method ), $args );
+    }
+    
     public function unserialize( $binary ){
         $blen = strlen( $binary );
         if( $blen < 45 ){

@@ -5,7 +5,7 @@ use Gaia\Test\Tap;
 use Gaia\Apn\notice;
 use Gaia\Apn\Message;
 
-Tap::plan(11);
+Tap::plan(12);
 
 
 
@@ -44,6 +44,11 @@ $r1->setMessage( $message );
 
 Tap::is( print_r( $r1->getMessage(), TRUE), print_R( $message, TRUE), 'setting the message as an object and grabbing it back out'); 
 
+$text = 'my favorite number is ' . mt_rand(1, 1000000);
+
+$r1->setText( $text );
+
+Tap::is( $r1->getText(), $text, 'method call passed from notice to message, auto decorated as a message class');
 
 $err = NULL;
 try {
