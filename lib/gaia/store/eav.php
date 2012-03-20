@@ -57,8 +57,30 @@ class EAV extends Container {
     */
     public function __construct( Iface $storage, $entity ){
         $this->storage = $storage;
+        
+        // a way to populate an entity without having to read from storage.
+        // for internal use only. used by the EAV::bulkLoad() method.
+        if( is_array( $entity ) ) {
+            $this->entity = $entity["\0._entity"];
+            unset( $entity["\0._entity"]);
+            $this->load( $entity );
+            return;
+        }
+        
+        // standard approach.
         $this->entity = $entity;
         parent::__construct( $this->storage->get( $entity ) );
+    }
+    
+    public static function bulkLoad( Iface $storage, array $keys ){
+        $response = $storage->get( $keys );
+        $list = array();
+        foreach( $keys as $key ){
+            $entity = isset( $response[ $key ] ) ? $response[ $key ] : array();
+            $entity["\0._entity"] = $key;
+            $list[ $key ] = new self( $storage, $entity );
+        }
+        return $list;
     }
     
    /**
