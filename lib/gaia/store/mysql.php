@@ -41,7 +41,7 @@ class MySQL implements Iface {
         foreach( $conns as $connstring => $tablelist ){
             $db = $this->db($connstring);
             foreach( $tablelist as $table => $keys ){
-                $query = "SELECT `id` as `id`, `data` FROM {$table} WHERE `id` IN (%s) AND `ttl` >= %i";
+                $query = "SELECT `id`, `data` FROM {$table} WHERE `id` IN (%s) AND `ttl` >= %i";
                 $rs = $db->execute( $query, array_keys( $keys ), $now );
                 while( $row = $rs->fetch() ) {
                     if( ! isset( $keys[ $row['id'] ] ) ) {
@@ -64,9 +64,9 @@ class MySQL implements Iface {
         $db = $this->db( $connstring );
         $now = $this->now();
         $ttl = $this->ttl( $ttl );
-        $rs = $db->execute("UPDATE `{$table}` SET `data` = %s, `ttl` = %i, `touches` = 1 WHERE `id` = %s AND `ttl` < %i", $v, $ttl, sha1($k, TRUE), $now);
+        $rs = $db->execute("UPDATE `{$table}` SET `data` = %s, `ttl` = %i, `revision` = `revision` + 1 WHERE `id` = %s AND `ttl` < %i", $v, $ttl, sha1($k, TRUE), $now);
         if( $rs->affected() > 0 ) return TRUE;
-        $rs = $db->execute("INSERT IGNORE INTO `{$table}` (`id`, `data`, `ttl`, `touches`) VALUES (%s, %s, %i, 1)", sha1($k, TRUE), $this->serialize($v), $ttl);
+        $rs = $db->execute("INSERT IGNORE INTO `{$table}` (`id`, `keyname`, `data`, `ttl`, `revision`) VALUES (%s, %s, %s, %i, 1)", sha1($k, TRUE), $k, $this->serialize($v), $ttl);
         return $rs->affected() > 0;
     }
     
@@ -76,7 +76,7 @@ class MySQL implements Iface {
         $db = $this->db( $connstring );
         $now = $this->now();
         $ttl = $this->ttl( $ttl );
-        $rs = $db->execute("INSERT INTO `{$table}` (`id`, `data`, `ttl`, `touches`) VALUES (%s, %s, %i, 1) ON DUPLICATE KEY UPDATE `data` = VALUES(`data`), `ttl` = VALUES(`ttl`), `touches` = `touches` + 1", sha1($k, TRUE), $this->serialize($v), $ttl);
+        $rs = $db->execute("INSERT INTO `{$table}` (`id`, `keyname`, `data`, `ttl`, `revision`) VALUES (%s, %s, %s, %i, 1) ON DUPLICATE KEY UPDATE `data` = VALUES(`data`), `ttl` = VALUES(`ttl`), `revision` = `revision` + 1", sha1($k, TRUE), $k, $this->serialize($v), $ttl);
         return $rs->affected() > 0;
     }
     
@@ -85,7 +85,7 @@ class MySQL implements Iface {
         $db = $this->db( $connstring );
         $now = $this->now();
         $ttl = $this->ttl( $ttl );
-        $rs = $db->execute("UPDATE `{$table}` SET `data` = %s, ttl = %i, `touches` = `touches` + 1 WHERE id = %s AND `ttl` >= %i", $v, $ttl, sha1($k, TRUE), $now);
+        $rs = $db->execute("UPDATE `{$table}` SET `data` = %s, ttl = %i, `revision` = `revision` + 1 WHERE id = %s AND `ttl` >= %i", $v, $ttl, sha1($k, TRUE), $now);
         return $rs->affected() > 0;
     }
     
@@ -93,7 +93,7 @@ class MySQL implements Iface {
         list( $connstring, $table ) =  $this->hash( $k );
         $db = $this->db( $connstring );       
         $now = $this->now();
-        $db->execute("UPDATE `{$table}` SET `data` =  @TOTAL:=CAST(`data` AS UNSIGNED) + %i, `touches` = `touches` + 1 WHERE id = %s AND ttl >= %i", $v, sha1($k, TRUE), $now);
+        $db->execute("UPDATE `{$table}` SET `data` =  @TOTAL:=CAST(`data` AS UNSIGNED) + %i, `revision` = `revision` + 1 WHERE id = %s AND ttl >= %i", $v, sha1($k, TRUE), $now);
         $rs = $db->execute('SELECT @TOTAL as total');
         $row = $rs->fetch();
         $rs->free();
@@ -104,7 +104,7 @@ class MySQL implements Iface {
         list( $connstring, $table ) =  $this->hash( $k );
         $db = $this->db( $connstring );
         $now = $this->now();
-        $rs = $db->execute("UPDATE `{$table}` SET `data` =  @TOTAL:=CAST(`data` AS UNSIGNED) - %i, `touches` = `touches` + 1 WHERE id = %s AND `ttl` >= %i", $v, sha1($k, TRUE), $now);
+        $rs = $db->execute("UPDATE `{$table}` SET `data` =  @TOTAL:=CAST(`data` AS UNSIGNED) - %i, `revision` = `revision` + 1 WHERE id = %s AND `ttl` >= %i", $v, sha1($k, TRUE), $now);
         $rs = $db->execute('SELECT @TOTAL as total');
         $row = $rs->fetch();
         $rs->free();
@@ -112,10 +112,9 @@ class MySQL implements Iface {
     }
     
     public function delete( $k ){
-        $now = $this->now();
         list( $connstring, $table ) =  $this->hash( $k );
         $db = $this->db( $connstring );        
-        $rs = $db->execute("UPDATE `{$table}` SET `data`= NULL, ttl = 0, `touches` = 0 WHERE id IN( %s ) AND ttl >= %i", sha1($k, TRUE), $now);
+        $rs = $db->execute("UPDATE `{$table}` SET `data`= NULL, ttl = NULL, `revision` = `revision` + 1 WHERE id IN( %s )", sha1($k, TRUE));
         return TRUE;
     }
     
@@ -136,7 +135,7 @@ class MySQL implements Iface {
     }
     
     public static function initializeStatement( $table ){
-        return "CREATE TABLE IF NOT EXISTS `{$table}` (`rowid` BIGINT UNSIGNED NOT NULL  AUTO_INCREMENT PRIMARY KEY, `id` binary(20) NOT NULL, `data` varbinary(64000), `ttl` INT UNSIGNED NOT NULL, touches INT UNSIGNED NOT NULL, UNIQUE `id` (`id`), INDEX `ttl` (`ttl`) ) Engine=InnoDB";
+        return "CREATE TABLE IF NOT EXISTS `{$table}` (`rowid` BIGINT UNSIGNED NOT NULL  AUTO_INCREMENT PRIMARY KEY, `id` binary(20) NOT NULL, `keyname` varchar(500) NOT NULL, `data` varbinary(64000), `ttl` INT UNSIGNED NOT NULL, revision BIGINT UNSIGNED NOT NULL, UNIQUE `id` (`id`), INDEX `ttl` (`ttl`) ) Engine=InnoDB";
     }
     
     public function flush(){
