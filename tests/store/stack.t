@@ -6,7 +6,7 @@ use Gaia\Store;
 
 $limit = 10;
 
-Tap::plan(1);
+Tap::plan(2);
 
 $cache = new Store\KvpTTL;
 $app = 'test/cache/stack/' . microtime(TRUE) .'/';
@@ -23,3 +23,5 @@ unset($cl);
 $cl = new Store\Stack( $cache );
 krsort( $values );
 Tap::is($cl->recent(400), $values, 'all the items added to the list show up, sorted by most recently added');
+Tap::is( $cl->count(), 11, 'got expected count of the items in the list');
+
