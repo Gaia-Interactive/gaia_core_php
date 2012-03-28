@@ -25,8 +25,7 @@ class Stack {
     }
     
     public function count(){
-        $m = $this->cacher();
-        $data = $m->get( array('i', 'a') );
+        $data = $this->core->get( array('i', 'a') );
         if( ! is_array( $data ) ) return 0;
         if( ! isset( $data['i'] ) || $data['i'] < 1) return 0;
         if( ! isset( $data['a'] ) || $data['a'] < 0 ) $data['a'] = 0;
@@ -85,6 +84,7 @@ class Stack {
     
     public function reset() {
     	$this->core->delete('i');
+    	$this->core->delete('a');
     }
 }
 
