@@ -6,19 +6,33 @@ namespace Gaia\Store;
 use Gaia\Time;
 use Gaia\DB;
 
-// basic wrapper to make redis library conform to the cache interface.
-// todo: figure out ways to make some of the more elegant list and member set functionality 
-// of redis available through the wrapper interface without breaking things.
+// basic wrapper to make mysql library conform to the storage interface.
 class MySQL implements Iface {
     
+    /**
+    * pluggable serializer 
+    */
     protected $s;
+    
+   /**
+    * closure that resolves a key to a dsn/table name pair.
+    */
     protected $resolver;
     
+   /**
+    * create the mysql object.
+    * pass in a closure to specify the dsn/tablename. receives a single key, and should return an array of:
+    * array( $dsn, $table );
+    * the dsn will be passed to Gaia\DB\Connecton::instance() to get the db object.
+    */
     public function __construct(\Closure $resolver, \Gaia\Serialize\Iface $s = NULL ){
         $this->resolver = $resolver;
         $this->s = ( $s ) ? $s : new \Gaia\Serialize\PHP;
     }
     
+    /**
+    * standard get method. wrapper for the getMulti method.
+    */
     public function get( $request){
         if( is_array( $request ) ) return $this->getMulti( $request );
         if( ! is_scalar( $request ) ) return NULL;
@@ -27,6 +41,10 @@ class MySQL implements Iface {
         return $res[ $request ];
     }
 
+    /**
+    * easier to program for a list of keys passed in and returned, than the overloaded interface 
+    * of the normal get method.
+    */
     protected function getMulti( array $request ){
         $conns = array();
         foreach( $request as $k ){
@@ -59,6 +77,9 @@ class MySQL implements Iface {
       
     }
     
+   /**
+    * add a key
+    */
     public function add( $k, $v, $ttl = NULL ){
         list( $connstring, $table ) =  $this->hash( $k );
         $db = $this->db( $connstring );
@@ -69,7 +90,10 @@ class MySQL implements Iface {
         $rs = $db->execute("INSERT IGNORE INTO `{$table}` (`id`, `keyname`, `data`, `ttl`, `revision`) VALUES (%s, %s, %s, %i, 1)", sha1($k, TRUE), $k, $this->serialize($v), $ttl);
         return $rs->affected() > 0;
     }
-    
+
+   /**
+    * set a key
+    */
     public function set( $k, $v, $ttl = NULL ){
         if( $v === NULL ) return $this->delete( $k );
         list( $connstring, $table ) =  $this->hash( $k );
@@ -79,7 +103,10 @@ class MySQL implements Iface {
         $rs = $db->execute("INSERT INTO `{$table}` (`id`, `keyname`, `data`, `ttl`, `revision`) VALUES (%s, %s, %s, %i, 1) ON DUPLICATE KEY UPDATE `data` = VALUES(`data`), `ttl` = VALUES(`ttl`), `revision` = `revision` + 1", sha1($k, TRUE), $k, $this->serialize($v), $ttl);
         return $rs->affected() > 0;
     }
-    
+
+   /**
+    * replace a key
+    */
     public function replace( $k, $v, $ttl = NULL ){
         list( $connstring, $table ) =  $this->hash( $k );
         $db = $this->db( $connstring );
@@ -88,7 +115,10 @@ class MySQL implements Iface {
         $rs = $db->execute("UPDATE `{$table}` SET `data` = %s, ttl = %i, `revision` = `revision` + 1 WHERE id = %s AND `ttl` >= %i", $v, $ttl, sha1($k, TRUE), $now);
         return $rs->affected() > 0;
     }
-    
+
+   /**
+    * replace a key
+    */
     public function increment( $k, $v = 1 ){
         list( $connstring, $table ) =  $this->hash( $k );
         $db = $this->db( $connstring );       
@@ -99,7 +129,10 @@ class MySQL implements Iface {
         $rs->free();
         return $row['total'];
     }
-    
+
+   /**
+    * decrement a key
+    */
     public function decrement( $k, $v = 1 ){
         list( $connstring, $table ) =  $this->hash( $k );
         $db = $this->db( $connstring );
@@ -110,7 +143,10 @@ class MySQL implements Iface {
         $rs->free();
         return $row['total'];
     }
-    
+
+   /**
+    * delete a key
+    */
     public function delete( $k ){
         list( $connstring, $table ) =  $this->hash( $k );
         $db = $this->db( $connstring );        
