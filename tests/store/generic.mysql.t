@@ -1,7 +1,8 @@
 #!/usr/bin/env php
 <?php
-ob_start();
 include __DIR__ . '/../common.php';
+include __DIR__ . '/../assert/mysqli_installed.php';
+include __DIR__ . '/../assert/mysql_running.php';
 use Gaia\Test\Tap;
 use Gaia\Store;
 use Gaia\DB;
