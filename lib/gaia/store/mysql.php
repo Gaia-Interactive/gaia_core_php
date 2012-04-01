@@ -15,9 +15,14 @@ class MySQL implements Iface {
     protected $s;
     
    /**
-    * closure that resolves a key to a dsn/table name pair.
+    * db object.
     */
-    protected $resolver;
+    protected $db;
+    
+    /*
+    * table
+    */
+    protected $table;
     
    /**
     * create the mysql object.
@@ -25,8 +30,11 @@ class MySQL implements Iface {
     * array( $dsn, $table );
     * the dsn will be passed to Gaia\DB\Connecton::instance() to get the db object.
     */
-    public function __construct(\Closure $resolver, \Gaia\Serialize\Iface $s = NULL ){
-        $this->resolver = $resolver;
+    public function __construct(DB\Iface $db, $table, \Gaia\Serialize\Iface $s = NULL ){
+        if( ! $db->isa('mysql') ) throw new Exception('invalid driver', $db );
+        if( ! $db->isa('Gaia\DB\Except') ) $db = new \Gaia\DB\Except( $db );
+        $this->db = $db;
+        $this->table = $table;
         $this->s = ( $s ) ? $s : new \Gaia\Serialize\PHP;
     }
     
@@ -46,30 +54,23 @@ class MySQL implements Iface {
     * of the normal get method.
     */
     protected function getMulti( array $request ){
-        $conns = array();
+        $keys = array();
         foreach( $request as $k ){
-            list( $connstring, $table ) =  $this->hash( $k );
-            if( ! isset( $conns[ $connstring ] ) ) $conns[ $connstring ] = array();
-            if( ! isset( $conns[ $connstring ][ $table ] ) ) $conns[ $connstring ][ $table ] = array();
-            $conns[ $connstring ][ $table ][ sha1($k, TRUE) ] = $k;
+            $keys[ sha1($k, TRUE) ] = $k;
         }
         $now = $this->now();
         $rows = array();
         $rows = array_fill_keys($request, NULL);
-        foreach( $conns as $connstring => $tablelist ){
-            $db = $this->db($connstring);
-            foreach( $tablelist as $table => $keys ){
-                $query = "SELECT `id`, `data` FROM {$table} WHERE `id` IN (%s) AND `ttl` >= %i";
-                $rs = $db->execute( $query, array_keys( $keys ), $now );
-                while( $row = $rs->fetch() ) {
-                    if( ! isset( $keys[ $row['id'] ] ) ) {
-                        continue;
-                    }
-                    $rows[ $keys[ $row['id'] ] ] = $this->unserialize( $row['data'] );
-                }
-                $rs->free(); 
+        $query = "SELECT `id`, `data` FROM {$this->table} WHERE `id` IN (%s) AND `ttl` >= %i";
+        $rs = $this->db->execute( $query, array_keys( $keys ), $now );
+        while( $row = $rs->fetch() ) {
+            if( ! isset( $keys[ $row['id'] ] ) ) {
+                continue;
             }
+            $rows[ $keys[ $row['id'] ] ] = $this->unserialize( $row['data'] );
         }
+        $rs->free(); 
+        
         foreach( $rows as $k => $v){
             if( $v === NULL ) unset( $rows[ $k ] );
         }
@@ -81,13 +82,11 @@ class MySQL implements Iface {
     * add a key
     */
     public function add( $k, $v, $ttl = NULL ){
-        list( $connstring, $table ) =  $this->hash( $k );
-        $db = $this->db( $connstring );
         $now = $this->now();
         $ttl = $this->ttl( $ttl );
-        $rs = $db->execute("UPDATE `{$table}` SET `data` = %s, `ttl` = %i, `revision` = `revision` + 1 WHERE `id` = %s AND `ttl` < %i", $v, $ttl, sha1($k, TRUE), $now);
+        $rs = $this->db->execute("UPDATE `{$this->table}` SET `data` = %s, `ttl` = %i, `revision` = `revision` + 1 WHERE `id` = %s AND `ttl` < %i", $v, $ttl, sha1($k, TRUE), $now);
         if( $rs->affected() > 0 ) return TRUE;
-        $rs = $db->execute("INSERT IGNORE INTO `{$table}` (`id`, `keyname`, `data`, `ttl`, `revision`) VALUES (%s, %s, %s, %i, 1)", sha1($k, TRUE), $k, $this->serialize($v), $ttl);
+        $rs = $this->db->execute("INSERT IGNORE INTO `{$this->table}` (`id`, `keyname`, `data`, `ttl`, `revision`) VALUES (%s, %s, %s, %i, 1)", sha1($k, TRUE), $k, $this->serialize($v), $ttl);
         return $rs->affected() > 0;
     }
 
@@ -96,11 +95,9 @@ class MySQL implements Iface {
     */
     public function set( $k, $v, $ttl = NULL ){
         if( $v === NULL ) return $this->delete( $k );
-        list( $connstring, $table ) =  $this->hash( $k );
-        $db = $this->db( $connstring );
         $now = $this->now();
         $ttl = $this->ttl( $ttl );
-        $rs = $db->execute("INSERT INTO `{$table}` (`id`, `keyname`, `data`, `ttl`, `revision`) VALUES (%s, %s, %s, %i, 1) ON DUPLICATE KEY UPDATE `data` = VALUES(`data`), `ttl` = VALUES(`ttl`), `revision` = `revision` + 1", sha1($k, TRUE), $k, $this->serialize($v), $ttl);
+        $rs = $this->db->execute("INSERT INTO `{$this->table}` (`id`, `keyname`, `data`, `ttl`, `revision`) VALUES (%s, %s, %s, %i, 1) ON DUPLICATE KEY UPDATE `data` = VALUES(`data`), `ttl` = VALUES(`ttl`), `revision` = `revision` + 1", sha1($k, TRUE), $k, $this->serialize($v), $ttl);
         return $rs->affected() > 0;
     }
 
@@ -108,11 +105,9 @@ class MySQL implements Iface {
     * replace a key
     */
     public function replace( $k, $v, $ttl = NULL ){
-        list( $connstring, $table ) =  $this->hash( $k );
-        $db = $this->db( $connstring );
         $now = $this->now();
         $ttl = $this->ttl( $ttl );
-        $rs = $db->execute("UPDATE `{$table}` SET `data` = %s, ttl = %i, `revision` = `revision` + 1 WHERE id = %s AND `ttl` >= %i", $v, $ttl, sha1($k, TRUE), $now);
+        $rs = $this->db->execute("UPDATE `{$this->table}` SET `data` = %s, ttl = %i, `revision` = `revision` + 1 WHERE id = %s AND `ttl` >= %i", $v, $ttl, sha1($k, TRUE), $now);
         return $rs->affected() > 0;
     }
 
@@ -120,11 +115,9 @@ class MySQL implements Iface {
     * replace a key
     */
     public function increment( $k, $v = 1 ){
-        list( $connstring, $table ) =  $this->hash( $k );
-        $db = $this->db( $connstring );       
         $now = $this->now();
-        $db->execute("UPDATE `{$table}` SET `data` =  @TOTAL:=CAST(`data` AS UNSIGNED) + %i, `revision` = `revision` + 1 WHERE id = %s AND ttl >= %i", $v, sha1($k, TRUE), $now);
-        $rs = $db->execute('SELECT @TOTAL as total');
+        $this->db->execute("UPDATE `{$this->table}` SET `data` =  @TOTAL:=CAST(`data` AS UNSIGNED) + %i, `revision` = `revision` + 1 WHERE id = %s AND ttl >= %i", $v, sha1($k, TRUE), $now);
+        $rs = $this->db->execute('SELECT @TOTAL as total');
         $row = $rs->fetch();
         $rs->free();
         return $row['total'];
@@ -134,11 +127,9 @@ class MySQL implements Iface {
     * decrement a key
     */
     public function decrement( $k, $v = 1 ){
-        list( $connstring, $table ) =  $this->hash( $k );
-        $db = $this->db( $connstring );
         $now = $this->now();
-        $rs = $db->execute("UPDATE `{$table}` SET `data` =  @TOTAL:=CAST(`data` AS UNSIGNED) - %i, `revision` = `revision` + 1 WHERE id = %s AND `ttl` >= %i", $v, sha1($k, TRUE), $now);
-        $rs = $db->execute('SELECT @TOTAL as total');
+        $rs = $this->db->execute("UPDATE `{$this->table}` SET `data` =  @TOTAL:=CAST(`data` AS UNSIGNED) - %i, `revision` = `revision` + 1 WHERE id = %s AND `ttl` >= %i", $v, sha1($k, TRUE), $now);
+        $rs = $this->db->execute('SELECT @TOTAL as total');
         $row = $rs->fetch();
         $rs->free();
         return $row['total'];
@@ -148,34 +139,28 @@ class MySQL implements Iface {
     * delete a key
     */
     public function delete( $k ){
-        list( $connstring, $table ) =  $this->hash( $k );
-        $db = $this->db( $connstring );        
-        $rs = $db->execute("UPDATE `{$table}` SET `data`= NULL, ttl = NULL, `revision` = `revision` + 1 WHERE id IN( %s )", sha1($k, TRUE));
+        $rs = $this->db->execute("UPDATE `{$this->table}` SET `data`= NULL, ttl = NULL, `revision` = `revision` + 1 WHERE id IN( %s )", sha1($k, TRUE));
         return TRUE;
     }
     
     protected function now(){
         return Time::now();
     }
-    
-    protected function hash( $key ){
-        $closure = $this->resolver;
-        return $closure( $key );
-    }
-    
-    protected function db( $connstring ){
-        $db = DB\Connection::instance( $connstring );
-        if( ! $db->isa('mysql') ) throw new Exception('invalid driver', $db );
-        if( ! $db->isa('Gaia\DB\Except') ) $db = new \Gaia\DB\Except( $db );
-        return $db;
-    }
-    
-    public static function initializeStatement( $table ){
-        return "CREATE TABLE IF NOT EXISTS `{$table}` (`rowid` BIGINT UNSIGNED NOT NULL  AUTO_INCREMENT PRIMARY KEY, `id` binary(20) NOT NULL, `keyname` varchar(500) NOT NULL, `data` varbinary(64000), `ttl` INT UNSIGNED NOT NULL, revision BIGINT UNSIGNED NOT NULL, UNIQUE `id` (`id`), INDEX `ttl` (`ttl`) ) Engine=InnoDB";
+
+    public function initialize(){
+        $this->db->execute(
+            "CREATE TABLE IF NOT EXISTS `{$this->table}` (" .
+            "`rowid` BIGINT UNSIGNED NOT NULL  AUTO_INCREMENT PRIMARY KEY, " . 
+            "`id` binary(20) NOT NULL, `keyname` varchar(500) NOT NULL, " . 
+            "`data` varbinary(64000), `ttl` INT UNSIGNED NOT NULL, " . 
+            "`revision` BIGINT UNSIGNED NOT NULL, " .
+            "UNIQUE `id` (`id`), " .
+            "INDEX `ttl` (`ttl`) " .
+            ") Engine=InnoDB");
     }
     
     public function flush(){
-        throw new Exception( __CLASS__ . '::' . __FUNCTION__ . ' not implemented');
+        $this->db->execute("TRUNCATE {$this->table}");
     }
     
     public function ttlEnabled(){
