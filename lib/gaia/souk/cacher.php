@@ -80,7 +80,7 @@ class Cacher extends Passthru {
         }
         $options = array(
             'callback'=> array( $this->core, 'fetch'), // callback handler for missing rows.
-            'method'=>'set', // use add method, so we don't accidentally clobber updates to the cache.
+            'method'=>'add', // use add method, so we don't accidentally clobber updates to the cache.
             'timeout' => $timeout, // how long do we want the data cached?
             'cache_missing'=> TRUE, // missing keys are stored in the cache, so we don't keep hitting the db.
         );
