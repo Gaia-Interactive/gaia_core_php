@@ -48,6 +48,12 @@ $res = $souk->fetch( $ids );
 
 Tap::is( array_keys( $res ), $ids, 'fetch returns results sorted in the same order as the ids we passed in');
 
+cachemock()->flush();
+
+$res = $souk->fetch( $ids );
+
+Tap::is( array_keys( $res ), $ids, 'flushing the cache doesnt change anything');
+
 
 $ids = souk( $app )->search( array('sort'=>'just_added', 'item_id'=>$item_id, 'seller'=>$seller_id) );
 
