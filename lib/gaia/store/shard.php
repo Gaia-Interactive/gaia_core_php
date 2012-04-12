@@ -5,11 +5,27 @@
 namespace Gaia\Store;
 use Gaia\Exception;
 
-// basic wrapper to make mysql library conform to the storage interface.
+/**
+ * basic wrapper that allows us to shard across many objects that implement the Iface object.
+ * A closure puts the sharding logic in the hands of the consumer.
+ * example:
+ * 
+ * $a = new KVPTTL;
+ * $b = new KVPTTL;
+ * $resolve = function ( $key ) use ( $a, $b ){ 
+ *      return abs(crc32( $key )) % 2 == 1 ? $a : $b;
+ * };
+ * $storage = new Shard( $resolve );
+ * 
+ * This should split the reads/writes evenly across the two shards. Of course you can define
+ * much more complex sharding logic, but this should be enough.
+ *  
+ */
+
 class Shard implements Iface {
     
    /**
-    * closure that resolves a key to a dsn/table name pair.
+    * closure that resolves a key to an object to handle it.
     */
     protected $resolver;
         
