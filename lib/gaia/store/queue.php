@@ -24,7 +24,7 @@ class Queue extends Wrap {
         $missing = $callbacks = array();
         foreach( $queue as $k=>$options ){
             if( isset( $options->missing_callback ) ){
-                $cb_key = md5( serialize( $options->missing_callback ) );
+                $cb_key = self::hashCallback( $options->missing_callback );
                 if( ! isset( $callbacks[ $cb_key ] ) ) $callbacks[ $cb_key ] = $options->missing_callback;
                 if( ! isset( $missing[ $cb_key ] ) ) $missing[ $cb_key ] = array();
                 $missing[ $cb_key ][substr($k, strlen($options->prefix)) ] = $k;
@@ -60,5 +60,14 @@ class Queue extends Wrap {
             if( $queue[ $k ]->response_callback ) call_user_func( $queue[ $k ]->response_callback, substr($k, strlen($queue[$k]->prefix)), $v );
         }
         return $res;
+    }
+    
+    protected static function hashCallback( $cb ){
+        if( $cb instanceof \Closure ){
+            $cb = new \ReflectionFunction( $cb );
+            $cb = $cb->__toString();
+        }elseif( is_array( $cb ) && isset( $cb[0] ) && is_object( $cb[0] ) ) $cb[0] = spl_object_hash( $cb[0] );
+        
+        return md5( serialize($cb) );
     }
 }
