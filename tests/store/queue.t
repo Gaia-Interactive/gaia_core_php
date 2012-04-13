@@ -4,7 +4,7 @@ include __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\Store;
 
-Tap::plan(17);
+Tap::plan(20);
 
 class TestData {
 
@@ -154,4 +154,24 @@ $t = new TestData();
 
 $res = $m->get(array(1,2) );
 Tap::is($res, array(1=>1, 2=>2), 'Callback works when wrapping Store\gate');
+
+
+$m = new Store\Queue( new Store\KvpTTL() );
+$t = new TestData();
+
+$options = array(
+            'prefix'=> $prefix1 = 'test1_' . time(),
+            'response_callback'=>function($k, $v) use( $t ) { $t->set($k, $v); },
+            'missing_callback'=>function( $keys ) use( $t ) { return $t->fetch($keys); },
+            'timeout'=>5000,
+            'compression'=>0
+);
+
+$m->queue( $ids, $options );
+$res = $m->fetchAll();
+
+Tap::ok(is_array($res), 'using closure, fetchall returned an array');
+Tap::is( array_keys( $res ), array( $prefix1 . $ids[0], $prefix1 . $ids[1]), 'closure fetchall results keyed properly');
+Tap::is( array_keys( $t->data() ), $ids, 'closure populated data into test object');
+
 
