@@ -38,15 +38,36 @@ $config = Job::config();
 $config->setQueuePrefix('test');
 //$config->addQueueRate('test*',10);
 
-$config->setBuilder( function($job, array & $opts ) use ($nonce) {
+// set up a connection pool for the default.
+$conn_pool = array();
+
+$config->setBuilder( function($job, array & $opts ) use ($nonce, & $conn_pool, $debugger) {
     $parts = new Gaia\Container( @parse_url( $job->url ));
     $uri = isset( $parts->path ) ? $parts->path : '/';
     if( $parts->query ) $uri = $uri . '?' . $parts->query;
     if( $job->id ) $opts[CURLOPT_HTTPHEADER][] = 'X-Job-Id: ' . $job->id;
     $opts[CURLOPT_HTTPHEADER][] = 'X-JOB-NONCE: ' . $nonce->create($uri, time() + 300 );
+    
+    if( $parts->host == '127.0.0.1' && $parts->port == '11299'){
+        $conn = array_pop( $conn_pool );
+        if( $conn ) {
+            if( $conn['timeout'] < time() ) {
+                curl_close( $conn['resource'] );
+            } else {
+                $job->persistent_timeout = $conn['timeout'];
+                $job->resource = $conn['resource'];
+            }
+        }
+        if( ! $job->persistent_timeout ){
+            $job->persistent_timeout = time() + 60;
+            $debugger( " ----------   NEW CONNECTION ---------------");
+        }
+        $opts[CURLOPT_HTTPHEADER][] = 'Connection: Keep-Alive';
+        $opts[CURLOPT_HTTPHEADER][] = 'Keep-Alive: 120';
+    }
 });
 
-$config->setHandler( function($job, $response ) use ($runner, $debugger) {
+$config->setHandler( function($job, $response ) use ($runner, $debugger, &$conn_pool) {
     //if( $response->headers->{'X-JOB-STATUS'} == 'complete') $job->flag = 1;
     if( $job->task == 'register'){
         Job::config()->registering = FALSE;
@@ -70,8 +91,6 @@ $config->setHandler( function($job, $response ) use ($runner, $debugger) {
         } else {
             $runner->shutdown();
         }
-
-        
     }
     $request = $job;
     $info = $response;
@@ -81,6 +100,11 @@ $config->setHandler( function($job, $response ) use ($runner, $debugger) {
     $out .= ": " . $info->url;
     if( $info->http_code == 200 ) {
         $debugger( $out );
+        if( $job->persistent_timeout && $job->persistent_timeout > time() ){
+            $conn_pool[] = array('timeout'=>$job->persistent_timeout, 'resource'=>$job->resource);
+        } else {
+            $job->close();
+        }
         return;
     }
     
