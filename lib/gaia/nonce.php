@@ -36,6 +36,7 @@ class Nonce {
     * in practice a number between 30 and 91 is pretty good. 91 is virtually unhackable.
     */
     public function __construct( $secret, $len = NULL ){
+        if( $secret === NULL || strlen( $secret ) < 1 ) throw new \Exception('invalid-nonce-secret');
         $this->secret = $secret;
         if( $len != NULL ){
             if( $len < 15 ) $len = 15;

@@ -3,7 +3,7 @@
 include_once __DIR__ . '/common.php';
 use Gaia\Test\Tap;
 use Gaia\Nonce;
-Tap::plan(7);
+Tap::plan(8);
 $token = 'demo' . time();
 $secret = 'abc123demo' . microtime(TRUE);
 $n = new Nonce($secret);
@@ -34,3 +34,13 @@ $nonce = $n->create( $token, $expires );
 Tap::is( strlen( $nonce), 1000, 'created a huge nonce');
 Tap::ok( $n->check( $nonce, $token ), 'huge nonce checks out');
 Tap::debug( $nonce );
+
+$err = '';
+
+try {
+    $nonce = new Nonce(NULL);
+} catch( Exception $e ){
+    $err = $e->getMessage();
+}
+
+Tap::like($err, '#secret#', 'exception thrown on no secret found');
