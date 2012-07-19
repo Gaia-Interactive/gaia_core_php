@@ -44,31 +44,32 @@ class SQLite implements Iface {
     public function add( array $data ){
         $shard = Util::currentShard();
         $table = 't_index';
-        $db = $this->db($table);
+        $dbi = $this->db($table);
         DB\Transaction::start();
-        DB\Transaction::add( $db );
+        $dbi->start();
         $sql = "INSERT OR IGNORE INTO $table (thread,shard,sequence) VALUES (%i, %i, 1)";
-        $rs = $db->execute( $sql, $this->thread, $shard );
+        $rs = $dbi->execute( $sql, $this->thread, $shard );
         if( ! $rs->affected() ){
             $sql = "UPDATE $table SET `sequence` = `sequence` + 1 WHERE `thread` = %i AND `shard` = %i";
-            $db->execute( $sql, $this->thread, $shard );
+            $dbi->execute( $sql, $this->thread, $shard );
         }
         $sql = "SELECT `sequence` FROM $table WHERE `thread` = %i AND `shard` = %i";
-        $rs = $db->execute($sql, $this->thread, $shard);
+        $rs = $dbi->execute($sql, $this->thread, $shard);
         $sequence = NULL;
         if( $row = $rs->fetch() ) $sequence = $row['sequence'];
         $rs->free();
         $table = 't_' . $shard;
-        $db = $this->db( $table );
-        DB\Transaction::start();
-        DB\Transaction::add( $db );
+        $dbs = $this->db( $table );
+        $dbs->start();
         $sql = "INSERT OR IGNORE INTO $table (thread, sequence, data) VALUES (%i, %i, %s)";
         $data = $this->serialize($data);
-        $db->execute( $sql, $this->thread, $sequence, $data );
+        $dbs->execute( $sql, $this->thread, $sequence, $data );
         if( ! $rs->affected() ){
             $sql = "UPDATE $table SET `data` = %s WHERE `thread` = %i AND `sequence` = %i";
-            $db->execute( $sql, $data, $this->thread, $sequence );
+            $dbs->execute( $sql, $data, $this->thread, $sequence );
         }
+        $dbi->commit();
+        $dbs->commit();
         DB\Transaction::commit();
         $id = Util::composeId( $shard, $sequence );
         return $id;
