@@ -44,22 +44,25 @@ class MySQL implements Iface {
     public function add( array $data ){
         $shard = Util::currentShard();
         $table = 't_index';
-        $db = $this->db($table);
+        $dbi = $this->db($table);
         DB\Transaction::start();
-        DB\Transaction::add( $db );
+        $dbi->start();
         $sql = "INSERT INTO $table (thread,shard,sequence) VALUES (%i, %i, @SKEIN_SEQUENCE:=1) ON DUPLICATE KEY UPDATE `sequence` = @SKEIN_SEQUENCE:=( `sequence` + 1 )";
-        $db->execute( $sql, $this->thread, $shard );
-        $rs = $db->execute('SELECT @SKEIN_SEQUENCE as sequence');
+        $dbi->execute( $sql, $this->thread, $shard );
+        $rs = $dbi->execute('SELECT @SKEIN_SEQUENCE as sequence');
         $sequence = NULL;
         if( $row = $rs->fetch() ) $sequence = $row['sequence'];
         $rs->free();
         $table = 't_' . $shard;
-        $db = $this->db( $table );
-        DB\Transaction::add( $db );
+        $dbs = $this->db( $table );
+        $dbs->start();
         $sql = "INSERT INTO $table (thread, sequence, data) VALUES (%i, %i, %s) ON DUPLICATE KEY UPDATE `data` = VALUES(`data`)";
-        $db->execute( $sql, $this->thread, $sequence, $this->serialize($data) );
-        $id = Util::composeId( $shard, $sequence );
+        $dbs->execute( $sql, $this->thread, $sequence, $this->serialize($data) );
+        $dbi->commit();
+        $dbs->commit();
         DB\Transaction::commit();
+        $id = Util::composeId( $shard, $sequence );
+       
         return $id;
     }
     
