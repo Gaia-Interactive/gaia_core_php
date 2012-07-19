@@ -9,11 +9,11 @@ class Wrap implements Iface {
         $this->core = $core;
     }
     
-    public function add( array $data ){
+    public function add( $data ){
         return $this->core->add( $data );
     }
     
-    public function store( $id, array $data ){
+    public function store( $id, $data ){
         return $this->core->store($id, $data );
     }
     
@@ -35,6 +35,14 @@ class Wrap implements Iface {
     
     public function shardSequences(){
         return $this->core->shardSequences();
+    }
+    
+    public function filterAscending( \Closure $c, $start_after = NULL ){
+        Util::filter( $this, $c, 'ascending', $start_after );
+    }
+    
+    public function filterDescending( \Closure $c, $start_after = NULL ){
+        Util::filter( $this, $c, 'descending', $start_after );
     }
     
     public function __call( $method, array $args ){

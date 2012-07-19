@@ -38,7 +38,7 @@ class Cache implements Iface {
     }
     
     
-    public function add( array $data ){
+    public function add( $data ){
         $id = $this->core->add( $data );
         $this->cache->set( $id, $data );
         list( $shard, $sequence ) = Util::parseId( $id );
@@ -56,7 +56,7 @@ class Cache implements Iface {
         return $id;
     }
     
-    public function store( $id, array $data ){
+    public function store( $id, $data ){
         $this->core->store( $id, $data );
         $this->cache->set( $id, $data, $this->ttl );
         return TRUE;
@@ -68,6 +68,14 @@ class Cache implements Iface {
     
     public function descending( $limit = 1000, $start_after = NULL ){
         return Util::descending( $this->shardSequences(), $limit, $start_after );
+    }
+    
+    public function filterAscending( \Closure $c, $start_after = NULL ){
+        Util::filter( $this, $c, 'ascending', $start_after );
+    }
+    
+    public function filterDescending( \Closure $c, $start_after = NULL ){
+        Util::filter( $this, $c, 'descending', $start_after );
     }
     
     public function shardSequences(){
