@@ -126,7 +126,7 @@ class MySQL implements Iface {
     protected function db( & $table ){
         $mapper = $this->mapper;
         $db = $mapper( $table );
-        if( ! $db instanceof DB ) throw new Exception('invalid db');
+        if( ! $db instanceof DB\Iface ) throw new Exception('invalid db');
         if( ! $db->isa('mysql') ) throw new Exception('invalid db');
         if( ! $db->isa('Gaia\DB\Except') ) $db = new DB\Except( $db );
         return $db;
