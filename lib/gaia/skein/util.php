@@ -4,9 +4,17 @@ use Gaia\Exception;
 use Gaia\Time;
 
 class Util {
-
+    
+    protected static $current_shard_generator;
+    
+    public static function setCurrentShardGenerator( \Closure $c ){
+        self::$current_shard_generator = $c;
+    }
+    
     public static function currentShard(){
-        return date('Ym', Time::now());
+        if( ! isset( self::$current_shard_generator ) ) return date('Ym', Time::now());
+        $c = self::$current_shard_generator;
+        return $c(); 
     }
     
     public static function validateIds( array $shard_sequences, array $ids ){
@@ -103,16 +111,17 @@ class Util {
     }
     
     public static function parseId( $id, $validate = TRUE ){
-        $id = strval( $id );
-        if( strlen( $id ) > 16 && ctype_digit( $id ) ){
-            $shard = substr( $id, 0, 6 );
-            $row_id = substr( $id, 6);
-            return array( $shard, ltrim($row_id, '0'));
+        $id = (string) $id;
+        $pattern = '#^([0-9]{1,11})\-([0-9]{11})$#';
+        if( preg_match( $pattern, $id, $matches ) ){
+            $shard = ltrim($matches[1], '0');
+            $sequence = ltrim($matches[2], '0');
+            if( $shard && $sequence ) return array( $shard, $sequence );
         }
         if( $validate ) {
             throw new Exception('invalid id', $id );
         }
-        return array(NULL, NULL );
+        return array(NULL, NULL);
     }
     
     public static function parseIds( array $ids ){
@@ -127,9 +136,9 @@ class Util {
     }
     
     
-    public static function composeId( $shard, $row_id ){
-        if( strlen( $shard ) != 6 || ! ctype_digit( strval( $shard ) ) || ! ctype_digit( strval( $row_id ) ) ) return NULL;
-        return $shard . str_pad($row_id, 11, '0', STR_PAD_LEFT);
+    public static function composeId( $shard, $sequence ){
+        if( ! ctype_digit( strval( $shard ) ) || ! ctype_digit( strval( $sequence ) ) ) return NULL;
+        return $shard . '-' . str_pad($sequence, 11, '0', STR_PAD_LEFT);
     }
     
 }
