@@ -26,11 +26,11 @@ class Wrap implements Iface {
     }
     
     public function ascending( $limit = 1000, $start_after = NULL ){
-        return $this->core->ascending( $limit, $start_after );
+        return Util::ascending( $this->shardSequences(), $limit, $start_after );
     }
     
     public function descending( $limit = 1000, $start_after = NULL ){
-        return $this->core->descending( $limit, $start_after );
+        return Util::descending( $this->shardSequences(), $limit, $start_after );
     }
     
     public function shardSequences(){
