@@ -82,6 +82,26 @@ class Util {
          return $result;
     }
     
+    public static function filter( Iface $core, \Closure $cb, $method = 'ascending', $start_after = NULL ){
+    
+        if( $method != 'ascending' ) $method = 'descending';
+        $id_chunk_size = 1000;
+        $get_chunk_size = 100;
+        $ct = 0;
+        do {
+            $ids = $core->$method( $id_chunk_size, $start_after );
+            $ct = count( $ids );
+            if( $ct < 1 ) return;
+            foreach( array_chunk( $ids, $get_chunk_size) as $i ){
+                foreach( $core->get( $i ) as $id => $data ){
+                    $res = $cb( $id, $data );
+                    if( $res === FALSE ) return;
+                }
+            }
+        
+        } while( $ct >= $id_chunk_size);
+    }
+    
     public static function parseId( $id, $validate = TRUE ){
         $id = strval( $id );
         if( strlen( $id ) > 16 && ctype_digit( $id ) ){

@@ -24,7 +24,7 @@ class SQLite implements Iface {
     }
     
     protected function multiGet( array $ids ){
-        $result = array();
+        $result = array_fill_keys( $ids, NULL );
         foreach( Util::parseIds( $ids ) as $shard=>$sequences ){
             $table= 't_' . $shard;
             $db = $this->db( $table );
@@ -37,11 +37,12 @@ class SQLite implements Iface {
             }
             $rs->free();
         }
+        foreach( array_keys( $result, NULL, TRUE) as $rm ) unset( $result[ $rm ] );
         return $result;
     }
     
     
-    public function add( array $data ){
+    public function add( $data ){
         $shard = Util::currentShard();
         $table = 't_index';
         $dbi = $this->db($table);
@@ -75,7 +76,7 @@ class SQLite implements Iface {
         return $id;
     }
     
-    public function store( $id, array $data ){
+    public function store( $id, $data ){
         $ids = Util::validateIds( $this->shardSequences(), array( $id ) );
         if( ! in_array( $id, $ids ) ) throw new Exception('invalid id', $id );
         list( $shard, $sequence ) = Util::parseId( $id );
@@ -97,6 +98,14 @@ class SQLite implements Iface {
     
     public function descending( $limit = 1000, $start_after = NULL ){
         return Util::descending( $this->shardSequences(), $limit, $start_after );
+    }
+    
+    public function filterAscending( \Closure $c, $start_after = NULL ){
+        Util::filter( $this, $c, 'ascending', $start_after );
+    }
+    
+    public function filterDescending( \Closure $c, $start_after = NULL ){
+        Util::filter( $this, $c, 'descending', $start_after );
     }
     
     public function shardSequences(){

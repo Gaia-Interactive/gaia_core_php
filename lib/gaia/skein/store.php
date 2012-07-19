@@ -24,7 +24,7 @@ class Store implements Iface {
     }
     
     
-    public function add( array $data ){
+    public function add( $data ){
         $shard = Util::currentShard();
         $shard_key = 'shard_' . $shard;
         $sequence = $this->store->increment($shard_key);
@@ -46,7 +46,7 @@ class Store implements Iface {
         return $id;
     }
     
-    public function store( $id, array $data ){
+    public function store( $id, $data ){
         $ids = Util::validateIds( $this->shardSequences(), array( $id ) );
         if( ! in_array( $id, $ids ) ) throw new Exception('invalid id', $id );
         $this->store->set($id, $data );
@@ -59,6 +59,14 @@ class Store implements Iface {
     
     public function descending( $limit = 1000, $start_after = NULL ){
         return Util::descending( $this->shardSequences(), $limit, $start_after );
+    }
+    
+    public function filterAscending( \Closure $c, $start_after = NULL ){
+        Util::filter( $this, $c, 'ascending', $start_after );
+    }
+    
+    public function filterDescending( \Closure $c, $start_after = NULL ){
+        Util::filter( $this, $c, 'descending', $start_after );
     }
     
     public function shardSequences(){
