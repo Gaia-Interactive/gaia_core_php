@@ -25,8 +25,9 @@ class Store implements Iface {
     }
     
     
-    public function add( $data ){
-        $shard = Util::currentShard();
+    public function add( $data, $shard = NULL ){
+        $shard = strval($shard);
+        if( ! ctype_digit( $shard ) ) $shard = Util::currentShard();
         $shard_key = 'shard_' . $shard;
         $sequence = $this->store->increment($shard_key);
         if( $sequence < 1 && ! $this->store->add( $shard_key, $sequence = 1) ) {

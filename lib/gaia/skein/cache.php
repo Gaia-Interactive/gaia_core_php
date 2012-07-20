@@ -2,7 +2,7 @@
 namespace Gaia\Skein;
 use Gaia\Store;
 
-class Cache implements Iface {
+class Cache extends Wrap {
 
     protected $core;
     protected $cache;
@@ -38,8 +38,8 @@ class Cache implements Iface {
     }
     
     
-    public function add( $data ){
-        $id = $this->core->add( $data );
+    public function add( $data, $shard = NULL ){
+        $id = $this->core->add( $data, $shard );
         $this->cache->set( $id, $data );
         list( $shard, $sequence ) = Util::parseId( $id );
         $shardkey = 'shard_' . $shard;

@@ -9,8 +9,8 @@ class Wrap implements Iface {
         $this->core = $core;
     }
     
-    public function add( $data ){
-        return $this->core->add( $data );
+    public function add( $data, $shard = NULL){
+        return $this->core->add( $data, $shard );
     }
     
     public function store( $id, $data ){
