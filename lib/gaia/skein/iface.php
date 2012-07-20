@@ -4,7 +4,7 @@ namespace Gaia\Skein;
 interface Iface {
     public function count();
     public function get( $id );
-    public function add( $data );
+    public function add( $data, $shard = NULL );
     public function store( $id, $data );
     public function ascending( $limit = 1000, $start_after = NULL );
     public function descending( $limit = 1000, $start_after = NULL );

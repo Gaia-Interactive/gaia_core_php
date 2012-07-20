@@ -42,8 +42,9 @@ class SQLite implements Iface {
     }
     
     
-    public function add( $data ){
-        $shard = Util::currentShard();
+    public function add( $data, $shard = NULL ){
+        $shard = strval($shard);
+        if( ! ctype_digit( $shard ) ) $shard = Util::currentShard();
         $table = 't_index';
         $dbi = $this->db($table);
         DB\Transaction::start();
