@@ -1,5 +1,6 @@
 <?php
 namespace Gaia\Skein;
+use Gaia\Exception;
 
 class Store implements Iface {
     
