@@ -5,16 +5,8 @@ use Gaia\Time;
 
 class Util {
     
-    protected static $current_shard_generator;
-    
-    public static function setCurrentShardGenerator( \Closure $c ){
-        self::$current_shard_generator = $c;
-    }
-    
     public static function currentShard(){
-        if( ! isset( self::$current_shard_generator ) ) return date('Ym', Time::now());
-        $c = self::$current_shard_generator;
-        return $c(); 
+        return date('Ym', Time::now());
     }
     
     public static function validateIds( array $shard_sequences, array $ids ){
@@ -111,17 +103,16 @@ class Util {
     }
     
     public static function parseId( $id, $validate = TRUE ){
-        $id = (string) $id;
-        $pattern = '#^([0-9]{1,11})\-([0-9]{11})$#';
-        if( preg_match( $pattern, $id, $matches ) ){
-            $shard = ltrim($matches[1], '0');
-            $sequence = ltrim($matches[2], '0');
-            if( $shard && $sequence ) return array( $shard, $sequence );
+        $id = strval( $id );
+        if( strlen( $id ) > 11 && ctype_digit( $id ) ){
+            $shard = substr( $id, 0, -11);
+            $sequence = substr( $id, -11);
+            return array( $shard, ltrim($sequence, '0'));
         }
         if( $validate ) {
             throw new Exception('invalid id', $id );
         }
-        return array(NULL, NULL);
+        return array(NULL, NULL );
     }
     
     public static function parseIds( array $ids ){
@@ -136,9 +127,13 @@ class Util {
     }
     
     
-    public static function composeId( $shard, $sequence ){
-        if( ! ctype_digit( strval( $shard ) ) || ! ctype_digit( strval( $sequence ) ) ) return NULL;
-        return $shard . '-' . str_pad($sequence, 11, '0', STR_PAD_LEFT);
+    public static function composeId( $shard, $sequence, $validate = TRUE ){
+        $id = $shard . str_pad($sequence, 11, '0', STR_PAD_LEFT);
+        if( ! $validate ) return $id;
+        if( ! ctype_digit( strval( $shard ) ) || 
+            ! ctype_digit( strval( $sequence ) )
+            ) return NULL;
+        return $id;
     }
     
 }
