@@ -14,7 +14,16 @@ class SQLite implements Iface {
     }
     
     public function count(){
-        return Util::count( $this->shardSequences() );
+        $table = 't_index';
+        $db = $this->db( $table );
+        $sql = "SELECT SUM( `sequence` ) as ct FROM $table WHERE `thread` = %s";
+        $rs = $db->execute( $sql, $this->thread );
+        $result = 0;
+        if( $row = $rs->fetch() ){
+            $result = $row['ct'];
+        }
+        $rs->free();
+        return $result;
     }
     
     public function get( $id ){
