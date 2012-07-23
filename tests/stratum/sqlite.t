@@ -13,7 +13,6 @@ try {
 } catch( \Exception $e ){
     Tap::plan('skip_all', $e->__toString());
 }
-Tap::plan(14);
 
 DB\Connection::load( array('test'=> function () use ( $db ) { return $db; }) );
 
