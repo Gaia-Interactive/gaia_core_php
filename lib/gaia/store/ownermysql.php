@@ -5,9 +5,10 @@
 namespace Gaia\Store;
 use Gaia\Time;
 use Gaia\DB;
+use Gaia\Exception;
 
 // basic wrapper to make mysql library conform to the storage interface.
-class MySQL implements Iface {
+class OwnerMySQL implements Iface {
     
     /**
     * pluggable serializer 
@@ -19,6 +20,8 @@ class MySQL implements Iface {
     */
     protected $db;
     
+    protected $owner;
+    
     /*
     * table
     */
@@ -26,11 +29,13 @@ class MySQL implements Iface {
     
    /**
     * create the mysql object.
-    * pass in a closure to specify the dsn/tablename. receives a single key, and should return an array of:
-    * array( $dsn, $table );
+    * pass in a  dsn/tablename.
     * the dsn will be passed to Gaia\DB\Connecton::instance() to get the db object.
     */
-    public function __construct($db, $table, \Gaia\Serialize\Iface $s = NULL ){
+    public function __construct($owner, $db, $table, \Gaia\Serialize\Iface $s = NULL ){
+        $owner = strval( $owner );
+        if( ! ctype_digit( $owner ) ) throw new Exception('invalid owner', $owner );
+        $this->owner = $owner;
         $this->db = $db;
         $this->table = $table;
         $this->s = ( $s ) ? $s : new \Gaia\Serialize\PHP;
@@ -82,10 +87,9 @@ class MySQL implements Iface {
     public function add( $k, $v, $ttl = NULL ){
         $now = $this->now();
         $ttl = $this->ttl( $ttl );
-        $db = $this->db();
-        $rs = $db->execute("UPDATE `{$this->table}` SET `data` = %s, `ttl` = %i, `revision` = `revision` + 1 WHERE `id` = %s AND `ttl` < %i", $v, $ttl, sha1($k, TRUE), $now);
+        $rs = $this->db()->execute("UPDATE `{$this->table}` SET `data` = %s, `ttl` = %i, `revision` = `revision` + 1 WHERE `owner` = %i AND `id` = %s AND `ttl` < %i", $v, $ttl, $this->owner, sha1($k, TRUE), $now);
         if( $rs->affected() > 0 ) return TRUE;
-        $rs = $db->execute("INSERT IGNORE INTO `{$this->table}` (`id`, `keyname`, `data`, `ttl`, `revision`) VALUES (%s, %s, %s, %i, 1)", sha1($k, TRUE), $k, $this->serialize($v), $ttl);
+        $rs = $this->db()->execute("INSERT IGNORE INTO `{$this->table}` (`owner`, `id`, `keyname`, `data`, `ttl`, `revision`) VALUES (%i, %s, %s, %s, %i, 1)", $this->owner, sha1($k, TRUE), $k, $this->serialize($v), $ttl);
         return $rs->affected() > 0;
     }
 
@@ -96,7 +100,7 @@ class MySQL implements Iface {
         if( $v === NULL ) return $this->delete( $k );
         $now = $this->now();
         $ttl = $this->ttl( $ttl );
-        $rs = $this->db()->execute("INSERT INTO `{$this->table}` (`id`, `keyname`, `data`, `ttl`, `revision`) VALUES (%s, %s, %s, %i, 1) ON DUPLICATE KEY UPDATE `data` = VALUES(`data`), `ttl` = VALUES(`ttl`), `revision` = `revision` + 1", sha1($k, TRUE), $k, $this->serialize($v), $ttl);
+        $rs = $this->db()->execute("INSERT INTO `{$this->table}` (`owner`, `id`, `keyname`, `data`, `ttl`, `revision`) VALUES (%i, %s, %s, %s, %i, 1) ON DUPLICATE KEY UPDATE `data` = VALUES(`data`), `ttl` = VALUES(`ttl`), `revision` = `revision` + 1", $this->owner, sha1($k, TRUE), $k, $this->serialize($v), $ttl);
         return $rs->affected() > 0;
     }
 
@@ -106,7 +110,7 @@ class MySQL implements Iface {
     public function replace( $k, $v, $ttl = NULL ){
         $now = $this->now();
         $ttl = $this->ttl( $ttl );
-        $rs = $this->db()->execute("UPDATE `{$this->table}` SET `data` = %s, ttl = %i, `revision` = `revision` + 1 WHERE id = %s AND `ttl` >= %i", $v, $ttl, sha1($k, TRUE), $now);
+        $rs = $this->db()->execute("UPDATE `{$this->table}` SET `data` = %s, ttl = %i, `revision` = `revision` + 1 WHERE `owner` = %i AND `id` = %s AND `ttl` >= %i", $v, $ttl, $this->owner, sha1($k, TRUE), $now);
         return $rs->affected() > 0;
     }
 
@@ -115,9 +119,8 @@ class MySQL implements Iface {
     */
     public function increment( $k, $v = 1 ){
         $now = $this->now();
-        $db = $this->db();
-        $db->execute("UPDATE `{$this->table}` SET `data` =  @TOTAL:=CAST(`data` AS UNSIGNED) + %i, `revision` = `revision` + 1 WHERE id = %s AND ttl >= %i", $v, sha1($k, TRUE), $now);
-        $rs = $db->execute('SELECT @TOTAL as total');
+        $this->db()->execute("UPDATE `{$this->table}` SET `data` =  @TOTAL:=CAST(`data` AS UNSIGNED) + %i, `revision` = `revision` + 1 WHERE `owner` = %i AND `id` = %s AND `ttl` >= %i", $v, $this->owner, sha1($k, TRUE), $now);
+        $rs = $this->db()->execute('SELECT @TOTAL as total');
         $row = $rs->fetch();
         $rs->free();
         return $row['total'];
@@ -128,9 +131,8 @@ class MySQL implements Iface {
     */
     public function decrement( $k, $v = 1 ){
         $now = $this->now();
-        $db = $this->db();
-        $rs = $db->execute("UPDATE `{$this->table}` SET `data` =  @TOTAL:=CAST(`data` AS UNSIGNED) - %i, `revision` = `revision` + 1 WHERE id = %s AND `ttl` >= %i", $v, sha1($k, TRUE), $now);
-        $rs = $db->execute('SELECT @TOTAL as total');
+        $rs = $this->db()->execute("UPDATE `{$this->table}` SET `data` =  @TOTAL:=CAST(`data` AS UNSIGNED) - %i, `revision` = `revision` + 1 WHERE `owner` = %i AND `id` = %s AND `ttl` >= %i", $v, $this->owner, sha1($k, TRUE), $now);
+        $rs = $this->db()->execute('SELECT @TOTAL as total');
         $row = $rs->fetch();
         $rs->free();
         return $row['total'];
@@ -140,7 +142,7 @@ class MySQL implements Iface {
     * delete a key
     */
     public function delete( $k ){
-        $rs = $this->db()->execute("UPDATE `{$this->table}` SET `data`= NULL, ttl = NULL, `revision` = `revision` + 1 WHERE id IN( %s )", sha1($k, TRUE));
+        $rs = $this->db()->execute("UPDATE `{$this->table}` SET `data`= NULL, ttl = NULL, `revision` = `revision` + 1 WHERE `owner` = %i AND `id` IN( %s )", $this->owner, sha1($k, TRUE));
         return TRUE;
     }
     
@@ -154,18 +156,21 @@ class MySQL implements Iface {
     
     public function schema(){
         return 
-            "CREATE TABLE IF NOT EXISTS `{$this->table}` (" .
+        "CREATE TABLE IF NOT EXISTS `{$this->table}` (" .
             "`rowid` BIGINT UNSIGNED NOT NULL  AUTO_INCREMENT PRIMARY KEY, " . 
-            "`id` binary(20) NOT NULL, `keyname` varchar(500) NOT NULL, " . 
-            "`data` varbinary(64000), `ttl` INT UNSIGNED NOT NULL, " . 
+            "`owner` BIGINT UNSIGNED NOT NULL, " .
+            "`id` binary(20) NOT NULL, " . 
+            "`keyname` varchar(500) NOT NULL, " . 
+            "`data` BLOB, " .
+            "`ttl` INT UNSIGNED NOT NULL, " . 
             "`revision` BIGINT UNSIGNED NOT NULL, " .
-            "UNIQUE `id` (`id`), " .
+            "UNIQUE `owner_id` (`owner`,`id`), " .
             "INDEX `ttl` (`ttl`) " .
             ") Engine=InnoDB";
     }
     
     public function flush(){
-        $this->db()->execute("TRUNCATE {$this->table}");
+        $this->db()->execute("DELETE FROM {$this->table} WHERE `owner` = %i", $this->owner);
     }
     
     public function ttlEnabled(){

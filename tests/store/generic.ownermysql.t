@@ -10,9 +10,8 @@ use Gaia\DB;
 $db = new DB\Except(new Gaia\DB( new MySQLi( '127.0.0.1', NULL, NULL, 'test', '3306') ) );
 DB\Connection::load( array('test'=>function() use( $db ){ return $db; } ) );
 
-
-$table = 'gaia_store_mysql_test';
-$cache = new Store\Mysql( 'test', $table );
+$table = 'gaia_store_mysqlowner_test';
+$cache = new Store\OwnerMySQL( mt_rand(1, 100000000), 'test', $table );
 $schema = $cache->schema();
 $schema = str_replace('CREATE TABLE', 'CREATE TEMPORARY TABLE', $schema );
 $db->execute( $schema );
