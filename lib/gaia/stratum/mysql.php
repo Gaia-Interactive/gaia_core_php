@@ -23,7 +23,6 @@ class MySQL implements Iface {
             (`owner`, `constraint`, `stratum`) VALUES (%i, %s, %i) 
             ON DUPLICATE KEY UPDATE `stratum` = VALUES(`stratum`)";
         $db->execute( $sql, $this->owner, $constraint, $stratum );
-        return TRUE;
     }
     
     public function query( array $params = array() ){
@@ -40,10 +39,10 @@ class MySQL implements Iface {
         if( isset( $params['sort'] ) ) $sort = $params['sort'];
         if( isset( $params['limit'] ) ) $limit = $params['limit'];
         if( $limit !== NULL ) $limit = str_replace(' ', '', $limit );
-        $db = $this->db();
-        $table = $this->table();
         $sort = strtoupper( $sort );
         if( $sort != 'DESC' ) $sort = 'ASC';
+        $db = $this->db();
+        $table = $this->table();
         $where = array($db->prep_args('`owner` = %i', array( $this->owner ) ) );
         if( $search !== NULL ) $where[] = $db->prep_args("`stratum` IN( %s )", array($search) );
         if( $min !== NULL ) $where[] = $db->prep_args("`stratum` >= %i", array($min) );
