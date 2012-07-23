@@ -19,9 +19,8 @@ DB\Connection::add('test', $db );
 
 $stratum = new Stratum\MySQL( mt_rand(1, 100000000), 'test', 'test' );
 $schema = $stratum->schema();
-//$schema = str_replace('CREATE TABLE', 'CREATE TEMPORARY TABLE', $schema);
+$schema = str_replace('CREATE TABLE', 'CREATE TEMPORARY TABLE', $schema);
 $db->execute( $schema );
 
 include __DIR__ .'/.basic_test_suite.php';
 
-//Tap::debug( $store->all() );

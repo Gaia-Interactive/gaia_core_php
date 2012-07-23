@@ -1,6 +1,7 @@
 <?php
-namespace Stratum;
+namespace Gaia\Stratum;
 use Gaia\Store;
+
 class Cache implements Iface {
     
     protected $cacher;
