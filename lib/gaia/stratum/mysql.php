@@ -20,9 +20,9 @@ class MySQL implements Iface {
         $db = $this->db();
         $table = $this->table();
         $sql = "INSERT INTO $table 
-            (`owner`, `constraint`, `stratum`) VALUES (%i, %s, %i) 
+            (`owner`, `constraint_id`, `constraint`, `stratum`) VALUES (%i, %s, %s, %i) 
             ON DUPLICATE KEY UPDATE `stratum` = VALUES(`stratum`)";
-        $db->execute( $sql, $this->owner, $constraint, $stratum );
+        $db->execute( $sql, $this->owner, sha1($constraint, TRUE), $constraint, $stratum );
     }
     
     public function query( array $params = array() ){
@@ -73,10 +73,11 @@ class MySQL implements Iface {
             "CREATE TABLE IF NOT EXISTS $table (
                 `rowid` INT UNSIGNED NOT NULL AUTO_INCREMENT,
                 `owner` BIGINT UNSIGNED NOT NULL,
-                `constraint` VARCHAR(100) NOT NULL,
+                `constraint_id` binary(20) NOT NULL,
+                `constraint` VARCHAR(255) NOT NULL,
                 `stratum` INT UNSIGNED NOT NULL,
                 PRIMARY KEY (`rowid`),
-                UNIQUE `owner_constraint` (`owner`,`constraint`),
+                UNIQUE `owner_constraint` (`owner`,`constraint_id`),
                 INDEX `owner_sort` (`owner`, `stratum`)
             ) ENGINE=InnoDB"; 
             
