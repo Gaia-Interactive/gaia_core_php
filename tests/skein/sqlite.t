@@ -18,8 +18,7 @@ try {
 
 $cache = new Container;
 
-$callback = function( & $table ) use ( $db, $cache ){
-    $table = 'skeintest' . substr($table, 1);
+$callback = function( $table ) use ( $db, $cache ){
     if( ! $cache->add( $table, 1, 60 ) ) return $db;
     $sql = (substr($table, -5) == 'index') ? 
     Skein\SQLite::indexSchema( $table ) : Skein\SQLite::dataSchema( $table );
@@ -29,7 +28,7 @@ $callback = function( & $table ) use ( $db, $cache ){
 
 
 
-$skein = new Skein\SQLite( $callback, $thread );
+$skein = new Skein\SQLite( $thread, $callback, 'test' );
 
 include __DIR__ . '/.basic_test_suite.php';
 

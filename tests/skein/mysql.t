@@ -18,8 +18,7 @@ if( $db->connect_error ){
 
 $cache = new Container;
 
-$callback = function( & $table ) use ( $db, $cache ){
-    $table = 'skeintest' . substr($table, 1);
+$callback = function( $table ) use ( $db, $cache ){
     if( ! $cache->add( $table, 1, 60 ) ) return $db;
     $sql = (substr($table, -5) == 'index') ? 
     Skein\MySQL::indexSchema( $table ) : Skein\MySQL::dataSchema( $table );
@@ -30,7 +29,7 @@ $callback = function( & $table ) use ( $db, $cache ){
 
 
 
-$skein = new Skein\MySQL( $callback, $thread );
+$skein = new Skein\MySQL( $thread, $callback, 'test' );
 
 include __DIR__ . '/.basic_test_suite.php';
 
