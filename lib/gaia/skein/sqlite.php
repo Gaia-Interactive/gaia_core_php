@@ -3,18 +3,36 @@ namespace Gaia\Skein;
 use Gaia\DB;
 use Gaia\Exception;
 
+// sqlite impementation of skein
 class SQLite implements Iface {
     
-    protected $mapper;
-    protected $thread;
     
-    public function __construct( \Closure $mapper, $thread ){
-        $this->mapper = $mapper;
+    protected $db;
+    protected $thread;
+    protected $table_prefix;
+    
+    /**
+    * Thread is an integer id that your thread of entries will be tied to.
+    * For db, you can pass in:
+    *       a closure that will accept the table name return the db
+    *       a db\iface object
+    *       a dsn string that will be passed to db\connection::instance to create the db object
+    *  Table prefix is an optional string that will allow you to prefix your table names with
+    * a custom string. If you pass in nothing, you will get back table names like:
+    *       skein_index
+    *       skein_201207
+    * if you were to pass in 'test', you would get names like:
+    *       testskein_index
+    *       testskein_201207
+    */
+    public function __construct( $thread, $db, $table_prefix = '' ){
+        $this->db = $db;
         $this->thread = $thread;
+        $this->table_prefix = $table_prefix;
     }
     
     public function count(){
-        $table = 't_index';
+        $table = $this->table('index');
         $db = $this->db( $table );
         $sql = "SELECT SUM( `sequence` ) as ct FROM $table WHERE `thread` = %s";
         $rs = $db->execute( $sql, $this->thread );
@@ -35,7 +53,7 @@ class SQLite implements Iface {
     protected function multiGet( array $ids ){
         $result = array_fill_keys( $ids, NULL );
         foreach( Util::parseIds( $ids ) as $shard=>$sequences ){
-            $table= 't_' . $shard;
+            $table= $this->table( $shard );
             $db = $this->db( $table );
             $sql = "SELECT `sequence`,`data` FROM `$table` WHERE `thread` = %s AND `sequence` IN( %i )";
             $rs = $db->execute( $sql, $this->thread, $sequences );
@@ -54,7 +72,7 @@ class SQLite implements Iface {
     public function add( $data, $shard = NULL ){
         $shard = strval($shard);
         if( ! ctype_digit( $shard ) ) $shard = Util::currentShard();
-        $table = 't_index';
+        $table = $this->table('index');
         $dbi = $this->db($table);
         DB\Transaction::start();
         $dbi->start();
@@ -69,7 +87,7 @@ class SQLite implements Iface {
         $sequence = NULL;
         if( $row = $rs->fetch() ) $sequence = $row['sequence'];
         $rs->free();
-        $table = 't_' . $shard;
+        $table = $this->table($shard);
         $dbs = $this->db( $table );
         $dbs->start();
         $sql = "INSERT OR IGNORE INTO $table (thread, sequence, data) VALUES (%i, %i, %s)";
@@ -90,7 +108,7 @@ class SQLite implements Iface {
         $ids = Util::validateIds( $this->shardSequences(), array( $id ) );
         if( ! in_array( $id, $ids ) ) throw new Exception('invalid id', $id );
         list( $shard, $sequence ) = Util::parseId( $id );
-        $table = 't_' . $shard;
+        $table = $this->table($shard);
         $db = $this->db( $table );
         $sql = "INSERT OR IGNORE INTO $table (thread, sequence, data) VALUES (%i, %i, %s)";
         $data = $this->serialize($data);
@@ -119,7 +137,7 @@ class SQLite implements Iface {
     }
     
     public function shardSequences(){
-        $table = 't_index';
+        $table = $this->table('index');
         $db = $this->db( $table );
         $sql = "SELECT `shard`, `sequence` FROM $table WHERE `thread` = %s ORDER BY `shard` DESC";
         $rs = $db->execute( $sql, $this->thread );
@@ -159,9 +177,20 @@ class SQLite implements Iface {
         return unserialize( $string );
     }
     
-    protected function db( & $table ){
-        $mapper = $this->mapper;
-        $db = $mapper( $table );
+    
+    protected function table( $suffix ){
+        return $this->table_prefix . 'skein_' . $suffix;
+    }
+    
+    protected function db( $table ){
+        if( $this->db instanceof \Closure ){
+            $mapper = $this->db;
+            $db = $mapper( $table );
+        } elseif( is_scalar( $this->db ) ){
+            $db = DB\Connection::instance( $this->db );
+        } else {
+            $db = $this->db;
+        }
         if( ! $db instanceof DB\Iface ) throw new Exception('invalid db');
         if( ! $db->isa('sqlite') ) throw new Exception('invalid db');
         if( ! $db->isa('Gaia\DB\Except') ) $db = new DB\Except( $db );

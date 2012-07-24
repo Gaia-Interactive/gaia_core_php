@@ -3,18 +3,38 @@ namespace Gaia\Skein;
 use Gaia\DB;
 use Gaia\Exception;
 
+// mysql implementation of skein.
 class MySQL implements Iface {
     
-    protected $mapper;
+    protected $db;
     protected $thread;
+    protected $table_prefix;
     
-    public function __construct( \Closure $mapper, $thread ){
-        $this->mapper = $mapper;
+    /**
+    * Thread is an integer id that your thread of entries will be tied to.
+    * For db, you can pass in:
+    *       a closure that will accept the table name return the db
+    *       a db\iface object
+    *       a dsn string that will be passed to db\connection::instance to create the db object
+    *  Table prefix is an optional string that will allow you to prefix your table names with
+    * a custom string. If you pass in nothing, you will get back table names like:
+    *       skein_index
+    *       skein_201207
+    * if you were to pass in 'test', you would get names like:
+    *       testskein_index
+    *       testskein_201207
+    */
+    public function __construct( $thread, $db, $table_prefix = '' ){
+        $this->db = $db;
         $this->thread = $thread;
+        $this->table_prefix = $table_prefix;
     }
     
+    /**
+    * count how many entries are in the thread.
+    */
     public function count(){        
-        $table = 't_index';
+        $table = $this->table('index');
         $db = $this->db( $table );
         $sql = "SELECT SUM( `sequence` ) as ct FROM $table WHERE `thread` = %s";
         $rs = $db->execute( $sql, $this->thread );
@@ -26,16 +46,22 @@ class MySQL implements Iface {
         return $result;
     }
     
+    /**
+    * fetch by id. can either be a single id, or a list of them.
+    */
     public function get( $id ){
         if( is_array( $id ) ) return $this->multiget( $id );
         $res = $this->multiget( array( $id ) );
         return isset( $res[ $id ] ) ? $res[ $id ] : NULL;
     }
     
+    /**
+    * actual logic for retrieving data.
+    */
     protected function multiGet( array $ids ){
         $result = array_fill_keys( $ids, NULL);
         foreach( Util::parseIds( $ids ) as $shard=>$sequences ){
-            $table= 't_' . $shard;
+            $table = $this->table($shard);
             $db = $this->db( $table );
             $sql = "SELECT `sequence`,`data` FROM `$table` WHERE `thread` = %s AND `sequence` IN( %i )";
             $rs = $db->execute( $sql, $this->thread, $sequences );
@@ -50,11 +76,13 @@ class MySQL implements Iface {
         return $result;
     }
     
-    
+    /**
+    * add a new entry to the skein. returns the id.
+    */
     public function add( $data, $shard = NULL ){
         $shard = strval($shard);
         if( ! ctype_digit( $shard ) ) $shard = Util::currentShard();
-        $table = 't_index';
+        $table = $this->table('index');
         $dbi = $this->db($table);
         DB\Transaction::start();
         $dbi->start();
@@ -64,7 +92,7 @@ class MySQL implements Iface {
         $sequence = NULL;
         if( $row = $rs->fetch() ) $sequence = $row['sequence'];
         $rs->free();
-        $table = 't_' . $shard;
+        $table = $this->table($shard);
         $dbs = $this->db( $table );
         $dbs->start();
         $sql = "INSERT INTO $table (thread, sequence, data) VALUES (%i, %i, %s) ON DUPLICATE KEY UPDATE `data` = VALUES(`data`)";
@@ -77,35 +105,60 @@ class MySQL implements Iface {
         return $id;
     }
     
+    /**
+    * update an existing entry based on id. It does an insert or update just in case the record is missing in the db.
+    */
     public function store( $id, $data ){
         $ids = Util::validateIds( $this->shardSequences(), array( $id ) );
         if( ! in_array( $id, $ids ) ) throw new Exception('invalid id', $id );
         list( $shard, $sequence ) = Util::parseId( $id );
-        $table = 't_' . $shard;
+        $table = $this->table($shard);
         $db = $this->db( $table );
+        if( DB\Transaction::inProgress() ) DB\Transaction::add( $db );
         $sql = "INSERT INTO $table (thread, sequence, data) VALUES (%i, %i, %s) ON DUPLICATE KEY UPDATE `data` = VALUES(`data`)";
         $db->execute( $sql, $this->thread, $sequence, $this->serialize($data) );
         return TRUE;
     }
     
+    /*
+    * get a list of ids in descending order starting after a given id
+    */
     public function ascending( $limit = 1000, $start_after = NULL ){
         return Util::ascending( $this->shardSequences(), $limit, $start_after );
     }
     
+    /*
+    * get a list of ids in ascending order starting after a given id
+    */
     public function descending( $limit = 1000, $start_after = NULL ){
         return Util::descending( $this->shardSequences(), $limit, $start_after );
     }
 
+   /**
+    * iterate through every record in ascending order starting after a given id 
+    * and pass the results to a closure.
+    * if the closure returns FALSE, it breaks out of the loop.
+    */
     public function filterAscending( \Closure $c, $start_after = NULL ){
         Util::filter( $this, $c, 'ascending', $start_after );
     }
     
+   /**
+    * iterate through every record in descending order starting after a given id 
+    * and pass the results to a closure.
+    * if the closure returns FALSE, it breaks out of the loop.
+    */
     public function filterDescending( \Closure $c, $start_after = NULL ){
         Util::filter( $this, $c, 'descending', $start_after );
     }
     
+   /**
+    * Utility function used mainly by other functions to derive values, but can be used by
+    * the application if you know what you are doing.
+    * Returns a count of how many entries are in each shard.
+    */
     public function shardSequences(){
-        $table = 't_index';
+        $table = $this->table('index');
         $db = $this->db( $table );
         $sql = "SELECT `shard`, `sequence` FROM $table WHERE `thread` = %s ORDER BY `shard` DESC";
         $rs = $db->execute( $sql, $this->thread );
@@ -117,6 +170,11 @@ class MySQL implements Iface {
         return $result;
     }
     
+   /**
+    * given a table name, return the shema for the data shard table.
+    * Allows you to programmatically create your table, either in the constructor closure,
+    * or in an admin script or cron.
+    */
     public static function dataSchema( $table ){
         return 
         "CREATE TABLE IF NOT EXISTS $table (
@@ -127,6 +185,12 @@ class MySQL implements Iface {
         ) ENGINE=InnoDB";
     }
     
+        
+   /**
+    * given a table name, return the shema for the index table.
+    * Allows you to programmatically create your table, either in the constructor closure,
+    * or in an admin script or cron.
+    */
     public static function indexSchema( $table ){
         return 
         "CREATE TABLE IF NOT EXISTS $table (
@@ -145,9 +209,19 @@ class MySQL implements Iface {
         return unserialize( $string );
     }
     
-    protected function db( & $table ){
-        $mapper = $this->mapper;
-        $db = $mapper( $table );
+    protected function table( $suffix ){
+        return $this->table_prefix . 'skein_' . $suffix;
+    }
+    
+    protected function db( $table ){
+        if( $this->db instanceof \Closure ){
+            $mapper = $this->db;
+            $db = $mapper( $table );
+        } elseif( is_scalar( $this->db ) ){
+            $db = DB\Connection::instance( $this->db );
+        } else {
+            $db = $this->db;
+        }
         if( ! $db instanceof DB\Iface ) throw new Exception('invalid db');
         if( ! $db->isa('mysql') ) throw new Exception('invalid db');
         if( ! $db->isa('Gaia\DB\Except') ) $db = new DB\Except( $db );
