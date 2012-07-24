@@ -68,7 +68,6 @@ class MySQL implements Iface {
             while( $row = $rs->fetch() ){
                 $id = Util::composeId( $shard, $row['sequence'] );
                 $result[ $id ] = $this->unserialize($row['data']);
-                if( ! is_array( $result[ $id ] ) ) $result[ $id ] = array();
             }
             $rs->free();
         }
