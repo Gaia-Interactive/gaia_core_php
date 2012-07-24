@@ -16,7 +16,7 @@ class OwnerMySQL implements Iface {
     protected $s;
     
    /**
-    * db object.
+    * db object or dsn string
     */
     protected $db;
     
@@ -29,8 +29,19 @@ class OwnerMySQL implements Iface {
     
    /**
     * create the mysql object.
-    * pass in a  dsn/tablename.
-    * the dsn will be passed to Gaia\DB\Connecton::instance() to get the db object.
+    * owner is an integer that you use as the first part of the unique key name. Often when
+    * composing a key for memcache data a user id, or thread id is used in the key name.
+    * if you pass this parameter to the constructor instead like you might to the prefix class,
+    * you can get much greater performance.
+    * 
+    * the db var can either be a gaia\db\iface object, or a dsn string that resolves to one
+    * when passed to DB\Connection::instance()
+    * This allows you to bypass the connection class if you want to, but avoids having to connect
+    * to mysql unnecessarily if you embed this class somewhere in your infrastructure but never 
+    * invoke any methods.
+    *
+    * The serialize param is for changing out the serialization mechanism. Can use json if that is
+    * a better fit.
     */
     public function __construct($owner, $db, $table, \Gaia\Serialize\Iface $s = NULL ){
         $owner = strval( $owner );
