@@ -33,27 +33,27 @@ $res = $skein->get( $ids );
 
 Tap::is( $res, $batch, 'added a bunch of keys and read them back using get( ids ) interface');
 
-Tap::is( $skein->ascending( $limit = 100 ), $ids, 'got the keys back in ascending order');
+Tap::is( $skein->ids( array( 'limit' => 100 ) ), $ids, 'got the keys back in ascending order');
 
 
 
-Tap::is( $res = $skein->ascending( $limit = 5 ), array_slice($ids, 0, 5), 'got the keys back in ascending order, limit 5');
+Tap::is( $res = $skein->ids( array( 'sort'=>'ascending', 'limit' => 5 ) ), array_slice($ids, 0, 5), 'got the keys back in ascending order, limit 5');
 
-Tap::is( $res = $skein->ascending( $limit = 5, $ids[5] ), array_slice($ids, 5, 5), 'got the keys back in ascending order, limit 5, starting with the 5th id');
+Tap::is( $res = $skein->ids( array( 'sort'=>'ascending', 'limit' => 5, 'start_after'=> $ids[5] ) ), array_slice($ids, 5, 5), 'got the keys back in ascending order, limit 5, starting with the 5th id');
 
-Tap::is( $res = $skein->ascending( $limit = 1), array($ids[0]), 'with limit 1, got back the 1st id');
+Tap::is( $res = $skein->ids(array('limit'=>1)), array($ids[0]), 'with limit 1, got back the 1st id');
 
 
 
 $ids = array_reverse( $ids );
 
-Tap::is( $skein->descending( $limit = 100 ), $ids, 'got the keys back in descending order');
+Tap::is( $skein->ids( array('sort'=>'descending', 'limit'=>100) ), $ids, 'got the keys back in descending order');
 
-Tap::is( $res = $skein->descending( $limit = 5 ), array_slice($ids, 0, 5), 'got the keys back in descending order, limit 5');
+Tap::is( $res = $skein->ids(  array('sort'=>'descending', 'limit'=>5) ), array_slice($ids, 0, 5), 'got the keys back in descending order, limit 5');
 
-Tap::is( $res = $skein->descending( $limit = 5, $ids[5] ), array_slice($ids, 5, 5), 'got the keys back in descending order, limit 5, starting with the 5th id');
+Tap::is( $res = $skein->ids(  array('sort'=>'descending', 'limit'=>5, 'start_after'=> $ids[5] ) ), array_slice($ids, 5, 5), 'got the keys back in descending order, limit 5, starting with the 5th id');
 
-Tap::is( $res = $skein->descending( $limit = 1), array($ids[0]), 'with limit 1, got back the last id');
+Tap::is( $res = $skein->ids(  array('sort'=>'descending', 'limit'=>1)), array($ids[0]), 'with limit 1, got back the last id');
 
 
 Tap::is( $skein->count(), 11, 'count matches the number we added');
@@ -70,7 +70,7 @@ $cb = function( $id, $data ) use ( & $ct, & $sum, $batch ){
 
 $ct = 0;
 $sum = 0;
-$skein->filterAscending( $cb );
+$skein->filter( array('closure'=>$cb ) );
 
 $expected_sum = 0;
 foreach( array_slice($batch, 0, 6) as $data ) $expected_sum = bcadd($expected_sum, $data['foo']);
@@ -82,7 +82,7 @@ $ct = 0;
 $sum = 0;
 $ids = array_keys( $batch );
 
-$skein->filterAscending( $cb, $ids[5] );
+$skein->filter( array('sort'=>'ascending', 'closure'=>$cb, 'start_after'=>$ids[5] ) );
 
 $expected_sum = 0;
 foreach( array_slice( $batch, 5) as $data ) $expected_sum = bcadd($expected_sum, $data['foo']);
@@ -93,7 +93,7 @@ Tap::is( $sum, $expected_sum, 'sum from filter with start_after arrived at the c
 
 $ct = 0;
 $sum = 0;
-$skein->filterDescending( $cb );
+$skein->filter( array('sort'=>'descending', 'closure'=>$cb ) );
 
 $expected_sum = 0;
 foreach( array_slice(array_reverse( $batch, TRUE ), 0, 6) as $data ) $expected_sum = bcadd($expected_sum, $data['foo']);
@@ -103,7 +103,7 @@ Tap::is( $sum, $expected_sum, 'sum from filter arrived at the correct amount' );
 
 $ct = 0;
 $sum = 0;
-$skein->filterDescending( $cb, $ids[5] );
+$skein->filter( array('sort'=>'descending', 'closure'=>$cb, 'start_after'=>$ids[5] ) );
 
 $expected_sum = 0;
 foreach( array_slice(array_reverse( $batch, TRUE ), 5) as $data ) $expected_sum = bcadd($expected_sum, $data['foo']);

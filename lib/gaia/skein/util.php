@@ -31,7 +31,21 @@ class Util {
         return $ct;
     }
     
-    public static function ascending( array $shard_sequences, $limit = 1000, $start_after = NULL ){
+    public static function ids( array $shard_sequences, array $params = array() ){
+        $default = array('limit'=>1000, 'start_after'=>NULL, 'sort'=>'ascending');
+        foreach( $params as $k=>$v ){
+            if( $v === NULL ) continue;
+            $default[ $k ] = $v;
+        }
+        $params = $default;
+        if( $params['sort'] == 'descending' ){
+            return self::descending( $shard_sequences, $params['limit'], $params['start_after'] );
+        } else {
+            return self::ascending( $shard_sequences, $params['limit'], $params['start_after'] );
+        }
+    }
+    
+    protected static function ascending( array $shard_sequences, $limit = 1000, $start_after = NULL ){
          ksort( $shard_sequences );
          if( $start_after === NULL ) {
             if( count( $shard_sequences ) < 1 ) return array();
@@ -58,7 +72,7 @@ class Util {
     }
     
     
-    public static function descending( array $shard_sequences, $limit = 1000, $start_after = NULL ){
+    protected static function descending( array $shard_sequences, $limit = 1000, $start_after = NULL ){
         krsort( $shard_sequences );
         if( $start_after === NULL ) {
             if( count( $shard_sequences ) < 1 ) return array();
@@ -82,14 +96,19 @@ class Util {
          return $result;
     }
     
-    public static function filter( Iface $core, \Closure $cb, $method = 'ascending', $start_after = NULL ){
-    
-        if( $method != 'ascending' ) $method = 'descending';
+    public static function filter( Iface $core, array $params ){
+        $default = array('sort'=>'ascending', 'closure'=>NULL, 'start_after'=>NULL);
+        $params = array_merge( $default, $params );
+        $cb = $params['closure'];
+        if( ! $cb instanceof \Closure ){
+            throw new Exception('no closure passed to filter');
+        }
         $id_chunk_size = 1000;
         $get_chunk_size = 100;
+        $id = $params['start_after'];
         $ct = 0;
         do {
-            $ids = $core->$method( $id_chunk_size, $start_after );
+            $ids = $core->ids( array('sort'=>$params['sort'], 'limit'=> $id_chunk_size, 'start_after'=>$id ) );
             $ct = count( $ids );
             if( $ct < 1 ) return;
             foreach( array_chunk( $ids, $get_chunk_size) as $i ){

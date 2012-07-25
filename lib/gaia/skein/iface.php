@@ -32,21 +32,20 @@ interface Iface {
     public function store( $id, $data );
     
     /**
-    * get a list of ids in ascending order.
+    * get a list of ids in ascending or decending order.
     * instead of limit, offset we give you limit and a starting id.
     * This will allow you to pick up where you left off.
+    *
+    * allowed params:
+    *
+    *       limit int
+    *       start_at int  an id number
+    *       sort string   ascending or descending. defaults to ascending.
     */
-    public function ascending( $limit = 1000, $start_after = NULL );
+    public function ids( array $params = array() );
     
     /**
-    * get a list of ids in descending order.
-    * instead of limit, offset we give you limit and a starting id.
-    * This will allow you to pick up where you left off.
-    */
-    public function descending( $limit = 1000, $start_after = NULL );
-    
-    /**
-    * iterates through the data set in ascending order, passing each entry to a closure.
+    * iterates through the data set in ascending or descending order, passing each entry to a closure.
     * will continue until it reaches the end of the entries, or your closure method returns false.
     * conceptually, it works like this:
     *
@@ -57,13 +56,8 @@ interface Iface {
     * of course, the actual iteration is more efficient, moving through the entries in chunks so 
     * if you break early in your iteration, we won't have pulled down all the data for nothing.
     */
-    public function filterAscending( \Closure $c, $start_after = NULL );
+    public function filter( array $params );
     
-    /**
-    * does the same thing as filterAscending, but of course, starting with the last entry,
-    * iterating toward the first.
-    */
-    public function filterDescending( \Closure $c, $start_after = NULL );
     
     /**
     * used internally only, or for admin purposes.
