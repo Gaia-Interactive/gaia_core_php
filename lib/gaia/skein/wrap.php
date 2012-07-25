@@ -25,24 +25,16 @@ class Wrap implements Iface {
         return $this->core->get( $id );
     }
     
-    public function ascending( $limit = 1000, $start_after = NULL ){
-        return Util::ascending( $this->shardSequences(), $limit, $start_after );
-    }
-    
-    public function descending( $limit = 1000, $start_after = NULL ){
-        return Util::descending( $this->shardSequences(), $limit, $start_after );
+    public function ids( array $params = array() ){
+        return Util::ids( $this->shardSequences(), $params );
     }
     
     public function shardSequences(){
         return $this->core->shardSequences();
     }
     
-    public function filterAscending( \Closure $c, $start_after = NULL ){
-        Util::filter( $this, $c, 'ascending', $start_after );
-    }
-    
-    public function filterDescending( \Closure $c, $start_after = NULL ){
-        Util::filter( $this, $c, 'descending', $start_after );
+    public function filter( array $params ){
+        Util::filter( $this, $params );
     }
     
     public function __call( $method, array $args ){

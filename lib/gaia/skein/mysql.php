@@ -120,36 +120,21 @@ class MySQL implements Iface {
     }
     
     /*
-    * get a list of ids in descending order starting after a given id
+    * get a list of ids in ascending/descending order starting after a given id
     */
-    public function ascending( $limit = 1000, $start_after = NULL ){
-        return Util::ascending( $this->shardSequences(), $limit, $start_after );
-    }
-    
-    /*
-    * get a list of ids in ascending order starting after a given id
-    */
-    public function descending( $limit = 1000, $start_after = NULL ){
-        return Util::descending( $this->shardSequences(), $limit, $start_after );
+    public function ids( array $params = array() ){
+        return Util::ids( $this->shardSequences(), $params );
     }
 
    /**
-    * iterate through every record in ascending order starting after a given id 
+    * iterate through every record
     * and pass the results to a closure.
     * if the closure returns FALSE, it breaks out of the loop.
     */
-    public function filterAscending( \Closure $c, $start_after = NULL ){
-        Util::filter( $this, $c, 'ascending', $start_after );
+    public function filter( array $params ){
+        Util::filter( $this, $params );
     }
-    
-   /**
-    * iterate through every record in descending order starting after a given id 
-    * and pass the results to a closure.
-    * if the closure returns FALSE, it breaks out of the loop.
-    */
-    public function filterDescending( \Closure $c, $start_after = NULL ){
-        Util::filter( $this, $c, 'descending', $start_after );
-    }
+
     
    /**
     * Utility function used mainly by other functions to derive values, but can be used by
