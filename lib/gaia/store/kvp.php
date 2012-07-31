@@ -12,16 +12,18 @@ class KVP implements Iface {
     }
     
     public function set($name, $value){
-        return $this->__d[ $name ] = $value;
+        if( $value === NULL ) return $this->delete( $name );
+        $this->__d[ $name ] = $value;
+        return TRUE;
     }
     
     public function increment($name, $value = 1) {
-        if(! isset($this->__d[$name]) ) $this->__d[$name] = 0;
+        if(! isset($this->__d[$name]) ) return FALSE;
         return $this->__d[$name] += $value;
     }
     
     public function decrement($name, $value = 1) {
-        if(! isset($this->__d[$name]) ) $this->__d[$name] = 0;
+        if(! isset($this->__d[$name]) ) return FALSE;
         return $this->__d[$name] -= $value;
     }
     
@@ -76,7 +78,8 @@ class KVP implements Iface {
     * @see http://www.php.net/oop5.magic
     */
     public function __set( $k, $v ){
-        return $this->set( $k, $v );
+        $this->set( $k, $v );
+        return $v;
     }
     
    /**
@@ -97,7 +100,7 @@ class KVP implements Iface {
     * @see http://www.php.net/oop5.magic
     */
     public function __isset( $k ){
-        return ( $this->get( $k ) !== NULL ) ? TRUE  : FALSE;
+        return isset( $this->__d[ $k ] );
     }
      
    /**
