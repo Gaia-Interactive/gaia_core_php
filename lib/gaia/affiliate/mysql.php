@@ -64,15 +64,15 @@ class MySQL implements Iface {
         return $result;
     }
     
-    public function findRelated( array $identifiers ){
-        return Util::findRelated( $this, $identifiers );
+    public function related( array $identifiers ){
+        return Util::related( $this, $identifiers );
     }
     
     public function join( array $identifiers ){
-        return $this->joinRelated( $this->findRelated($identifiers) );
+        return $this->_joinRelated( $this->related($identifiers) );
     }
     
-    public function joinRelated( array $related ){
+    public function _joinRelated( array $related ){
         $db = $this->db();
         $table = $this->table();
         if( ! DB\Transaction::atStart() ) DB\Transaction::add( $db );

@@ -24,49 +24,49 @@ class Cache implements Iface {
         return $res;
     }
         
-    public function identifiers( array $affiliate_ids ){
+    public function identifiers( array $affiliations ){
         $cache = $this->affiliationCache();
         $cache = new Cacher\Callback( $cache, array(
             'callback'=> array( $this->core, __FUNCTION__),
             'timeout'=>300,
             'cache_missing'=>TRUE,
         ));
-        $res = $cache->get( $affiliate_ids );
+        $res = $cache->get( $affiliations );
         return $res;
     }
     
-    public function findRelated( array $identifiers ){
-        return Util::findRelated( $this, $identifiers );
+    public function related( array $identifiers ){
+        return Util::related( $this, $identifiers );
     }
     
     public function join( array $identifiers ){
-        return $this->joinRelated( $this->findRelated($identifiers) );
+        return $this->_joinRelated( $this->related($identifiers) );
     }
     
-    public function joinRelated( array $related ){
+    public function _joinRelated( array $related ){
         $a_cache = $this->affiliationCache();
         $i_cache  = $this->identifierCache();
 
         $ids = array();
-        foreach( $related as $identifier => $affiliate_id ){
-            if( $affiliate_id === NULL ) continue;
+        foreach( $related as $identifier => $affiliation ){
+            if( $affiliation === NULL ) continue;
             $i_cache->delete($identifier);
-            $ids[ $affiliate_id ] = 1;
+            $ids[ $affiliation ] = 1;
         }
         if( $ids ) {
             foreach( $ids as $id => $set ){
                 $a_cache->delete( $id );
             }
         }
-        $res =  $this->core->joinRelated( $related );
+        $res =  $this->core->_joinRelated( $related );
         $cache_result = array();
-        foreach( $res as $identifier => $affiliate_id ){
-            if( ! isset( $cache_result[ $affiliate_id ] ) ) $cache_result[ $affiliate_id ] = array();
-            $cache_result[ $affiliate_id ][] = $identifier;
-            $i_cache->set( $identifier, $affiliate_id );
+        foreach( $res as $identifier => $affiliation ){
+            if( ! isset( $cache_result[ $affiliation ] ) ) $cache_result[ $affiliation ] = array();
+            $cache_result[ $affiliation ][] = $identifier;
+            $i_cache->set( $identifier, $affiliation );
         }
-        foreach( $cache_result as $affiliate_id => $identifiers ){
-            $a_cache->set( $affiliate_id, $identifiers, 300 );
+        foreach( $cache_result as $affiliation => $identifiers ){
+            $a_cache->set( $affiliation, $identifiers, 300 );
         }
         return $res;
         

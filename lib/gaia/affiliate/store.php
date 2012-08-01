@@ -19,15 +19,15 @@ class Store implements Iface {
         return $this->affiliateStore()->get( $affiliate_ids );
     }
     
-    public function findRelated( array $identifiers ){
-        return Util::findRelated( $this, $identifiers );
+    public function related( array $identifiers ){
+        return Util::related( $this, $identifiers );
     }
     
     public function join( array $identifiers ){
-        return $this->joinRelated( $this->findRelated($identifiers) );
+        return $this->_joinRelated( $this->related($identifiers) );
     }
     
-    public function joinRelated( array $related ){
+    public function _joinRelated( array $related ){
         $affiliate = NULL;
         foreach( $related as $identifier => $affiliate ){
             if( $affiliate ) break;            

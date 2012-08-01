@@ -1,11 +1,17 @@
 <?php
 namespace Gaia\Affiliate;
 
-interface Iface {   
-    public function affiliations( array $identifiers ); // search
-    public function identifiers( array $affiliations ); // get
-    public function findRelated( array $identifiers );
-    public function joinRelated( array $related );
+interface Iface {  
+    // accessors
+    public function affiliations( array $identifiers );
+    public function identifiers( array $affiliations );
+    public function related( array $identifiers );
+    
+    // mutators
     public function join( array $identifiers );
     public function delete( array $identifiers );
+    
+    // for internal use only.
+    public function _joinRelated( array $related );
+
 }
