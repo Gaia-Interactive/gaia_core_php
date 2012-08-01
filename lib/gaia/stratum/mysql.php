@@ -19,6 +19,8 @@ class MySQL implements Iface {
     public function store( $constraint, $stratum ){
         $db = $this->db();
         $table = $this->table();
+        if( DB\Transaction::inProgress() ) DB\Transaction::add( $db );
+
         $sql = "INSERT INTO $table 
             (`owner`, `constraint_id`, `constraint`, `stratum`) VALUES (%i, %s, %s, %i) 
             ON DUPLICATE KEY UPDATE `stratum` = VALUES(`stratum`)";
@@ -43,6 +45,7 @@ class MySQL implements Iface {
         if( $sort != 'DESC' ) $sort = 'ASC';
         $db = $this->db();
         $table = $this->table();
+        if( DB\Transaction::inProgress() ) DB\Transaction::add( $db );
         $where = array($db->prep_args('`owner` = %i', array( $this->owner ) ) );
         if( $search !== NULL ) $where[] = $db->prep_args("`stratum` IN( %s )", array($search) );
         if( $min !== NULL ) $where[] = $db->prep_args("`stratum` >= %i", array($min) );
