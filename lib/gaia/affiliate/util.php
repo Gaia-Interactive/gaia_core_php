@@ -11,8 +11,8 @@ class Util {
     
     public static function findRelated( Iface $core, array $identifiers ){
         $result = array_fill_keys( $identifiers, NULL );
-        foreach( $core->get( array_unique( array_values( $core->search( $identifiers) ) ) ) as $astral_id => $identifiers ){
-            foreach( $identifiers as $identifier ) $result[ $identifier ] = $astral_id;
+        foreach( $core->identifiers( array_unique( array_values( $core->affiliations( $identifiers) ) ) ) as $affiliation => $identifiers ){
+            foreach( $identifiers as $identifier ) $result[ $identifier ] = $affiliation;
         }
         return $result;
     }

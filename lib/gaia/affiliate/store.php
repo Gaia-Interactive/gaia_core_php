@@ -11,11 +11,11 @@ class Store implements Iface {
         $this->core = $core;
     }
     
-    public function search( array $identifiers ){
+    public function affiliations( array $identifiers ){
         return $this->identifierStore()->get( $identifiers );
     }
         
-    public function get( array $affiliate_ids ){
+    public function identifiers( array $affiliate_ids ){
         return $this->affiliateStore()->get( $affiliate_ids );
     }
     
@@ -55,10 +55,10 @@ class Store implements Iface {
     }
     
     public function delete( array $identifiers ){
-        $affiliate_ids = array_unique( array_values( $this->search( $identifiers) ) );
+        $affiliate_ids = array_unique( array_values( $this->affiliations( $identifiers) ) );
         
         $store = $this->affiliateStore();
-        foreach( $this->get( $affiliate_ids ) as $affiliate_id => $ids ){
+        foreach( $this->identifiers( $affiliate_ids ) as $affiliate_id => $ids ){
             foreach( $ids as $i => $id ){
                 if( in_array( $id, $identifiers ) ){
                     unset( $ids[ $i ] );

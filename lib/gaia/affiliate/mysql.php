@@ -7,12 +7,13 @@ use Gaia\Exception;
 class MySQL implements Iface {
 
     protected $db;
-    protected $table;
+    protected $table_prefix;
 
-    public function __construct( $db, $table ){
-        if( ! is_scalar( $table ) || ! preg_match('#^[a-z0-9_]+$#', $table ) ) {
+    public function __construct( $db, $table_prefix ){
+        if( ! is_scalar( $table_prefix ) || ! preg_match('#^[a-z0-9_]+$#', $table_prefix ) ) {
             throw new Exception('invalid table name');
         }
+        $this->table_prefix = $table_prefix;
         $this->db = function() use ( $db ){
             static $object;
             if( isset( $object ) ) return $object;
@@ -22,12 +23,11 @@ class MySQL implements Iface {
             if( ! $db->isA('Gaia\DB\Except') ) $db = new DB\Except( $db );
             return $object = $db;
         };
-        $this->table = $table;
     }
     
-    public function search( array $identifiers ){
+    public function affiliations( array $identifiers ){
         $db = $this->db();
-        $table = $this->table;
+        $table = $this->table();
         if( ! DB\Transaction::atStart() ) DB\Transaction::add( $db );
         $result = $hashes = array();
         foreach( $identifiers as $identifier ){
@@ -36,10 +36,10 @@ class MySQL implements Iface {
             $result[ $identifier ] = NULL;
         }
         
-        $rs = $db->execute("SELECT `affiliate`, `identifier` FROM `$table` WHERE `hash` IN ( %s )", array_keys($hashes) );
+        $rs = $db->execute("SELECT `identifier`, `affiliation` FROM `$table` WHERE `hash` IN ( %s )", array_keys($hashes) );
         $ids = array();
         while( $row = $rs->fetch() ){
-            $result[$row['identifier']] =  $row['affiliate'];
+            $result[$row['identifier']] =  $row['affiliation'];
         }
         $rs->free();
         
@@ -49,16 +49,16 @@ class MySQL implements Iface {
         return $result;
     }
         
-    public function get( array $affiliates ){
-        if( ! $affiliates ) return array();
-        $result = array_fill_keys( $affiliates, array() );
+    public function identifiers( array $affiliations ){
+        if( ! $affiliations ) return array();
+        $result = array_fill_keys( $affiliations, array() );
         $db = $this->db();
         if( ! DB\Transaction::atStart() ) DB\Transaction::add( $db );
-        $table = $this->table;
-        $rs = $db->execute("SELECT affiliate, `identifier` FROM `$table` WHERE `affiliate` IN ( %i )", $affiliates );
+        $table = $this->table();
+        $rs = $db->execute("SELECT `affiliation`, `identifier` FROM `$table` WHERE `affiliation` IN ( %i )", $affiliations );
         $result = array();
         while( $row = $rs->fetch() ){
-            $result[ $row['affiliate'] ][] = $row['identifier'];
+            $result[ $row['affiliation'] ][] = $row['identifier'];
         }
         $rs->free();     
         return $result;
@@ -74,32 +74,32 @@ class MySQL implements Iface {
     
     public function joinRelated( array $related ){
         $db = $this->db();
-        $table = $this->table;
+        $table = $this->table();
         if( ! DB\Transaction::atStart() ) DB\Transaction::add( $db );
-        $affiliate = NULL;
-        foreach( $related as $identifier => $affiliate ){
-            if( $affiliate ) break;            
+        $affiliation = NULL;
+        foreach( $related as $identifier => $affiliation ){
+            if( $affiliation ) break;            
         }
         
-        if( ! $affiliate ) $affiliate = Util::newID();
+        if( ! $affiliation ) $affiliation = Util::newID();
         
         $clauses = array();
         
         foreach( $related as $identifier => $_id ){
-            if( $_id == $affiliate ) continue;
-            $related[ $identifier ] = $affiliate;
-            $clauses[] = $db->prep_args('(%i, %s, %s)', array( $affiliate, $identifier, sha1( $identifier, TRUE) ) );
+            if( $_id == $affiliation ) continue;
+            $related[ $identifier ] = $affiliation;
+            $clauses[] = $db->prep_args('(%s, %s, %i)', array( $identifier, sha1( $identifier, TRUE), $affiliation ) );
         }
         
         if( ! $clauses ) return $related;
-        $sql = "INSERT INTO `$table` (`affiliate`, `identifier`, `hash`) VALUES " . implode(',', $clauses ) . ' ON DUPLICATE KEY UPDATE `affiliate` = VALUES( `affiliate` )';
+        $sql = "INSERT INTO `$table` (`identifier`, `hash`, `affiliation` ) VALUES " . implode(',', $clauses ) . ' ON DUPLICATE KEY UPDATE `affiliation` = VALUES( `affiliation` )';
         $db->execute($sql);
         return $related;
     }
     
     public function delete( array $identifiers ){
         $db = $this->db();
-        $table = $this->table;
+        $table = $this->table();
         if( ! DB\Transaction::atStart() ) DB\Transaction::add( $db );
         $hashes = array();
         foreach( $identifiers as $identifier ){
@@ -118,16 +118,20 @@ class MySQL implements Iface {
         return $db();
     }
     
+    protected function table(){
+        return $this->table_prefix . '_affiliate';
+    }
+    
     public function schema(){
-        $table = $this->table;
+        $table = $this->table();
         return 
         "CREATE TABLE IF NOT EXISTS `$table` ( 
             `row_id` INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
             `identifier` VARCHAR(500) NOT NULL, 
             `hash` BINARY(20) NOT NULL, 
-            `affiliate` BIGINT UNSIGNED NOT NULL,
+            `affiliation` BIGINT UNSIGNED NOT NULL,
             UNIQUE(`hash`), 
-            INDEX (`affiliate`) 
+            INDEX (`affiliation`) 
             ) engine InnoDB";
     }
 }

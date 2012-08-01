@@ -13,29 +13,25 @@ class Cache implements Iface {
         $this->cache = $cache;
     }
     
-    public function search( array $identifiers ){
-        //return $this->core->search( $identifiers );
-        $cache = new Cacher\Prefix( $this->cache, 'affiliate_identifiers/');
+    public function affiliations( array $identifiers ){
+        $cache = $this->identifierCache();
         $cache = new Cacher\Callback( $cache, array(
-            'callback'=> array( $this->core, 'search'),
+            'callback'=> array( $this->core, __FUNCTION__),
             'timeout'=>300,
             'cache_missing'=>TRUE,
         ));
         $res = $cache->get( $identifiers );
-        //var_dump( $res );
         return $res;
     }
         
-    public function get( array $affiliate_ids ){
-        //return $this->core->get( $affiliate_ids );
-        $cache = new Cacher\Prefix( $this->cache, 'affiliate_ids/');
+    public function identifiers( array $affiliate_ids ){
+        $cache = $this->affiliationCache();
         $cache = new Cacher\Callback( $cache, array(
-            'callback'=> array( $this->core, 'get'),
+            'callback'=> array( $this->core, __FUNCTION__),
             'timeout'=>300,
             'cache_missing'=>TRUE,
         ));
         $res = $cache->get( $affiliate_ids );
-        //var_dump( $res );
         return $res;
     }
     
@@ -48,18 +44,18 @@ class Cache implements Iface {
     }
     
     public function joinRelated( array $related ){
-        $cache = new Cacher\Prefix( $this->cache, 'affiliate_ids/');
+        $a_cache = $this->affiliationCache();
+        $i_cache  = $this->identifierCache();
 
         $ids = array();
-        $cache_identifiers  = new Cacher\Prefix( $this->cache, 'affiliate_identifiers/');
         foreach( $related as $identifier => $affiliate_id ){
             if( $affiliate_id === NULL ) continue;
-            $cache_identifiers->delete($identifier);
+            $i_cache->delete($identifier);
             $ids[ $affiliate_id ] = 1;
         }
         if( $ids ) {
             foreach( $ids as $id => $set ){
-                $cache->delete( $id );
+                $a_cache->delete( $id );
             }
         }
         $res =  $this->core->joinRelated( $related );
@@ -67,26 +63,35 @@ class Cache implements Iface {
         foreach( $res as $identifier => $affiliate_id ){
             if( ! isset( $cache_result[ $affiliate_id ] ) ) $cache_result[ $affiliate_id ] = array();
             $cache_result[ $affiliate_id ][] = $identifier;
-            $cache_identifiers->set( $identifier, $affiliate_id );
+            $i_cache->set( $identifier, $affiliate_id );
         }
         foreach( $cache_result as $affiliate_id => $identifiers ){
-            $cache->set( $affiliate_id, $identifiers, 300 );
+            $a_cache->set( $affiliate_id, $identifiers, 300 );
         }
         return $res;
         
     }
     
     public function delete( array $identifiers ){
-        $res = $this->search( $identifiers );
-        $affiliate_ids = array_unique( array_values( $res ) );
-        $cache = new Cacher\Prefix( $this->cache, 'affiliate_ids/');
-        foreach( $affiliate_ids as $affiliate_id ){
-            $cache->delete( $affiliate_id );
+        $res = $this->affiliations( $identifiers );
+        $affiliations = array_unique( array_values( $res ) );
+        $cache = $this->affiliationCache();
+        foreach( $affiliations as $affiliation ){
+            $cache->delete( $affiliation );
         }
-        $cache = new Cacher\Prefix( $this->cache, 'affiliate_identifiers/');
-        foreach( $res as $identifier => $affiliate_id ){
+        $cache = $this->identifierCache();
+        foreach( $res as $identifier => $affiliation ){
             $cache->delete( $identifier );
         }
         return $this->core->delete( $identifiers );
+    }
+    
+    protected function identifierCache(){
+        return new Cacher\Prefix( $this->cache, 'identifiers/');
+    }
+    
+    protected function affiliationCache(){
+        return new Cacher\Prefix( $this->cache, 'affiliations/');
+
     }
 }

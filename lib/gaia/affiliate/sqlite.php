@@ -7,12 +7,13 @@ use Gaia\Exception;
 class SQLite implements Iface {
 
     protected $db;
-    protected $table;
+    protected $table_prefix;
 
-    public function __construct( $db, $table ){
-        if( ! is_scalar( $table ) || ! preg_match('#^[a-z0-9_]+$#', $table ) ) {
+    public function __construct( $db, $table_prefix ){
+        if( ! is_scalar( $table_prefix ) || ! preg_match('#^[a-z0-9_]+$#', $table_prefix ) ) {
             throw new Exception('invalid table name');
         }
+        $this->table_prefix = $table_prefix;
         $this->db = function() use ( $db ){
             static $object;
             if( isset( $object ) ) return $object;
@@ -22,24 +23,17 @@ class SQLite implements Iface {
             if( ! $db->isA('Gaia\DB\Except') ) $db = new DB\Except( $db );
             return $object = $db;
         };
-        $this->table = $table;
     }
     
-    public function search( array $identifiers ){
+    public function affiliations( array $identifiers ){
         $db = $this->db();
-        $table = $this->table;
+        $table = $this->table();
         if( ! DB\Transaction::atStart() ) DB\Transaction::add( $db );
-        $result = $hashes = array();
-        foreach( $identifiers as $identifier ){
-            $hash =sha1($identifier, true);
-            $hashes[ $hash ] = $identifier;
-            $result[ $identifier ] = NULL;
-        }
-        
-        $rs = $db->execute("SELECT `affiliate`, `identifier` FROM `$table` WHERE `hash` IN ( %s )", array_keys($hashes) );
+        $result = array_fill_keys( $identifiers, NULL );
+        $rs = $db->execute("SELECT `affiliation`, `identifier` FROM `$table` WHERE `identifier` IN ( %s )", $identifiers );
         $ids = array();
         while( $row = $rs->fetch() ){
-            $result[$row['identifier']] =  $row['affiliate'];
+            $result[$row['identifier']] =  $row['affiliation'];
         }
         $rs->free();
         
@@ -49,16 +43,16 @@ class SQLite implements Iface {
         return $result;
     }
         
-    public function get( array $affiliates ){
-        if( ! $affiliates ) return array();
-        $result = array_fill_keys( $affiliates, array() );
+    public function identifiers( array $affiliations ){
+        if( ! $affiliations ) return array();
+        $result = array_fill_keys( $affiliations, array() );
         $db = $this->db();
-        $table = $this->table;
+        $table = $this->table();
         if( ! DB\Transaction::atStart() ) DB\Transaction::add( $db );
-        $rs = $db->execute("SELECT affiliate, `identifier` FROM `$table` WHERE `affiliate` IN ( %i )", $affiliates );
+        $rs = $db->execute("SELECT `affiliation`, `identifier` FROM `$table` WHERE `affiliation` IN ( %i )", $affiliations );
         $result = array();
         while( $row = $rs->fetch() ){
-            $result[ $row['affiliate'] ][] = $row['identifier'];
+            $result[ $row['affiliation'] ][] = $row['identifier'];
         }
         $rs->free();     
         return $result;
@@ -73,25 +67,24 @@ class SQLite implements Iface {
     }
     
     public function joinRelated( array $related ){
-        $affiliate = NULL;
-        foreach( $related as $identifier => $affiliate ){
-            if( $affiliate ) break;            
+        $affiliation = NULL;
+        foreach( $related as $identifier => $affiliation ){
+            if( $affiliation ) break;            
         }
         
-        if( ! $affiliate ) $affiliate = Util::newID();
+        if( ! $affiliation ) $affiliation = Util::newID();
         $db = $this->db();
-        $table = $this->table;
+        $table = $this->table();
         $local_txn =  DB\Transaction::claimStart();
         DB\Transaction::add( $db );
-        $sql_insert = "INSERT OR IGNORE INTO `$table` (`affiliate`, `identifier`, `hash`) VALUES (%i, %s, %s)";
-        $sql_update = "UPDATE `$table` set `affiliate` = %i WHERE `hash` = %s";
+        $sql_insert = "INSERT OR IGNORE INTO `$table` (`identifier`, `affiliation`) VALUES (%s, %i)";
+        $sql_update = "UPDATE `$table` set `affiliation` = %i WHERE `identifier` = %s";
         foreach( $related as $identifier => $_id ){
-            if( $_id == $affiliate ) continue;
-            $related[ $identifier ] = $affiliate;
-            $hash = sha1( $identifier, TRUE);
-            $rs = $db->execute( $sql_insert, $affiliate, $identifier,  $hash );
+            if( $_id == $affiliation ) continue;
+            $related[ $identifier ] = $affiliation;
+            $rs = $db->execute( $sql_insert, $identifier, $affiliation );
             if( $rs->affected() < 1 ){
-                $db->execute( $sql_update, $affiliate, $hash );
+                $db->execute( $sql_update, $affiliation, $identifier );
             }
         }
         if( $local_txn && ! DB\Transaction::commit() ) {
@@ -102,13 +95,9 @@ class SQLite implements Iface {
     
     public function delete( array $identifiers ){
         $db = $this->db();
-        $table = $this->table;
+        $table = $this->table();
         $local_txn =  DB\Transaction::claimStart();
-        $hashes = array();
-        foreach( $identifiers as $identifier ){
-            $hashes[] = sha1($identifier, true);
-        }
-        $db->execute("DELETE FROM `$table` WHERE `hash` IN ( %s )", $hashes );
+        $db->execute("DELETE FROM `$table` WHERE `identifier` IN ( %s )", $identifiers );
         
         if( $local_txn && ! DB\Transaction::commit() ) {
             throw new Exception('database error: unable to commit transaction', $db );
@@ -117,7 +106,7 @@ class SQLite implements Iface {
     
     public function initialize(){
         $db = $this->db();
-        $rs = $db->execute("SELECT name FROM sqlite_master WHERE type = %s AND name = %s", 'table', $this->table );
+        $rs = $db->execute("SELECT name FROM sqlite_master WHERE type = %s AND name = %s", 'table', $this->table() );
         if( $rs->fetch() ) return;
         foreach(explode(';', $this->schema() ) as $query ) {
             $query = trim($query);
@@ -127,23 +116,26 @@ class SQLite implements Iface {
     }
     
     
+    protected function table(){
+        return $this->table_prefix . '_affiliate';
+    }
+    
     protected function db(){
         $db = $this->db;
         return $db();
     }
     
     public function schema(){
-        $table = $this->table;
+        $table = $this->table();
         $index = $table . '_affiliate_idx';
         return 
         "CREATE TABLE IF NOT EXISTS `$table` ( 
             `identifier` TEXT NOT NULL, 
-            `hash` BLOB NOT NULL, 
-            `affiliate` INT NOT NULL,
-            UNIQUE(`hash`)
+            `affiliation` INT NOT NULL,
+            UNIQUE(`identifier`)
             );
             
-         CREATE INDEX IF NOT EXISTS `$index` ON `$table` (`affiliate`);
+         CREATE INDEX IF NOT EXISTS `$index` ON `$table` (`affiliation`);
          ";
     }
 }

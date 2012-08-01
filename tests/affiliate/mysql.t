@@ -20,9 +20,9 @@ DB\Connection::load( array(
     },
 ));
 
-$affiliate = new affiliate\Mysql('test', 'affiliate_test');
+$affiliate = new affiliate\Mysql('test', 'test');
 $sql = $affiliate->schema();
-//$sql = str_replace('CREATE TABLE', 'CREATE TEMPORARY TABLE', $sql);
+$sql = str_replace('CREATE TABLE', 'CREATE TEMPORARY TABLE', $sql);
 $rs = DB\Connection::instance('test')->execute( $sql );
 
 

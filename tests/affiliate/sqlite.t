@@ -16,7 +16,7 @@ try {
 
 DB\Connection::load( array('test'=> function () use ( $db ) { return $db; }) );
 
-$affiliate = new Affiliate\Sqlite('test', 'affiliate_test');
+$affiliate = new Affiliate\Sqlite('test', 'test');
 $sql = $affiliate->initialize();
 
 include __DIR__ . '/.base_test.php';

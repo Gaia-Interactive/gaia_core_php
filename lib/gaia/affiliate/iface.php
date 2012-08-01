@@ -2,8 +2,8 @@
 namespace Gaia\Affiliate;
 
 interface Iface {   
-    public function search( array $identifiers );
-    public function get( array $affiliates );
+    public function affiliations( array $identifiers ); // search
+    public function identifiers( array $affiliations ); // get
     public function findRelated( array $identifiers );
     public function joinRelated( array $related );
     public function join( array $identifiers );
