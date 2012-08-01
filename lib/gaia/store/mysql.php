@@ -26,12 +26,18 @@ class MySQL implements Iface {
     
    /**
     * create the mysql object.
-    * pass in a closure to specify the dsn/tablename. receives a single key, and should return an array of:
-    * array( $dsn, $table );
-    * the dsn will be passed to Gaia\DB\Connecton::instance() to get the db object.
+    * pass in a db object or dsn string and table name
     */
     public function __construct($db, $table, \Gaia\Serialize\Iface $s = NULL ){
-        $this->db = $db;
+        $this->db = function() use ( $db ){
+            static $object;
+            if( isset( $object ) ) return $object;
+            if( is_scalar( $db ) ) $db = DB\Connection::instance( $db );
+            if( ! $db instanceof DB\Iface ) throw new Exception('invalid db object');
+            if( ! $db->isA('mysql') ) throw new Exception('db object not mysql');
+            if( ! $db->isA('Gaia\DB\Except') ) $db = new DB\Except( $db );
+            return $object = $db;
+        };
         $this->table = $table;
         $this->s = ( $s ) ? $s : new \Gaia\Serialize\PHP;
     }
@@ -212,11 +218,9 @@ class MySQL implements Iface {
     }
     
     protected function db(){
-        if( is_string( $this->db ) ) $this->db = DB\Connection::instance( $this->db );
-        $db = $this->db;
-        if( ! $db instanceof DB\Iface ) throw new Exception('invalid dsn');
-        if( ! $db->isa('mysql') ) throw new Exception('invalid driver', $db );
-        if( ! $db->isa('Gaia\DB\Except') ) $db = $this->db = new \Gaia\DB\Except( $db );
+        $closure = $this->db;
+        $db = $closure();
+        if( DB\Transaction::inProgress() ) DB\Transaction::add( $db );
         return $db;
     }
 }
