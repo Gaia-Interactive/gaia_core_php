@@ -34,6 +34,7 @@ class SQLite implements Iface {
     public function count(){
         $table = $this->table('index');
         $db = $this->db( $table );
+        if( DB\Transaction::inProgress() ) DB\Transaction::add( $db );
         $sql = "SELECT SUM( `sequence` ) as ct FROM $table WHERE `thread` = %s";
         $rs = $db->execute( $sql, $this->thread );
         $result = 0;
@@ -55,6 +56,7 @@ class SQLite implements Iface {
         foreach( Util::parseIds( $ids ) as $shard=>$sequences ){
             $table= $this->table( $shard );
             $db = $this->db( $table );
+            if( DB\Transaction::inProgress() ) DB\Transaction::add( $db );
             $sql = "SELECT `sequence`,`data` FROM `$table` WHERE `thread` = %s AND `sequence` IN( %i )";
             $rs = $db->execute( $sql, $this->thread, $sequences );
             while( $row = $rs->fetch() ){
@@ -110,6 +112,7 @@ class SQLite implements Iface {
         list( $shard, $sequence ) = Util::parseId( $id );
         $table = $this->table($shard);
         $db = $this->db( $table );
+        if( DB\Transaction::inProgress() ) DB\Transaction::add( $db );
         $sql = "INSERT OR IGNORE INTO $table (thread, sequence, data) VALUES (%i, %i, %s)";
         $data = $this->serialize($data);
         $rs = $db->execute( $sql, $this->thread, $sequence, $data );
@@ -131,6 +134,7 @@ class SQLite implements Iface {
     public function shardSequences(){
         $table = $this->table('index');
         $db = $this->db( $table );
+        if( DB\Transaction::inProgress() ) DB\Transaction::add( $db );
         $sql = "SELECT `shard`, `sequence` FROM $table WHERE `thread` = %s ORDER BY `shard` DESC";
         $rs = $db->execute( $sql, $this->thread );
         $result = array();
