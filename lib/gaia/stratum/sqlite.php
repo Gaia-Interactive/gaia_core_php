@@ -19,6 +19,7 @@ class SQLite implements Iface {
     public function store( $constraint, $stratum ){
         $db = $this->db();
         $table = $this->table();
+        if( DB\Transaction::inProgress() ) DB\Transaction::add( $db );
         $sql = "INSERT OR IGNORE INTO `$table` 
             (`owner`, `constraint`, `stratum`) VALUES (%i, %s, %i)";
         $rs = $db->execute( $sql, $this->owner, $constraint, $stratum );
@@ -46,6 +47,7 @@ class SQLite implements Iface {
         if( $sort != 'DESC' ) $sort = 'ASC';
         $db = $this->db();
         $table = $this->table();
+        if( DB\Transaction::inProgress() ) DB\Transaction::add( $db );
         $where = array($db->prep_args('`owner` = %i', array( $this->owner ) ) );
         if( $search !== NULL ) $where[] = $db->prep_args("`stratum` IN( %s )", array($search) );
         if( $min !== NULL ) $where[] = $db->prep_args("`stratum` >= %i", array($min) );
