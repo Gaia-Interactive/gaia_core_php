@@ -28,7 +28,7 @@ class MySQL implements Iface {
     public function search( array $identifiers ){
         $db = $this->db();
         $table = $this->table;
-        
+        if( ! DB\Transaction::atStart() ) DB\Transaction::add( $db );
         $result = $hashes = array();
         foreach( $identifiers as $identifier ){
             $hash =sha1($identifier, true);
@@ -53,6 +53,7 @@ class MySQL implements Iface {
         if( ! $affiliates ) return array();
         $result = array_fill_keys( $affiliates, array() );
         $db = $this->db();
+        if( ! DB\Transaction::atStart() ) DB\Transaction::add( $db );
         $table = $this->table;
         $rs = $db->execute("SELECT affiliate, `identifier` FROM `$table` WHERE `affiliate` IN ( %i )", $affiliates );
         $result = array();
@@ -72,6 +73,9 @@ class MySQL implements Iface {
     }
     
     public function joinRelated( array $related ){
+        $db = $this->db();
+        $table = $this->table;
+        if( ! DB\Transaction::atStart() ) DB\Transaction::add( $db );
         $affiliate = NULL;
         foreach( $related as $identifier => $affiliate ){
             if( $affiliate ) break;            
@@ -80,8 +84,7 @@ class MySQL implements Iface {
         if( ! $affiliate ) $affiliate = Util::newID();
         
         $clauses = array();
-        $db = $this->db();
-        $table = $this->table;
+        
         foreach( $related as $identifier => $_id ){
             if( $_id == $affiliate ) continue;
             $related[ $identifier ] = $affiliate;
@@ -97,6 +100,7 @@ class MySQL implements Iface {
     public function delete( array $identifiers ){
         $db = $this->db();
         $table = $this->table;
+        if( ! DB\Transaction::atStart() ) DB\Transaction::add( $db );
         $hashes = array();
         foreach( $identifiers as $identifier ){
             $hashes[] = sha1($identifier, true);

@@ -28,7 +28,7 @@ class SQLite implements Iface {
     public function search( array $identifiers ){
         $db = $this->db();
         $table = $this->table;
-        
+        if( ! DB\Transaction::atStart() ) DB\Transaction::add( $db );
         $result = $hashes = array();
         foreach( $identifiers as $identifier ){
             $hash =sha1($identifier, true);
@@ -54,6 +54,7 @@ class SQLite implements Iface {
         $result = array_fill_keys( $affiliates, array() );
         $db = $this->db();
         $table = $this->table;
+        if( ! DB\Transaction::atStart() ) DB\Transaction::add( $db );
         $rs = $db->execute("SELECT affiliate, `identifier` FROM `$table` WHERE `affiliate` IN ( %i )", $affiliates );
         $result = array();
         while( $row = $rs->fetch() ){
@@ -80,6 +81,8 @@ class SQLite implements Iface {
         if( ! $affiliate ) $affiliate = Util::newID();
         $db = $this->db();
         $table = $this->table;
+        $local_txn =  DB\Transaction::claimStart();
+        DB\Transaction::add( $db );
         $sql_insert = "INSERT OR IGNORE INTO `$table` (`affiliate`, `identifier`, `hash`) VALUES (%i, %s, %s)";
         $sql_update = "UPDATE `$table` set `affiliate` = %i WHERE `hash` = %s";
         foreach( $related as $identifier => $_id ){
@@ -91,17 +94,25 @@ class SQLite implements Iface {
                 $db->execute( $sql_update, $affiliate, $hash );
             }
         }
+        if( $local_txn && ! DB\Transaction::commit() ) {
+            throw new Exception('database error: unable to commit transaction', $db );
+        }
         return $related;
     }
     
     public function delete( array $identifiers ){
         $db = $this->db();
         $table = $this->table;
+        $local_txn =  DB\Transaction::claimStart();
         $hashes = array();
         foreach( $identifiers as $identifier ){
             $hashes[] = sha1($identifier, true);
         }
         $db->execute("DELETE FROM `$table` WHERE `hash` IN ( %s )", $hashes );
+        
+        if( $local_txn && ! DB\Transaction::commit() ) {
+            throw new Exception('database error: unable to commit transaction', $db );
+        }
     }
     
     public function initialize(){
