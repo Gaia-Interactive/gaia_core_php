@@ -46,6 +46,10 @@ class Observe implements IFace {
         return $this->__call( __FUNCTION__, array($name) );
     }
     
+    public function hash() {
+        return $this->__call( __FUNCTION__, array() );
+    }
+    
     public function __call( $method, $args ){
         $result = call_user_func_array( array( $this->db, $method ), $args );
         if( isset( $this->callbacks[ $method ] ) ) {

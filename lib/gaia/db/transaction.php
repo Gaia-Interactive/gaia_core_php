@@ -11,14 +11,13 @@ class Transaction
     const SIGNATURE = '__TXN__';
     
     public static function add( Iface $obj ){
-        while( $obj instanceof \Gaia\DB && $obj->core() instanceof Iface ) $obj = $obj->core();
-        $hash = spl_object_hash($obj);
+        $hash = $obj->hash();
         if( isset( self::$tran[ $hash ] ) ) return $obj;
         self::claimStart();
         if( ! $obj->start(self::SIGNATURE) ) {
             return FALSE;
         }
-        return self::$tran[spl_object_hash($obj)] = $obj;
+        return self::$tran[$hash] = $obj;
     }
     
     public static function connections(){

@@ -118,6 +118,10 @@ class MySQLi extends \MySQLi implements \Gaia\DB\Iface {
         return FALSE;
     }
     
+    public function hash(){
+        return spl_object_hash( $this );
+    }
+    
     public function __toString(){
         @ $res ='(Gaia\DB\MySQLi object - ' . "\n" .
             '  [affected_rows] => ' . $this->affected_rows . "\n" .
