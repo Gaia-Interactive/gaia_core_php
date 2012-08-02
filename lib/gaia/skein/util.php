@@ -50,20 +50,21 @@ class Util {
          if( $start_after === NULL ) {
             if( count( $shard_sequences ) < 1 ) return array();
             foreach( $shard_sequences as $shard => $sequence ) break;
-            $start_after = self::composeId( $shard, 1 );
+            $start_after = self::composeId( $shard, 0 );
          }
          list( $start_shard, $start_sequence ) = self::parseId( $start_after );
-         
          $result = array();
          
          if( $start_shard === NULL || $start_sequence === NULL ) return array();
          
          foreach( $shard_sequences as $shard => $sequence ){
             if( $shard < $start_shard ) continue;
-            $pos = 1;
-            if( $shard == $start_shard && $sequence > $start_sequence ) $pos = $start_sequence;
-            while( $sequence >= $pos && $limit > 0) {
-                $result[] = self::composeId( $shard, $pos++);
+            $pos = 0;
+            if( $shard == $start_shard ) {
+                $pos = $start_sequence;
+            }
+            while( $sequence > $pos && $limit > 0) {
+                $result[] = self::composeId( $shard, (++$pos));
                 $limit--;
             }
             if( $limit < 1 ) break;
@@ -97,23 +98,32 @@ class Util {
     }
     
     public static function filter( Iface $core, array $params ){
-        $default = array('sort'=>'ascending', 'closure'=>NULL, 'start_after'=>NULL);
+        $default = array('sort'=>'ascending', 'process'=>NULL, 'pre_process'=>NULL, 'start_after'=>NULL);
         $params = array_merge( $default, $params );
-        $cb = $params['closure'];
-        if( ! $cb instanceof \Closure ){
-            throw new Exception('no closure passed to filter');
+        $process = $params['process'];
+        if( ! $process instanceof \Closure ){
+            throw new Exception('invalid closure passed to process');
         }
         $id_chunk_size = 1000;
         $get_chunk_size = 100;
         $id = $params['start_after'];
+        $pre_process = ( isset( $params['pre_process'] ) &&  $params['pre_process'] instanceof \Closure ) ?  $params['pre_process'] : NULL;
         $ct = 0;
         do {
             $ids = $core->ids( array('sort'=>$params['sort'], 'limit'=> $id_chunk_size, 'start_after'=>$id ) );
+            $id = end( $ids );
             $ct = count( $ids );
             if( $ct < 1 ) return;
+            
+            if( $pre_process ){
+                $ids = $pre_process( $ids );
+                if( $ids === FALSE ) return;
+                if( ! is_array( $ids ) ) $ids = array();
+            }
+            
             foreach( array_chunk( $ids, $get_chunk_size) as $i ){
                 foreach( $core->get( $i ) as $id => $data ){
-                    $res = $cb( $id, $data );
+                    $res = $process( $id, $data );
                     if( $res === FALSE ) return;
                 }
             }
