@@ -1,6 +1,7 @@
 <?php
 use Gaia\Test\Tap;
 use Gaia\Time;
+use Gaia\DB;
 if( ! isset( $seller_id ) ) $seller_id = uniqueUserId();
 if( ! isset( $buyer_id ) ) $buyer_id = uniqueUserId();
 if( ! isset( $item_id ) ) $item_id = uniqueNumber(1,100000);
@@ -41,6 +42,10 @@ try {
 }
 Tap::is( $e, 'invalid bidder', 'sellers cant bid on their their own items');
 
+DB\Transaction::reset();
+DB\Connection::reset();
+$souk = Souk( $app, $seller_id );
+
 
 $e = NULL;
 try {
@@ -50,6 +55,9 @@ try {
 }
 Tap::is( $e, 'invalid buyer', 'sellers cant buy their their own items');
 
+
+DB\Transaction::reset();
+DB\Connection::reset();
 
 $souk = Souk( $app, $buyer_id );
 $listing = $souk->bid($listing->id, 2, array('enable_proxy'=>1));
@@ -78,6 +86,9 @@ try {
 }
 Tap::is( $e, 'too low', 'when under-bidding, fails with message: too low');
 
+DB\Transaction::reset();
+DB\Connection::reset();
+
 $listing = $souk->close($listing->id);
 Tap::is( $listing->bid, 3, 'after closing, bid is 3');
 Tap::is( $listing->price, 10, 'after closing, price is 10 ... wasnt met');
@@ -86,6 +97,8 @@ Tap::is( $listing->closed, 1, 'auction is closed');
 Tap::is( $listing->buyer, $listing->bidder, 'bidder is now the buyer');
 Tap::cmp_ok( abs( $listing->touch - Time::now() ), '<', 2, 'after closing, touch matches current time');
 
+DB\Transaction::reset();
+DB\Connection::reset();
 
 $e = NULL;
 try {
@@ -96,6 +109,8 @@ try {
 Tap::is( $e, 'already closed', 'when trying to close an already closed listing, fails with message: already closed');
 
 
+DB\Transaction::reset();
+DB\Connection::reset();
 
 $e = NULL;
 try {
@@ -107,6 +122,8 @@ Tap::is( $e, 'closed', 'when bidding on a closed listing, fails with message: so
 
 
 
+DB\Transaction::reset();
+DB\Connection::reset();
 
 $e = NULL;
 try {
@@ -116,7 +133,8 @@ try {
 }
 Tap::is( $e, 'sold', 'when trying to buy a closed listing, fails with message: closed');
 
-
+DB\Transaction::reset();
+DB\Connection::reset();
 
 $e = NULL;
 try {
@@ -127,6 +145,8 @@ try {
 Tap::is( $e, 'not found', 'when bidding on a non-existent listing, fails with message: not found');
 
 
+DB\Transaction::reset();
+DB\Connection::reset();
 
 $souk = Souk( $app, $seller_id );
 $listing = $souk->auction( array( 'price'=>10, 'item_id'=>$item_id) );
@@ -140,6 +160,9 @@ try {
     $e = $e->getMessage();
 }
 Tap::is( $e, 'buy only', 'when bidding on buy-only, fails');
+
+DB\Transaction::reset();
+DB\Connection::reset();
 
 $listing = $souk->buy($listing->id);
 
@@ -158,6 +181,8 @@ try {
 }
 Tap::is( $e, 'bid only', 'when buying bid-only, fails');
 
+DB\Transaction::reset();
+DB\Connection::reset();
 
 $listing = $souk->bid($listing->id, 1);
 
