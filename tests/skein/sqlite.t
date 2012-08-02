@@ -3,6 +3,7 @@
 use Gaia\Skein;
 use Gaia\Container;
 use Gaia\Test\Tap;
+use Gaia\DB;
 
 include __DIR__ . '/../common.php';
 include __DIR__ . '/../assert/pdo_installed.php';
@@ -30,7 +31,12 @@ $callback = function( $table ) use ( $db, $cache ){
 
 $skein = new Skein\SQLite( $thread, $callback, 'test' );
 
+$extra_tests = 1;
+DB\Transaction::start();
+
 include __DIR__ . '/.basic_test_suite.php';
+
+Tap::ok( DB\Transaction::rollback(), 'rolling back all the queries');
 
 
 //Tap::debug( $store->all() );

@@ -3,6 +3,7 @@
 use Gaia\Skein;
 use Gaia\Container;
 use Gaia\Test\Tap;
+use Gaia\DB;
 
 include __DIR__ . '/../common.php';
 include __DIR__ . '/../assert/mysqli_installed.php';
@@ -31,7 +32,14 @@ $callback = function( $table ) use ( $db, $cache ){
 
 $skein = new Skein\MySQL( $thread, $callback, 'test' );
 
+DB\Transaction::start();
+
+$extra_tests = 1;
+
 include __DIR__ . '/.basic_test_suite.php';
 
+tap::debug( array_keys( DB\Transaction::connections() ) );
+
+Tap::ok( DB\Transaction::rollback(), 'rolling back all the queries');
 
 //Tap::debug( $store->all() );
