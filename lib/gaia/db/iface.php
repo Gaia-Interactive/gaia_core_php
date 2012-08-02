@@ -9,4 +9,5 @@ interface IFace {
     public function prep($query);
     public function prep_args($query, array $args);
     public function isa( $name );
+    public function hash();
 }

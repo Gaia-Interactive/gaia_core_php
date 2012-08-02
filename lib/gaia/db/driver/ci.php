@@ -119,6 +119,10 @@ class CI implements \Gaia\DB\Iface {
         return FALSE;
     }
     
+    public function hash(){
+        return spl_object_hash( $this->core );
+    }
+    
     public function __toString(){
         @ $res = print_r( $this, TRUE);
         return $res;
