@@ -6,8 +6,10 @@ use Gaia\DB\Transaction;
 $original = $db;
 
 
-Tap::plan(50);
+Tap::plan(51);
 $db = new DB($db);
+
+Tap::is( spl_object_hash($original), $db->hash(), 'the hash function returns the hash of the original db object');
 
 DB\Connection::load( array( 'test'=> function() use( $db ){ return $db; }));
 
