@@ -98,6 +98,10 @@ class PDO extends Callback implements \Gaia\DB\Iface {
             return $db->rollback();
         };
         
+        $callbacks['hash'] = function () use ( $db ){
+            return spl_object_hash( $db );
+        };
+        
         $callbacks['__get'] = function ($k) use ( $db ){
             return $db->$k;
         };

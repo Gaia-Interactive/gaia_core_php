@@ -86,6 +86,12 @@ class PDO {
             if( $name == $db->getAttribute(\PDO::ATTR_DRIVER_NAME) ) return TRUE;
             return FALSE;
         };
+        
+        
+        $_['hash'] = function() use ( $db ){
+            if( $db instanceof Iface ) return $db->hash();
+            return spl_object_hash( $db );
+        };
 
         return $_;
     }
