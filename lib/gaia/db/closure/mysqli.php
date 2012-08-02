@@ -11,6 +11,7 @@ class MySQLi {
         $lastquery = '';
 
         $_['__tostring'] = function() use ( $db, & $lastquery ) {
+            if( method_exists( $db, '__toString' ) ) return $db->__toString();
             if( $db->connect_error ){ 
                 $error = ($db->connect_error) ? $db->connect_errno . ': connection error ... ' . $db->connect_error : '';
             } else {
