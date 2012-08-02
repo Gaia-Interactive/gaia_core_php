@@ -11,15 +11,15 @@ class Wrapper implements IFace {
     }
     
     public function start($auth = NULL){
-        return $this->core->start($auth = NULL);
+        return $this->core->start($auth);
     }
     
     public function rollback($auth = NULL){
-        return $this->core->rollback($auth = NULL);
+        return $this->core->rollback($auth );
     }
     
     public function commit($auth = NULL){
-        return $this->core->commit($auth = NULL);
+        return $this->core->commit($auth );
     }
     
     public function execute($query){
@@ -40,6 +40,10 @@ class Wrapper implements IFace {
         if( method_exists( $this->core, 'isa') ) return $this->core->isa( $name );
         return ( $this->core instanceof $name );
     }
+    
+    public function hash(){
+        return $this->core->hash();
+    }   
     
     public function __get( $k ){
         return $this->core->$k;
