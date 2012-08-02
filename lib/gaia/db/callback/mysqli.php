@@ -63,7 +63,9 @@ class MySQLi extends Callback implements \Gaia\DB\Iface {
             return ( $mode ) ? $wrapper->commit() : $wrapper->start();
         };
         
-        
+        $callbacks['hash'] = function () use ( $mysqli ){
+            return spl_object_hash( $mysqli );
+        };
         
         $callbacks['rollback'] = function () use ( $mysqli ){
             return $mysqli->query('ROLLBACK');
