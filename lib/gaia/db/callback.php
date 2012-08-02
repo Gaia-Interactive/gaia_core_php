@@ -78,6 +78,12 @@ class Callback implements IFace {
         return $this->__call( __FUNCTION__, array( $name ) );
     }
     
+    public function hash(){
+        $f = strtolower( __FUNCTION__);
+        if( isset( $this->callbacks[ $f ] ) ) return $this->__call( $f, array() );
+        return spl_object_hash( $this );
+    }
+    
     public function __get( $k ){
         if( $k == 'lock' ) return $this->lock;
         if( $k == 'txn' ) return $this->txn;

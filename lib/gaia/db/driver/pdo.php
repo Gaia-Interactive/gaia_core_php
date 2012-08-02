@@ -87,6 +87,10 @@ class PDO extends \PDO implements \Gaia\DB\Iface {
         return FALSE;
     }
     
+    public function hash(){
+        return spl_object_hash( $this );
+    }
+    
     public function prep( $query /*, ... */ ){
         $args = func_get_args();
         array_shift($args);
