@@ -38,8 +38,6 @@ $extra_tests = 1;
 
 include __DIR__ . '/.basic_test_suite.php';
 
-tap::debug( array_keys( DB\Transaction::connections() ) );
-
 Tap::ok( DB\Transaction::rollback(), 'rolling back all the queries');
 
 //Tap::debug( $store->all() );
