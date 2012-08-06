@@ -114,12 +114,13 @@ Tap::is( $sum, $expected_sum, 'sum from filter with start_after arrived at the c
 
 
 
-$pre_processed_ids = $post_processed_ids = array();
+$generated_ids = $post_processed_ids = array();
 
-$pre_process = function( array $ids ) use( & $pre_processed_ids, & $post_processed_ids ) {
+$generate = function( array $params ) use( $skein, & $generated_ids, & $post_processed_ids ) {
     $return = array();
+    $ids = $skein->ids( $params );
     foreach($ids as $id) {
-        $pre_processed_ids[] = $id; 
+        $generated_ids[] = $id; 
         if( $id % 2 == 0 ) $post_processed_ids[] = $return[] = $id;
     }
     return $return;
@@ -132,11 +133,11 @@ $process =function($id, $data ) use ( & $processed_ids ){
 };
 
 
-$skein->filter( array('process'=>$process, 'pre_process'=> $pre_process ) );
+$skein->filter( array('process'=>$process, 'generate'=> $generate ) );
 
-Tap::is( $pre_processed_ids, $ids, 'pre_process filter gets all the ids');
+Tap::is( $generated_ids, $ids, 'generate filter gets all the ids');
 
-Tap::is( $processed_ids, $post_processed_ids, 'process filter gets only the ids returned by pre_process');
+Tap::is( $processed_ids, $post_processed_ids, 'process filter gets only the ids returned by generate');
 
 
 $shard = mt_rand(1, 100);
