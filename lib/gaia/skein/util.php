@@ -98,7 +98,7 @@ class Util {
     }
     
     public static function filter( Iface $core, array $params ){
-        $default = array('sort'=>'ascending', 'process'=>NULL, 'pre_process'=>NULL, 'start_after'=>NULL);
+        $default = array('sort'=>'ascending', 'process'=>NULL, 'generate'=>NULL, 'start_after'=>NULL);
         $params = array_merge( $default, $params );
         $process = $params['process'];
         if( ! $process instanceof \Closure ){
@@ -107,19 +107,18 @@ class Util {
         $id_chunk_size = 1000;
         $get_chunk_size = 100;
         $id = $params['start_after'];
-        $pre_process = ( isset( $params['pre_process'] ) &&  $params['pre_process'] instanceof \Closure ) ?  $params['pre_process'] : NULL;
+        $generate = ( isset( $params['generate'] ) &&  $params['generate'] instanceof \Closure ) ?  $params['generate'] : NULL;
         $ct = 0;
         do {
-            $ids = $core->ids( array('sort'=>$params['sort'], 'limit'=> $id_chunk_size, 'start_after'=>$id ) );
+            if( $generate ){
+                $ids = $generate( array('sort'=>$params['sort'], 'limit'=> $id_chunk_size, 'start_after'=>$id )  );
+                if( ! is_array( $ids ) ) $ids = array();
+            } else {
+                $ids = $core->ids( array('sort'=>$params['sort'], 'limit'=> $id_chunk_size, 'start_after'=>$id ) );
+            }
             $id = end( $ids );
             $ct = count( $ids );
             if( $ct < 1 ) return;
-            
-            if( $pre_process ){
-                $ids = $pre_process( $ids );
-                if( $ids === FALSE ) return;
-                if( ! is_array( $ids ) ) $ids = array();
-            }
             
             foreach( array_chunk( $ids, $get_chunk_size) as $i ){
                 foreach( $core->get( $i ) as $id => $data ){
