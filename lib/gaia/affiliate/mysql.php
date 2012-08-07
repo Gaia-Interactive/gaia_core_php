@@ -109,7 +109,10 @@ class MySQL implements Iface {
     }
     
     public function initialize(){
-        $this->db()->execute( $this->schema() );
+        $table = $this->table();
+        $db = $this->db();
+        $rs = $db->execute('SHOW TABLES LIKE %s', $table );
+        if( ! $rs->fetch() ) $db->execute( $this->schema() );
     }
     
     
