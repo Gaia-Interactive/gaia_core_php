@@ -7,7 +7,7 @@ include __DIR__ . '/../common.php';
 include __DIR__ . '/../assert/mysqli_installed.php';
 include __DIR__ . '/../assert/pdo_installed.php';
 
-Tap::plan(5);
+Tap::plan(6);
 
 $db = new DB\Except( $mock = new DB\Callback());
 
@@ -45,5 +45,9 @@ Tap::is( $err, '', 'no exception thrown when query runs properly');
 
 Tap::is( $db->isa('Gaia\DB\Callback'), TRUE, 'expect is a wrapper and tells us the core instanceof');
 Tap::is( $db->isa('Gaia\DB\Transaction'), FALSE, 'doesnt false report instanceof');
+
+$sql = $db->prep( '%i %s', 1, 'test');
+
+Tap::is( $sql, "1 'test'", 'SQL prep works properly' );
 
 //print $err;
