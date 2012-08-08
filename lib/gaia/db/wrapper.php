@@ -28,7 +28,9 @@ class Wrapper implements IFace {
     }
     
     public function prep($query){
-        return $this->core->prep( $query );
+        $args = func_get_args();
+        array_shift($args);
+        return $this->prep_args( $query, $args );
     }
     
     public function prep_args( $query, array $args ){
