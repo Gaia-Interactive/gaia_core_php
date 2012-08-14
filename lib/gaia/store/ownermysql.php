@@ -83,8 +83,8 @@ class OwnerMySQL implements Iface {
         $now = $this->now();
         $rows = array();
         $rows = array_fill_keys($request, NULL);
-        $query = "SELECT `id`, `data` FROM {$this->table} WHERE `id` IN (%s) AND `ttl` >= %i";
-        $rs = $this->db()->execute( $query, array_keys( $keys ), $now );
+        $query = "SELECT `id`, `data` FROM {$this->table} WHERE owner = %i AND `id` IN (%s) AND `ttl` >= %i";
+        $rs = $this->db()->execute( $query, $this->owner, array_keys( $keys ), $now );
         while( $row = $rs->fetch() ) {
             if( ! isset( $keys[ $row['id'] ] ) ) {
                 continue;
