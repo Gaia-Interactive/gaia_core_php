@@ -18,11 +18,18 @@ class Cache implements Iface {
     }
     
     public function query( array $params = array() ){
+        $refresh =  isset( $params['refresh'] ) && $params['refresh'] ? TRUE : FALSE;
+        unset( $params['refresh']);
         $key = sha1( strtolower( serialize( $params ) ) );
-        $res = $this->cacher->get( $key );
+        $res =  ! $refresh ? $this->cacher->get( $key ) : NULL;
         if( is_array( $res ) ) return $res;
         $res = $this->core->query( $params );
         $this->cacher->set( $key, $res, $this->ttl );
         return $res;
     }
+    
+    public function delete( $constraint ){
+        return $this->core->delete( $constraint );
+    }
+
 }

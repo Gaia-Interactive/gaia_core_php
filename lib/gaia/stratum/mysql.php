@@ -27,6 +27,15 @@ class MySQL implements Iface {
         $db->execute( $sql, $this->owner, sha1($constraint, TRUE), $constraint, $stratum );
     }
     
+    public function delete( $constraint ){
+        $db = $this->db();
+        $table = $this->table();
+        if( DB\Transaction::inProgress() ) DB\Transaction::add( $db );
+        $sql = "DELETE FROM $table WHERE `owner` = %i AND `constraint_id` = %s";
+        $rs = $db->execute( $sql, $this->owner, sha1($constraint, TRUE) );
+        return $rs->affected() > 0;
+    }
+    
     public function query( array $params = array() ){
         $search = NULL;
         $min = NULL;
