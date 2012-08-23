@@ -26,8 +26,17 @@ class SQLite implements Iface {
         if( $rs->affected() ) return;
         $sql = "UPDATE `$table` SET `stratum` = %i WHERE `owner` = %i AND `constraint` = %s";
         $db->execute($sql, $stratum, $this->owner, $constraint );
-        
     }
+    
+    public function delete( $constraint ){
+        $db = $this->db();
+        $table = $this->table();
+        if( DB\Transaction::inProgress() ) DB\Transaction::add( $db );
+        $sql = "DELETE FROM $table WHERE `owner` = %i AND `constraint` = %s";
+        $rs = $db->execute( $sql, $this->owner, $constraint );
+        return $rs->affected() > 0;
+    }
+    
     
     public function query( array $params = array() ){
         $search = NULL;

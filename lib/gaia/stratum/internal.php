@@ -15,6 +15,11 @@ class Internal implements Iface {
     public function store( $constraint, $stratum ){
         $this->kvp[ $constraint ] = $stratum;
     }
+    public function delete( $constraint ){  
+        if( ! isset( $this->kvp[ $constraint ] ) ) return FALSE;
+        unset( $this->kvp[ $constraint ] );
+        return TRUE;
+    }
     
     public function query( array $params = array() ){
         $search = NULL;
