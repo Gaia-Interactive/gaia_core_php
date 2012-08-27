@@ -7,10 +7,10 @@ spl_autoload_register(function($classname) {
     
     // load facebook related classes.
     if( $class == 'facebook' ) {
-        return @include  __DIR__ . '/vendor/facebook/php-sdk/src/facebook.php';
+        return @include  __DIR__ . '/vendor/facebook-php-sdk/src/facebook.php';
     }
     if( $class == 'basefacebook' ) {
-        return @include  __DIR__ . '/vendor/facebook/php-sdk/src/base_facebook.php';
+        return @include  __DIR__ . '/vendor/facebook-php-sdk/src/base_facebook.php';
     }
     
     // load yaml vendor classes
