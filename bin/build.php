@@ -31,5 +31,5 @@ $phar->convertToExecutable(Phar::TAR, Phar::GZ);
 $file =__DIR__ . '/facebook.phar';
 @unlink($file . '.tar.gz');
 $phar = new Phar($file);
-$phar->buildFromDirectory($DIR_VENDOR . '/facebook/php-sdk/src/');
+$phar->buildFromDirectory($DIR_VENDOR . '/facebook-php-sdk/src/');
 $phar->convertToExecutable(Phar::TAR, Phar::GZ);
