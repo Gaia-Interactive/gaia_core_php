@@ -1,9 +1,6 @@
 [submodule "vendor/CodeIgniter"]
 	path = vendor/CodeIgniter
 	url = git://github.com/EllisLab/CodeIgniter.git
-[submodule "vendor/facebook/php-sdk"]
-	path = vendor/facebook/php-sdk
-	url = git://github.com/facebook/php-sdk.git
 [submodule "vendor/predis"]
 	path = vendor/predis
 	url = git://github.com/nrk/predis.git
@@ -13,3 +10,6 @@
 [submodule "vendor/yaml"]
 	path = vendor/yaml
 	url = git://github.com/fabpot/yaml.git
+[submodule "vendor/facebook-php-sdk"]
+	path = vendor/facebook-php-sdk
+	url = git://github.com/facebook/facebook-php-sdk.git
