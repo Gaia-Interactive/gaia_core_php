@@ -163,7 +163,8 @@ class MySQL implements Iface {
             "CREATE TABLE IF NOT EXISTS `{$this->table}` (" .
             "`rowid` BIGINT UNSIGNED NOT NULL  AUTO_INCREMENT PRIMARY KEY, " . 
             "`id` binary(20) NOT NULL, `keyname` varchar(500) NOT NULL, " . 
-            "`data` varbinary(64000), `ttl` INT UNSIGNED NOT NULL, " . 
+            "`data` BLOB, " .
+            "`ttl` INT UNSIGNED NOT NULL, " . 
             "`revision` BIGINT UNSIGNED NOT NULL, " .
             "UNIQUE `id` (`id`), " .
             "INDEX `ttl` (`ttl`) " .
