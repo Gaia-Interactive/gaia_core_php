@@ -7,45 +7,34 @@ class Tally extends Core {
 
     const TABLE = 'tally';
 
-const SQL_CREATE = 
-"CREATE TABLE IF NOT EXISTS `{TABLE}` (
-  `user_id` INTEGER NOT NULL,
-  `item_id` INTEGER NOT NULL,
-  `quantity` INTEGER NOT NULL DEFAULT '0',
-  UNIQUE  (`user_id`,`item_id`)
-)";
-
-const SQL_INDEX = "";
-
-const SQL_ADD = 
-"INSERT OR IGNORE INTO `{TABLE}` (`user_id`, `item_id`, `quantity`) VALUES (%i, %i, %i)";
-
-CONST SQL_UPDATE =
-"UPDATE {TABLE} SET `quantity` = `quantity` + %i WHERE `user_id` = %i AND `item_id` = %i";
+    public function schema(){
+        $table = $this->table();
+        return  "CREATE TABLE IF NOT EXISTS `{$table}` ( " .
+                "`user_id` INTEGER NOT NULL, " .
+                "`item_id` INTEGER NOT NULL, " .
+                "`quantity` INTEGER NOT NULL DEFAULT '0', " .
+                "UNIQUE  (`user_id`,`item_id`))";
+    }
     
-const SQL_SELECT = 
-'SELECT `quantity` FROM `{TABLE}`  WHERE `user_id` = %i AND `item_id` = %i';
-
-const SQL_SUBTRACT = 
-'UPDATE `{TABLE}` SET `quantity` = `quantity` - %i WHERE user_id = %i AND `item_id` = %i AND `quantity` >= %i';
-
-const SQL_FETCH_ITEM =
-'SELECT `item_id`, `quantity` FROM `{TABLE}` WHERE user_id = %i AND item_id IN( %i )';
-
-const SQL_FETCH = 
-'SELECT `item_id`, `quantity` FROM `{TABLE}` WHERE user_id = %i';
     
     public function add( $item_id, $quantity ){
         $local_txn = $this->claimStart();
-        $rs = $this->execute($this->sql('ADD'),$this->user_id, $item_id, $quantity );
+        $table = $this->table();
+        $sql = "INSERT OR IGNORE INTO `{$table}` " . 
+                    "(`user_id`, `item_id`, `quantity`) VALUES (%i, %i, %i)";
+        
+        $rs = $this->execute($sql,$this->user_id, $item_id, $quantity );
         if( ! $rs->affected() ){
-            $rs = $this->execute($this->sql('UPDATE'),$quantity, $this->user_id, $item_id );
+            $sql = "UPDATE {$table} SET `quantity` = `quantity` + %i " . 
+                    "WHERE `user_id` = %i AND `item_id` = %i";
+            $rs = $this->execute($sql,$quantity, $this->user_id, $item_id );
             if( ! $rs->affected() ){
                 if( $local_txn ) Transaction::rollback();
                 throw new Exception('database error', $this->dbInfo() );
             }
         }
-        $rs = $this->execute($this->sql('SELECT'), $this->user_id, $item_id);
+        $sql = "SELECT `quantity` FROM `{$table}`  WHERE `user_id` = %i AND `item_id` = %i";
+        $rs = $this->execute($sql, $this->user_id, $item_id);
         $row = $rs->fetch();
         $rs->free();
         if( ! $row ) {
@@ -62,12 +51,16 @@ const SQL_FETCH =
     
     public function subtract( $item_id, $quantity ){
         $local_txn = $this->claimStart();
-        $rs = $this->execute($this->sql('SUBTRACT'), $quantity, $this->user_id,$item_id, $quantity );        
+        $table = $this->table();
+        $sql =  "UPDATE `{$table}` SET `quantity` = `quantity` - %i " . 
+                "WHERE user_id = %i AND `item_id` = %i AND `quantity` >= %i";
+        $rs = $this->execute($sql, $quantity, $this->user_id,$item_id, $quantity );        
         if( $rs->affected() < 1 ) {
             if( $local_txn ) Transaction::rollback();
             throw new Exception('not enough', $this->dbInfo() );
         }
-        $rs = $this->execute($this->sql('SELECT'), $this->user_id, $item_id);
+        $sql = "SELECT `quantity` FROM `{$table}`  WHERE `user_id` = %i AND `item_id` = %i";
+        $rs = $this->execute($sql, $this->user_id, $item_id);
         $row = $rs->fetch();
         $rs->free();
         if( ! $row ) {
@@ -83,10 +76,13 @@ const SQL_FETCH =
     }
     
     public function fetch( array $item_ids = NULL ){
+        $table = $this->table();
         if( is_array( $item_ids ) ) {
-            $rs = $this->execute( $this->sql('FETCH_ITEM'), $this->user_id, $item_ids );
+            $sql = "SELECT `item_id`, `quantity` FROM `{$table}` WHERE `user_id` = %i AND `item_id` IN( %i )";
+            $rs = $this->execute( $sql, $this->user_id, $item_ids );
         } else {
-            $rs = $this->execute($this->sql('FETCH'), $this->user_id );
+            $sql = "SELECT `item_id`, `quantity` FROM `{$table}` WHERE `user_id` = %i";
+            $rs = $this->execute($sql, $this->user_id );
         }
         $list = array();
         while( $row = $rs->fetch() ){
