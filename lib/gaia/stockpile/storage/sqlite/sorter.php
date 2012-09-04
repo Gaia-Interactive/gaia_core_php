@@ -12,43 +12,33 @@ use \Gaia\DB\Transaction;
 class Sorter extends Core {
 
 const TABLE = 'sort';
+
+    public function schema(){
+        $table = $this->table();
+        return "CREATE TABLE IF NOT EXISTS `{$table}` ( " . 
+                "`user_id` INTEGER NOT NULL, " .
+                "`item_id` INTEGER NOT NULL, " .
+                "`pos` INTEGER NOT NULL default '0', " .
+                "UNIQUE  (`user_id`,`item_id`));" . 
+                
+                "CREATE INDEX IF NOT EXISTS `{$table}_idx_user_id_pos` " . 
+                "ON `{$table}` ( `user_id`, `pos`);";
+    }
     
-const SQL_CREATE =
-"CREATE TABLE IF NOT EXISTS `{TABLE}` (
-  `user_id` INTEGER NOT NULL,
-  `item_id` INTEGER NOT NULL,
-  `pos` INTEGER NOT NULL default '0',
-  UNIQUE  (`user_id`,`item_id`)
-)";
-
-const SQL_INDEX =
-"CREATE INDEX IF NOT EXISTS `{TABLE)_idx_user_id_pos` ON `{TABLE}` ( `user_id`, `pos`)";
-
-const SQL_SELECT = 
-    'SELECT `item_id`, `pos` FROM `{TABLE}` WHERE `user_id` = %i AND `item_id` IN ( %i )';
-
-const SQL_UPDATE =
-'UPDATE `{TABLE}` SET `pos` = %i WHERE `user_id` = %i AND `item_id` = %i';
-
-const SQL_INSERT = 
-'INSERT OR IGNORE INTO `{TABLE}` (`user_id`, `item_id`, `pos`) VALUES (%i, %i, %i)';
-
-const SQL_REMOVE = 
-'UPDATE `{TABLE}` SET `pos` = 0 WHERE `user_id` = %i AND `item_id` = %i';
-
-const SQL_MAXPOS =
-'SELECT MAX(`pos`) as `pos` FROM `{TABLE}` WHERE `user_id` = %i';
     
     public function sort( $pos, array $item_ids, $ignore_dupes = FALSE ){
         $batch = array();
         $ct = 0;
         $local_txn = $this->claimStart();
+        $table = $this->table();
+        $sql_insert = "INSERT OR IGNORE INTO `{$table}` (`user_id`, `item_id`, `pos`) VALUES (%i, %i, %i)";
+        $sql_update = "UPDATE `{$table}` SET `pos` = %i WHERE `user_id` = %i AND `item_id` = %i";
         foreach( $item_ids as $item_id ){
             $pos = bcadd($pos, 1);
-            $rs = $this->execute($this->sql('INSERT'), $this->user_id, $item_id, $pos );
+            $rs = $this->execute($sql_insert, $this->user_id, $item_id, $pos );
             $ct += $curr = $rs->affected();
             if( ! $ignore_dupes && ! $curr  ){
-                $rs = $this->execute($this->sql('UPDATE'), $pos, $this->user_id, $item_id );
+                $rs = $this->execute($sql_update, $pos, $this->user_id, $item_id );
                 $ct += $rs->affected();
             }
         }
@@ -59,7 +49,9 @@ const SQL_MAXPOS =
     }
     
     public function remove( $item_id ){
-        $rs = $this->execute( $this->sql('REMOVE'), $this->user_id, $item_id );
+        $table = $this->table();
+        $sql = "UPDATE `{$table}` SET `pos` = 0 WHERE `user_id` = %i AND `item_id` = %i";
+        $rs = $this->execute( $sql, $this->user_id, $item_id );
     }
     
    /**
@@ -67,7 +59,9 @@ const SQL_MAXPOS =
     * @returns the positions, keyed by item id.
     */
     public function fetchPos( array $ids ){
-        $rs = $this->db->execute($this->sql('SELECT'), $this->user_id, $ids );
+        $table = $this->table();
+        $sql = "SELECT `item_id`, `pos` FROM `{$table}` WHERE `user_id` = %i AND `item_id` IN ( %i )";
+        $rs = $this->db->execute($sql, $this->user_id, $ids );
         $list = array();
         while( $row = $rs->fetch() ){
             $list[ $row['item_id'] ] = $row['pos'];
@@ -80,7 +74,9 @@ const SQL_MAXPOS =
     * what is the largest position number we have in our sort list?
     */
     public function maxPos(){
-        $rs = $this->execute($this->sql('MAXPOS'), $this->user_id );
+        $table = $this->table();
+        $sql = "SELECT MAX(`pos`) as `pos` FROM `{$table}` WHERE `user_id` = %i";
+        $rs = $this->execute($sql, $this->user_id );
         $row = $rs->fetch();
         $rs->free();
         return $row['pos'];

@@ -6,55 +6,36 @@ use \Gaia\DB\Transaction;
 class Serial extends Core {
     
 const TABLE = 'serial';
+
     
-const SQL_CREATE =
-"CREATE TABLE IF NOT EXISTS `{TABLE}` (
-  `user_id` BIGINT NOT NULL,
-  `item_id` INTEGER NOT NULL,
-  `serial` BIGINT NOT NULL,
-  `properties` TEXT,
-  `soft_delete` INTEGER NOT NULL DEFAULT '0',
-  UNIQUE (`user_id`,`item_id`,`serial`)
-  )";
-
-const SQL_INDEX =
-"CREATE INDEX IF NOT EXISTS `{TABLE}_idx_user_id_soft_delete_item_id` ON `{TABLE}` (`user_id`, `soft_delete`, `item_id`)";
-
-const SQL_ADD = 
-"INSERT OR IGNORE INTO `{TABLE}` (`user_id`, `item_id`, `serial`, `properties`, `soft_delete`) VALUES (%i, %i, %i, %s, 0)";
-
-const SQL_UPDATE = 
-'UPDATE `{TABLE}` SET `properties` = %s, `soft_delete` = 0 WHERE 
-`user_id` = %i AND `item_id` = %i AND `serial` = %i';
-
-const SQL_SUBTRACT = 
-'UPDATE {TABLE} SET `soft_delete` = 1 WHERE 
-`user_id` = %i AND 
-item_id = %i AND 
-`serial` IN (%i) AND 
-`soft_delete` = 0';
-
-const SQL_FETCH =
-'SELECT `item_id`, `serial`, `properties` FROM `{TABLE}` 
- WHERE `user_id` = %i AND `soft_delete` = 0';
- 
-const SQL_FETCH_ITEM =
-'SELECT `item_id`, `serial`, `properties` FROM `{TABLE}` 
- WHERE `user_id` = %i AND `soft_delete` = 0 AND `item_id` IN( %i )';
- 
-const SQL_VERIFY = 
-'SELECT `serial` FROM `{TABLE}` 
-WHERE `user_id` = %i AND `item_id` = %i AND `serial` IN ( %i )';
-
-
+    public function schema(){
+        $table = $this->table();
+        return 
+        "CREATE TABLE IF NOT EXISTS `{$table}` ( " .
+        "`user_id` BIGINT NOT NULL, " . 
+        "`item_id` INTEGER NOT NULL, " .
+        "`serial` BIGINT NOT NULL, " . 
+        "`properties` TEXT, " . 
+        "`soft_delete` INTEGER NOT NULL DEFAULT '0', " . 
+        "UNIQUE (`user_id`,`item_id`,`serial`)); " . 
+        "CREATE INDEX IF NOT EXISTS `{$table}_idx_user_id_soft_delete_item_id` ON `{$table}` " . 
+        "(`user_id`, `soft_delete`, `item_id`);";
+    }
+    
     public function add( $item_id, $quantity ){
         $batches = array();
         $local_txn = $this->claimStart();
+        $table = $this->table();
+        $sql_add =  "INSERT OR IGNORE INTO `{$table}` " . 
+                    "(`user_id`, `item_id`, `serial`, `properties`, `soft_delete`) " . 
+                    "VALUES (%i, %i, %i, %s, 0)";
+        $sql_update =   "UPDATE `{$table}` SET `properties` = %s, `soft_delete` = 0 " . 
+                        "WHERE `user_id` = %i AND `item_id` = %i AND `serial` = %i";
         foreach( $quantity->all() as $serial => $properties ){
             $properties = json_encode( $properties );
-            $rs = $this->execute($this->sql('ADD'), $this->user_id, $item_id, $serial, $properties);
+            $rs = $this->execute($sql_add, $this->user_id, $item_id, $serial, $properties);
             if( $rs->affected() < 1 ) {
-                $rs = $this->execute($this->sql('UPDATE'), $properties, $this->user_id, $item_id, $serial);
+                $rs = $this->execute($sql_update, $properties, $this->user_id, $item_id, $serial);
                 if( $rs->affected() < 1 ) {
                     if( $local_txn ) Transaction::rollback();
                     throw new Exception('database error', $this->dbInfo() );
@@ -68,16 +49,23 @@ WHERE `user_id` = %i AND `item_id` = %i AND `serial` IN ( %i )';
     }
     
     public function subtract( $item_id, $serials ){
-        $rs = $this->execute( $this->sql('SUBTRACT'), $this->user_id, $item_id, $serials );
+        $table = $this->table();
+        $sql =  "UPDATE {$table} SET `soft_delete` = 1 WHERE " .
+                "`user_id` = %i AND item_id = %i AND `serial` IN (%i) AND `soft_delete` = 0";
+        $rs = $this->execute( $sql, $this->user_id, $item_id, $serials );
         return $rs->affected();
     }
     
     public function fetch( array $item_ids = NULL ){
-        
+        $table = $this->table();
         if( is_array( $item_ids ) ) {
-            $rs = $this->execute( $this->sql('FETCH_ITEM'), $this->user_id, $item_ids );
+            $sql =  "SELECT `item_id`, `serial`, `properties` FROM `{$table}` " .
+                    "WHERE `user_id` = %i AND `soft_delete` = 0 AND `item_id` IN( %i )";
+            $rs = $this->execute( $sql, $this->user_id, $item_ids );
         } else {
-            $rs = $this->execute( $this->sql('FETCH'), $this->user_id );
+            $sql = "SELECT `item_id`, `serial`, `properties` FROM `{$table}` " .
+                    "WHERE `user_id` = %i AND `soft_delete` = 0";
+            $rs = $this->execute( $sql, $this->user_id );
         }
         $list = array();
         while( $row = $rs->fetch() ){
@@ -96,7 +84,10 @@ WHERE `user_id` = %i AND `item_id` = %i AND `serial` IN ( %i )';
     * over from the cache in the quantity object earlier.
     */
     public function verifySerials( $item_id, array $serials ){
-        $rs = $this->execute( $this->sql('VERIFY'), $this->user_id, $item_id, $serials );
+        $table = $this->table();
+        $sql =  "SELECT `serial` FROM `{$table}` " .
+                "WHERE `user_id` = %i AND `item_id` = %i AND `serial` IN ( %i )";
+        $rs = $this->execute( $sql, $this->user_id, $item_id, $serials );
         $serials = array();
         while( $row = $rs->fetch() )  $serials[] = $row['serial'];
         $rs->free();
