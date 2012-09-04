@@ -11,33 +11,17 @@ use \Gaia\Stockpile\Exception;
 class Sorter extends Core {
 
 const TABLE = 'sort';
-    
-const SQL_CREATE =
-"CREATE TABLE IF NOT EXISTS `{TABLE}` (
-  `user_id` bigint unsigned NOT NULL,
-  `item_id` int unsigned NOT NULL,
-  `pos` bigint unsigned NOT NULL default '0',
-  UNIQUE KEY  (`user_id`,`item_id`),
-  KEY `user_id_pos` ( `user_id`, `pos`)
-) ENGINE=InnoDB";
 
-const SQL_SELECT = 
-    'SELECT `item_id`, `pos` FROM `{TABLE}` WHERE `user_id` = %i AND `item_id` IN ( %i )';
-
-const SQL_INSERT =
-'INSERT INTO `{TABLE}` (`user_id`, `item_id`, `pos`) VALUES 
- %s
-ON DUPLICATE KEY UPDATE `pos` = VALUES(`pos`)';
-
-const SQL_INSERT_IGNORE = 
-'INSERT IGNORE INTO `{TABLE}` (`user_id`, `item_id`, `pos`) VALUES 
- %s';
-
-const SQL_REMOVE = 
-'UPDATE `{TABLE}` SET `pos` = 0 WHERE `user_id` = %i AND `item_id` = %i';
-
-const SQL_MAXPOS =
-'SELECT MAX(`pos`) as `pos` FROM `{TABLE}` WHERE `user_id` = %i';
+    public function schema(){
+        $table = $this->table();
+        return "CREATE TABLE IF NOT EXISTS `{$table}` ( " .
+                "`user_id` bigint unsigned NOT NULL, " .
+                "`item_id` int unsigned NOT NULL, " .
+                "`pos` bigint unsigned NOT NULL default '0', " . 
+                "UNIQUE KEY  (`user_id`,`item_id`), " .
+                "KEY `user_id_pos` ( `user_id`, `pos`) " . 
+                ") ENGINE=InnoDB";
+    }
     
     public function sort( $pos, array $item_ids, $ignore_dupes = FALSE ){
         $batch = array();
@@ -45,12 +29,20 @@ const SQL_MAXPOS =
             $pos = bcadd($pos, 1);
             $batch[] = $this->db->prep('(%i, %i, %i)', $this->user_id, $item_id, $pos );
         }
-        $rs = $this->execute(sprintf( $this->sql( $ignore_dupes ? 'INSERT_IGNORE' : 'INSERT'), implode(",\n ", $batch )));
+        $table = $this->table();
+        if( $ignore_dupes ){ 
+            $sql = "INSERT IGNORE INTO `{$table}` (`user_id`, `item_id`, `pos`) VALUES  %s";
+        } else {
+            $sql = "INSERT INTO `{$table}` (`user_id`, `item_id`, `pos`) VALUES %s ON DUPLICATE KEY UPDATE `pos` = VALUES(`pos`)";        
+        }
+        $rs = $this->execute(sprintf( $sql, implode(",\n ", $batch )));
         return $rs->affected();
     }
     
     public function remove( $item_id ){
-        $rs = $this->execute( $this->sql('REMOVE'), $this->user_id, $item_id );
+        $table = $this->table();
+        $sql = "UPDATE `{$table}` SET `pos` = 0 WHERE `user_id` = %i AND `item_id` = %i";
+        $rs = $this->execute( $sql, $this->user_id, $item_id );
     }
     
    /**
@@ -58,7 +50,9 @@ const SQL_MAXPOS =
     * @returns the positions, keyed by item id.
     */
     public function fetchPos( array $ids ){
-        $rs = $this->db->execute($this->sql('SELECT'), $this->user_id, $ids );
+        $table = $this->table();
+        $sql = "SELECT `item_id`, `pos` FROM `{$table}` WHERE `user_id` = %i AND `item_id` IN ( %i )";
+        $rs = $this->db->execute($sql, $this->user_id, $ids );
         $list = array();
         while( $row = $rs->fetch() ){
             $list[ $row['item_id'] ] = $row['pos'];
@@ -71,7 +65,9 @@ const SQL_MAXPOS =
     * what is the largest position number we have in our sort list?
     */
     public function maxPos(){
-        $rs = $this->execute($this->sql('MAXPOS'), $this->user_id );
+        $table = $this->table();
+        $sql = "SELECT MAX(`pos`) as `pos` FROM `{$table}` WHERE `user_id` = %i";
+        $rs = $this->execute($sql, $this->user_id );
         $row = $rs->fetch();
         $rs->free();
         return $row['pos'];

@@ -3,6 +3,7 @@ namespace Gaia\Stockpile;
 use \Gaia\Exception;
 use \Gaia\DB\Transaction;
 use \Gaia\DB\Connection;
+use Gaia\Store;
 
 class Storage {
 
@@ -42,7 +43,15 @@ class Storage {
         } else {
             throw new Exception('invalid db driver', $db );
         }
-        return new $classname( $db, $stockpile->app(), $stockpile->user(), $dsn . '.' . Connection::version() );
+        $table = $stockpile->app() . '_stockpile_' . constant($classname . '::TABLE');
+        $object = new $classname( $db, $table, $stockpile->user() );
+        if( ! \Gaia\Stockpile\Storage::isAutoSchemaEnabled() ) return $object;
+        $cache = new Store\Gate( new Store\Apc() );
+        $key = 'stockpile/storage/__create/' . md5( $dsn . '/' .  Connection::version() . '/' . $table . '/' . $classname );
+        if( $cache->get( $key ) ) return $object;
+        if( ! $cache->add( $key, 1, 60 ) ) return $object;
+        $object->create();
+        return $object;
     }
 }
 
