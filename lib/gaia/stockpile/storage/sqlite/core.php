@@ -8,7 +8,7 @@ abstract class Core implements Iface {
     protected $db;
     protected $table;
     protected $user_id;
-    public function __construct( \Gaia\DB $db, $table, $user_id ){
+    public function __construct( \Gaia\DB\Iface $db, $table, $user_id ){
         if( ! $db->isa('sqlite') ) throw new Exception('invalid driver', $db );
         $this->db = $db;
         $this->table = $table;
