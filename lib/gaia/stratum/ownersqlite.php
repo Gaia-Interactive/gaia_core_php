@@ -3,14 +3,16 @@ namespace Gaia\Stratum;
 use Gaia\DB;
 use Gaia\Exception;
 
-class MySQL implements Iface {
+class OwnerSQLite implements Iface {
     
-    protected $dsn;
     protected $table;
-
-    public function __construct( $dsn, $table ){
-        $this->dsn = $dsn;
+    protected $dsn;
+    protected $owner;
+    
+    public function __construct( $owner, $dsn, $table ){
         $this->table = $table;
+        $this->dsn = $dsn;
+        $this->owner = $owner;
     }
     
     
@@ -18,21 +20,23 @@ class MySQL implements Iface {
         $db = $this->db();
         $table = $this->table();
         if( DB\Transaction::inProgress() ) DB\Transaction::add( $db );
-
-        $sql = "INSERT INTO $table 
-            (`constraint_id`, `constraint`, `stratum`) VALUES (%s, %s, %i) 
-            ON DUPLICATE KEY UPDATE `stratum` = VALUES(`stratum`)";
-        $db->execute( $sql, sha1($constraint, TRUE), $constraint, $stratum );
+        $sql = "INSERT OR IGNORE INTO `$table` 
+            (`owner`, `constraint`, `stratum`) VALUES (%i, %s, %i)";
+        $rs = $db->execute( $sql, $this->owner, $constraint, $stratum );
+        if( $rs->affected() ) return;
+        $sql = "UPDATE `$table` SET `stratum` = %i WHERE `owner` = %i AND `constraint` = %s";
+        $db->execute($sql, $stratum, $this->owner, $constraint );
     }
     
     public function delete( $constraint ){
         $db = $this->db();
         $table = $this->table();
         if( DB\Transaction::inProgress() ) DB\Transaction::add( $db );
-        $sql = "DELETE FROM $table WHERE `constraint_id` = %s";
-        $rs = $db->execute( $sql, sha1($constraint, TRUE) );
+        $sql = "DELETE FROM $table WHERE `owner` = %i AND `constraint` = %s";
+        $rs = $db->execute( $sql, $this->owner, $constraint );
         return $rs->affected() > 0;
     }
+    
     
     public function query( array $params = array() ){
         $search = NULL;
@@ -53,12 +57,12 @@ class MySQL implements Iface {
         $db = $this->db();
         $table = $this->table();
         if( DB\Transaction::inProgress() ) DB\Transaction::add( $db );
-        $where = array();
+        $where = array($db->prep_args('`owner` = %i', array( $this->owner ) ) );
         if( $search !== NULL ) $where[] = $db->prep_args("`stratum` IN( %s )", array($search) );
         if( $min !== NULL ) $where[] = $db->prep_args("`stratum` >= %i", array($min) );
         if( $max !== NULL ) $where[] = $db->prep_args("`stratum` <= %i", array($max) );
-        $where = ( $where ) ? 'WHERE ' . implode(' AND ', $where ) : '';
-        $sql = "SELECT `constraint`, `stratum` FROM `{$table}` {$where} ORDER BY `stratum` $sort";
+        $where = implode(' AND ', $where );
+        $sql = "SELECT `constraint`, `stratum` FROM `$table` WHERE $where ORDER BY `stratum` $sort";
         if( $limit !== NULL && preg_match("#^([0-9]+)((,[0-9]+)?)$#", $limit ) ) $sql .= " LIMIT " . $limit;
         //print "\n$sql\n";
         $rs = $db->execute( $sql );
@@ -71,34 +75,37 @@ class MySQL implements Iface {
     
     public function init(){
         $db = $this->db();
-        $rs = $db->execute("SHOW TABLES LIKE %s", $this->table() );
+        $rs = $db->execute("SELECT name FROM sqlite_master WHERE type = %s AND name = %s", 'table', $this->table() );
         if( $rs->fetch() ) return;
-        $db->execute( $this->schema() );
+        foreach(explode(';', $this->schema() ) as $query ) {
+            $db->execute( $query );
+        }
     }
     
     
     public function schema(){
         $table = $this->table();
+        $index = $table . '_idx';
         return 
-            "CREATE TABLE IF NOT EXISTS $table (
-                `rowid` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-                `constraint_id` binary(20) NOT NULL,
-                `constraint` VARCHAR(255) NOT NULL,
+            "CREATE TABLE IF NOT EXISTS `$table` (
+                `rowid` INTEGER PRIMARY KEY AUTOINCREMENT,
+                `owner` BIGINT NOT NULL,
+                `constraint` TEXT NOT NULL,
                 `stratum` INT UNSIGNED NOT NULL,
-                PRIMARY KEY (`rowid`),
-                UNIQUE `constraint` (`constraint_id`),
-                INDEX `stratum` (`stratum`)
-            ) ENGINE=InnoDB"; 
+                UNIQUE (`owner`,`constraint`)
+            );
+            
+            CREATE INDEX IF NOT EXISTS `$index` ON `$table` (`owner`,`stratum`)"; 
             
     }
     
-    public function table(){
+    protected function table(){
         return  $this->table;
     }
     
     protected function db(){
         $db = DB\Connection::instance( $this->dsn );
-        if( ! $db->isa('mysql') ) throw new Exception('invalid db');
+        if( ! $db->isa('sqlite') ) throw new Exception('invalid db');
         if( ! $db->isa('Gaia\DB\Except') ) $db = new DB\Except( $db );
         return $db;
     }

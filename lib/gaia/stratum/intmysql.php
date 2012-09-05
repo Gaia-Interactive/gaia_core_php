@@ -3,7 +3,7 @@ namespace Gaia\Stratum;
 use Gaia\DB;
 use Gaia\Exception;
 
-class MySQL implements Iface {
+class IntMySQL implements Iface {
     
     protected $dsn;
     protected $table;
@@ -15,22 +15,26 @@ class MySQL implements Iface {
     
     
     public function store( $constraint, $stratum ){
+        $constraint = strval( $constraint );
+        if( ! ctype_digit( $constraint ) ) throw new Exception('only integer constraint supported');
         $db = $this->db();
         $table = $this->table();
         if( DB\Transaction::inProgress() ) DB\Transaction::add( $db );
 
         $sql = "INSERT INTO $table 
-            (`constraint_id`, `constraint`, `stratum`) VALUES (%s, %s, %i) 
+            (`constraint`, `stratum`) VALUES (%i, %i) 
             ON DUPLICATE KEY UPDATE `stratum` = VALUES(`stratum`)";
-        $db->execute( $sql, sha1($constraint, TRUE), $constraint, $stratum );
+        $db->execute( $sql, $constraint, $stratum );
     }
     
     public function delete( $constraint ){
+        $constraint = strval( $constraint );
+        if( ! ctype_digit( $constraint ) ) throw new Exception('only integer constraint supported');
         $db = $this->db();
         $table = $this->table();
         if( DB\Transaction::inProgress() ) DB\Transaction::add( $db );
-        $sql = "DELETE FROM $table WHERE `constraint_id` = %s";
-        $rs = $db->execute( $sql, sha1($constraint, TRUE) );
+        $sql = "DELETE FROM $table WHERE `constraint` = %i";
+        $rs = $db->execute( $sql, $constraint );
         return $rs->affected() > 0;
     }
     
@@ -57,7 +61,7 @@ class MySQL implements Iface {
         if( $search !== NULL ) $where[] = $db->prep_args("`stratum` IN( %s )", array($search) );
         if( $min !== NULL ) $where[] = $db->prep_args("`stratum` >= %i", array($min) );
         if( $max !== NULL ) $where[] = $db->prep_args("`stratum` <= %i", array($max) );
-        $where = ( $where ) ? 'WHERE ' . implode(' AND ', $where ) : '';
+        if( $where ) $where = 'WHERE ' . implode(' AND ', $where );
         $sql = "SELECT `constraint`, `stratum` FROM `{$table}` {$where} ORDER BY `stratum` $sort";
         if( $limit !== NULL && preg_match("#^([0-9]+)((,[0-9]+)?)$#", $limit ) ) $sql .= " LIMIT " . $limit;
         //print "\n$sql\n";
@@ -82,11 +86,10 @@ class MySQL implements Iface {
         return 
             "CREATE TABLE IF NOT EXISTS $table (
                 `rowid` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-                `constraint_id` binary(20) NOT NULL,
-                `constraint` VARCHAR(255) NOT NULL,
+                `constraint` BIGINT UNSIGNED NOT NULL,
                 `stratum` INT UNSIGNED NOT NULL,
                 PRIMARY KEY (`rowid`),
-                UNIQUE `constraint` (`constraint_id`),
+                UNIQUE `constraint` (`constraint`),
                 INDEX `stratum` (`stratum`)
             ) ENGINE=InnoDB"; 
             
