@@ -17,7 +17,7 @@ if( $db->connect_error ){
 
 DB\Connection::add('test', $db );
 
-$stratum = new Stratum\MySQL('test', 'test_stratum' );
+$stratum = new Stratum\OwnerMySQL( mt_rand(1, 100000000), 'test', 'test_owner_stratum' );
 $schema = $stratum->schema();
 $schema = str_replace('CREATE TABLE', 'CREATE TEMPORARY TABLE', $schema);
 $db->execute( $schema );

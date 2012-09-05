@@ -3,14 +3,16 @@ namespace Gaia\Stratum;
 use Gaia\DB;
 use Gaia\Exception;
 
-class MySQL implements Iface {
+class OwnerMySQL implements Iface {
     
     protected $dsn;
     protected $table;
-
-    public function __construct( $dsn, $table ){
+    protected $owner;
+    
+    public function __construct( $owner, $dsn, $table  ){
         $this->dsn = $dsn;
         $this->table = $table;
+        $this->owner = $owner;
     }
     
     
@@ -20,17 +22,17 @@ class MySQL implements Iface {
         if( DB\Transaction::inProgress() ) DB\Transaction::add( $db );
 
         $sql = "INSERT INTO $table 
-            (`constraint_id`, `constraint`, `stratum`) VALUES (%s, %s, %i) 
+            (`owner`, `constraint_id`, `constraint`, `stratum`) VALUES (%i, %s, %s, %i) 
             ON DUPLICATE KEY UPDATE `stratum` = VALUES(`stratum`)";
-        $db->execute( $sql, sha1($constraint, TRUE), $constraint, $stratum );
+        $db->execute( $sql, $this->owner, sha1($constraint, TRUE), $constraint, $stratum );
     }
     
     public function delete( $constraint ){
         $db = $this->db();
         $table = $this->table();
         if( DB\Transaction::inProgress() ) DB\Transaction::add( $db );
-        $sql = "DELETE FROM $table WHERE `constraint_id` = %s";
-        $rs = $db->execute( $sql, sha1($constraint, TRUE) );
+        $sql = "DELETE FROM $table WHERE `owner` = %i AND `constraint_id` = %s";
+        $rs = $db->execute( $sql, $this->owner, sha1($constraint, TRUE) );
         return $rs->affected() > 0;
     }
     
@@ -53,12 +55,12 @@ class MySQL implements Iface {
         $db = $this->db();
         $table = $this->table();
         if( DB\Transaction::inProgress() ) DB\Transaction::add( $db );
-        $where = array();
+        $where = array($db->prep_args('`owner` = %i', array( $this->owner ) ) );
         if( $search !== NULL ) $where[] = $db->prep_args("`stratum` IN( %s )", array($search) );
         if( $min !== NULL ) $where[] = $db->prep_args("`stratum` >= %i", array($min) );
         if( $max !== NULL ) $where[] = $db->prep_args("`stratum` <= %i", array($max) );
-        if( $where ) $where = 'WHERE ' . implode(' AND ', $where );
-        $sql = "SELECT `constraint`, `stratum` FROM `{$table}` {$where} ORDER BY `stratum` $sort";
+        $where = implode(' AND ', $where );
+        $sql = "SELECT `constraint`, `stratum` FROM `$table` WHERE $where ORDER BY `stratum` $sort";
         if( $limit !== NULL && preg_match("#^([0-9]+)((,[0-9]+)?)$#", $limit ) ) $sql .= " LIMIT " . $limit;
         //print "\n$sql\n";
         $rs = $db->execute( $sql );
@@ -82,12 +84,13 @@ class MySQL implements Iface {
         return 
             "CREATE TABLE IF NOT EXISTS $table (
                 `rowid` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                `owner` BIGINT UNSIGNED NOT NULL,
                 `constraint_id` binary(20) NOT NULL,
                 `constraint` VARCHAR(255) NOT NULL,
                 `stratum` INT UNSIGNED NOT NULL,
                 PRIMARY KEY (`rowid`),
-                UNIQUE `constraint` (`constraint_id`),
-                INDEX `stratum` (`stratum`)
+                UNIQUE `owner_constraint` (`owner`,`constraint_id`),
+                INDEX `owner_sort` (`owner`, `stratum`)
             ) ENGINE=InnoDB"; 
             
     }
