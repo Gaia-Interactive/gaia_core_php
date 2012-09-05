@@ -16,7 +16,7 @@ try {
 
 DB\Connection::load( array('test'=> function () use ( $db ) { return $db; }) );
 
-$stratum = new Stratum\SQLite( 'test', 'test_stratum' );
+$stratum = new Stratum\OwnerSQLite( mt_rand(1, 100000000), 'test', 'test_owner_stratum' );
 $stratum->init();
 
 include __DIR__ .'/.basic_test_suite.php';

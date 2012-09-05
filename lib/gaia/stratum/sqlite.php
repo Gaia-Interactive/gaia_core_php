@@ -5,14 +5,12 @@ use Gaia\Exception;
 
 class SQLite implements Iface {
     
-    protected $prefix;
+    protected $table;
     protected $dsn;
-    protected $owner;
     
-    public function __construct( $owner, $dsn, $prefix = ''  ){
-        $this->prefix = $prefix;
+    public function __construct( $dsn, $table ){
+        $this->table = $table;
         $this->dsn = $dsn;
-        $this->owner = $owner;
     }
     
     
@@ -21,19 +19,19 @@ class SQLite implements Iface {
         $table = $this->table();
         if( DB\Transaction::inProgress() ) DB\Transaction::add( $db );
         $sql = "INSERT OR IGNORE INTO `$table` 
-            (`owner`, `constraint`, `stratum`) VALUES (%i, %s, %i)";
-        $rs = $db->execute( $sql, $this->owner, $constraint, $stratum );
+            (`constraint`, `stratum`) VALUES ( %s, %i)";
+        $rs = $db->execute( $sql, $constraint, $stratum );
         if( $rs->affected() ) return;
-        $sql = "UPDATE `$table` SET `stratum` = %i WHERE `owner` = %i AND `constraint` = %s";
-        $db->execute($sql, $stratum, $this->owner, $constraint );
+        $sql = "UPDATE `$table` SET `stratum` = %i WHERE `constraint` = %s";
+        $db->execute($sql, $stratum, $constraint );
     }
     
     public function delete( $constraint ){
         $db = $this->db();
         $table = $this->table();
         if( DB\Transaction::inProgress() ) DB\Transaction::add( $db );
-        $sql = "DELETE FROM $table WHERE `owner` = %i AND `constraint` = %s";
-        $rs = $db->execute( $sql, $this->owner, $constraint );
+        $sql = "DELETE FROM $table WHERE `constraint` = %s";
+        $rs = $db->execute( $sql, $constraint );
         return $rs->affected() > 0;
     }
     
@@ -57,12 +55,12 @@ class SQLite implements Iface {
         $db = $this->db();
         $table = $this->table();
         if( DB\Transaction::inProgress() ) DB\Transaction::add( $db );
-        $where = array($db->prep_args('`owner` = %i', array( $this->owner ) ) );
+        $where = array();
         if( $search !== NULL ) $where[] = $db->prep_args("`stratum` IN( %s )", array($search) );
         if( $min !== NULL ) $where[] = $db->prep_args("`stratum` >= %i", array($min) );
         if( $max !== NULL ) $where[] = $db->prep_args("`stratum` <= %i", array($max) );
-        $where = implode(' AND ', $where );
-        $sql = "SELECT `constraint`, `stratum` FROM `$table` WHERE $where ORDER BY `stratum` $sort";
+        $where = ( $where ) ? 'WHERE ' . implode(' AND ', $where ) : '';
+        $sql = "SELECT `constraint`, `stratum` FROM `$table` $where ORDER BY `stratum` $sort";
         if( $limit !== NULL && preg_match("#^([0-9]+)((,[0-9]+)?)$#", $limit ) ) $sql .= " LIMIT " . $limit;
         //print "\n$sql\n";
         $rs = $db->execute( $sql );
@@ -85,22 +83,21 @@ class SQLite implements Iface {
     
     public function schema(){
         $table = $this->table();
-        $index = $table . '_owner_stratum_idx';
+        $index = $table . '_idx';
         return 
             "CREATE TABLE IF NOT EXISTS `$table` (
                 `rowid` INTEGER PRIMARY KEY AUTOINCREMENT,
-                `owner` BIGINT NOT NULL,
                 `constraint` TEXT NOT NULL,
                 `stratum` INT UNSIGNED NOT NULL,
-                UNIQUE (`owner`,`constraint`)
+                UNIQUE (`constraint`)
             );
             
-            CREATE INDEX IF NOT EXISTS `$index` ON `$table` (`owner`,`stratum`)"; 
+            CREATE INDEX IF NOT EXISTS `$index` ON `$table` (`stratum`)"; 
             
     }
     
     protected function table(){
-        return  $this->prefix . 'stratum';
+        return  $this->table;
     }
     
     protected function db(){
