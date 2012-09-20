@@ -12,13 +12,10 @@ class NestedContainer extends Container implements \Iterator {
         return $all;
     }
     
-    public function load( $input ){
-        
-        if( $input === NULL ) return;
-        
-        if( is_array( $input ) || $input instanceof parent ) {
-            foreach( $input as $k=>$v ){
-                if( is_array( $v )) $v = new self($v);
+    public function load( $input ){        
+        if($input === NULL) return;        
+        if(is_array($input) || $input instanceof parent) {
+            foreach($input as $k=>$v){
                 $this->__set( $k, $v);
             }
         }
