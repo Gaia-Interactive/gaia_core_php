@@ -6,6 +6,13 @@ use Gaia\Apn\notice;
 use Gaia\Apn\Message;
 use Gaia\APN\Connection;
 
+ini_set('default_socket_timeout', 1);
+list($url, $port ) = explode(':', str_replace('ssl://', '', Connection\Production::$url));
+if( ! @fsockopen( $url, $port, $errno, $errstr, $timeout =1 ) ){
+    Tap::plan('skip_all', 'unable to connect to apn production gateway');
+}
+
+
 if( ! file_exists( $ssl_cert = __DIR__ . '/.cert.production.pem' ) ){
     Tap::plan('skip_all', 'No cert found');
 
