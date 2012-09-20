@@ -5,6 +5,7 @@ use Gaia\Container;
 class NestedContainer extends Container implements \Iterator {
     
     public function all(){
+        $all = array();
         foreach ($this as $k => $v){
             if ($v instanceof self ) $v = $v->all();
             $all[$this->key()] = $v;
