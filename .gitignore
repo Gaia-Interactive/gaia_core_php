@@ -1,5 +1,6 @@
 .*
 ENABLE_*
+DISABLE_*
 bin/*.phar
 bin/*.phar.tar.gz
-
+vendor/*
