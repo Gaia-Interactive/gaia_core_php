@@ -1,11 +1,6 @@
 <?php
 
-
-
-
-$download_path = 'https://github.com/downloads/gaiaops/gaia_core_php/';
-
-
+// a utility function for downloading phar archives for vendor libraries.
 $download = function  ($url, $path) {
   $url_fp = fopen ($url, "rb");
   if (! $url_fp) throw new Exception('unable to download url: ' . $url );
@@ -18,7 +13,9 @@ $download = function  ($url, $path) {
 };
 
 
+// do we want to auto-download the phar archives?
 if( ! file_exists( __DIR__ . '/DISABLE_AUTO_DOWNLOAD' ) ){
+    // make sure they all exist and download if not.
     foreach( array('facebook', 'sfyaml', 'pheanstalk', 'predis') as $repo ){
         $path = __DIR__ . '/vendor/' . $repo . '.phar';
         if( file_exists( $path ) ) continue;
@@ -27,7 +24,7 @@ if( ! file_exists( __DIR__ . '/DISABLE_AUTO_DOWNLOAD' ) ){
     }
 }
 
-
+// are we using the regular code or the phar archive of gaia_core_php?
 if( file_exists( __DIR__ . '/ENABLE_PHAR' ) ){
     $gaia_path = 'phar://' . __DIR__ . '/bin/gaia_core_php.phar/';
 } else {
@@ -41,8 +38,9 @@ spl_autoload_register(function($classname) use( $gaia_path ){
     $class = strtolower($classname);
     
     // load the gaia namespaced classes.
-    if( substr( $class, 0, 5) == 'gaia\\' ) 
+    if( substr( $class, 0, 5) == 'gaia\\' ) {
             return include $gaia_path .strtr($class, '\\', '/').'.php';
+    }
     
     // load facebook related classes.
     if( $class == 'facebook' ) {
