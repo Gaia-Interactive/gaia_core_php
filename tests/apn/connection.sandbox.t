@@ -21,7 +21,10 @@ foreach( explode("\n", @file_get_contents(__DIR__ . '/.tokens.development.txt'))
 if( count( $tokens ) < 1 ) {
     Tap::plan('skip_all', 'No tokens found');
 }
-
+list($url, $port ) = explode(':', str_replace('ssl://', '', Connection\Sandbox::$url));
+if( ! @fsockopen( $url, $port, $errno, $errstr, $timeout =1 ) ){
+    Tap::plan('skip_all', 'unable to connect to apn sandbox gateway');
+}
 $token = $tokens[ array_rand( $tokens ) ];
 
 
