@@ -10,6 +10,7 @@ include __DIR__ . '/../assert/curl_installed.php';
 include __DIR__ . '/../assert/pheanstalk_installed.php';
 include __DIR__ . '/../assert/beanstalkd_running.php';
 include __DIR__ . '/../assert/webservice_started.php';
+include __DiR__ . '/../assert/date_configured.php';
 
 
 Tap::plan(8);
