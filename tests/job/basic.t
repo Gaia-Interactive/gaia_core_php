@@ -9,6 +9,7 @@ include __DIR__ . '/../common.php';
 include __DIR__ . '/../assert/curl_installed.php';
 include __DIR__ . '/../assert/pheanstalk_installed.php';
 include __DIR__ . '/../assert/beanstalkd_running.php';
+include __DiR__ . '/../assert/date_configured.php';
 
 if( ! @fsockopen('graph.facebook.com', '80')) {
     Tap::plan('skip_all', 'cant connect to test url');
