@@ -5,6 +5,7 @@ use Gaia\Container;
 use Gaia\Test\Tap;
 
 include __DIR__ . '/../common.php';
+include __DiR__ . '/../assert/date_configured.php';
 
 $skein = new Skein\Cache( new Skein\Store( $store = new Container() ), $cache = new Container() );
 
