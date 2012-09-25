@@ -8,6 +8,7 @@ use Gaia\DB;
 include __DIR__ . '/../common.php';
 include __DIR__ . '/../assert/mysqli_installed.php';
 include __DIR__ . '/../assert/mysql_running.php';
+include __DiR__ . '/../assert/date_configured.php';
 
 $thread = bcsub( time(), 1000000000 ) . str_pad( mt_rand(0, 9999999999), 10, '0', STR_PAD_LEFT);
     
