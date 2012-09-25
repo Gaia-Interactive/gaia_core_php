@@ -61,7 +61,7 @@ class IntMySQL implements Iface {
         if( $search !== NULL ) $where[] = $db->prep_args("`stratum` IN( %s )", array($search) );
         if( $min !== NULL ) $where[] = $db->prep_args("`stratum` >= %i", array($min) );
         if( $max !== NULL ) $where[] = $db->prep_args("`stratum` <= %i", array($max) );
-        if( $where ) $where = 'WHERE ' . implode(' AND ', $where );
+        $where = ( $where ) ? 'WHERE ' . implode(' AND ', $where ) : '';
         $sql = "SELECT `constraint`, `stratum` FROM `{$table}` {$where} ORDER BY `stratum` $sort";
         if( $limit !== NULL && preg_match("#^([0-9]+)((,[0-9]+)?)$#", $limit ) ) $sql .= " LIMIT " . $limit;
         //print "\n$sql\n";
