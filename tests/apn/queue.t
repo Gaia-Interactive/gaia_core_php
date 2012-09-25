@@ -3,6 +3,7 @@
 include __DIR__ . '/common.php';
 include __DIR__ . '/../assert/pheanstalk_installed.php';
 include __DIR__ . '/../assert/beanstalkd_running.php';
+include __DiR__ . '/../assert/date_configured.php';
 
 use Gaia\APN\Config;
 use Gaia\APN\Queue;
