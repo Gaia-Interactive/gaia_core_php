@@ -6,10 +6,10 @@ class DB implements Iface {
     protected $core;
     
     public function __construct( $db, $app = 'default' ){
-        if( ! $db instanceof \Gaia\DB\Iface ){
+        if( ! $db instanceof \Gaia\DB\ExtendedIface ){
             $db = new \Gaia\DB( $db );
         }
-        if( ! $db->isa('\gaia\db' ) ) $db = new \Gaia\DB( $db );
+        if( ! $db->isa('\gaia\db\extendediface' ) ) $db = new \Gaia\DB( $db );
         
         if( $db->isa('mysql') ){
             $this->core = new \Gaia\NewId\DB\MySQL( $db, $app );
