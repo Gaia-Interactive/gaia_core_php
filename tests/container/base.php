@@ -44,8 +44,8 @@ Tap::is( $c->shift(), $v = array_shift($input), 'shifted off an element, same as
 
 Tap::is( $c->unshift($v), array_unshift($input, $v), 'unshift an element back onto the container');
 Tap::is( $c->all(), $input, 'after shift and unshift, input matches container');
-asort( $input );
-$c->sort();
+@asort( $input );
+@$c->sort();
 Tap::is( $c->all(), $input, 'after sorting, matches sorted input');
 ksort( $input );
 $c->ksort();
