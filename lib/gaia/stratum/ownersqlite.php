@@ -106,6 +106,7 @@ class OwnerSQLite implements Iface {
     protected function db(){
         $db = DB\Connection::instance( $this->dsn );
         if( ! $db->isa('sqlite') ) throw new Exception('invalid db');
+        if( ! $db->isa('gaia\db\extendediface') ) throw new Exception('invalid db');
         if( ! $db->isa('Gaia\DB\Except') ) $db = new DB\Except( $db );
         return $db;
     }
