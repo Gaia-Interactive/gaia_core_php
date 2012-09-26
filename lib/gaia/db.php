@@ -1,7 +1,7 @@
 <?php
 namespace Gaia;
 use Gaia\DB\Transaction;
-use Gaia\DB\Iface;
+use Gaia\DB\ExtendedIface;
 
 /**
 * This DB class is a simple wrapper around an existing database connection like mysqli or pdo.
@@ -82,7 +82,7 @@ use Gaia\DB\Iface;
 *       print $e;
 *   }
 */
-class DB implements Iface {
+class DB implements ExtendedIface {
     
     protected $core;
     protected $_ = array();
