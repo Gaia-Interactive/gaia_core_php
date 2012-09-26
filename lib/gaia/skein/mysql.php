@@ -211,6 +211,7 @@ class MySQL implements Iface {
         }
         if( ! $db instanceof DB\Iface ) throw new Exception('invalid db');
         if( ! $db->isa('mysql') ) throw new Exception('invalid db');
+        if( ! $db->isa('gaia\db\extendediface') ) throw new Exception('invalid db');
         if( ! $db->isa('Gaia\DB\Except') ) $db = new DB\Except( $db );
         return $db;
     }
