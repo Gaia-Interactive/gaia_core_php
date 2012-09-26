@@ -44,7 +44,7 @@ class Connection {
         
         foreach( self::$instances as $k => $v ){
             if( $v === $name ) unset( self::$instances[ $k ] );
-            while( $v instanceof \Gaia\DB && $v->core() instanceof Iface ){
+            while( $v instanceof \Gaia\DB\ExtendedIface && $v->core() instanceof Iface && $v !== $v->core() ){
                 $v = $v->core();
                 if( $v === $name ) unset( self::$instances[ $k ] );
             }
