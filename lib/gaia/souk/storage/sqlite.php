@@ -12,7 +12,7 @@ class SQLite implements IFace {
     protected $app;
     protected $user_id;
     protected $dsn;
-    public function __construct( \Gaia\DB $db, $app, $user_id, $dsn){
+    public function __construct( \Gaia\DB\ExtendedIface $db, $app, $user_id, $dsn){
         if( ! $db->isa('sqlite') ) throw new Exception('invalid driver', $db );
         $this->db = $db;
         $this->app = $app;
