@@ -20,6 +20,7 @@ class SQLite implements Iface {
             if( is_scalar( $db ) ) $db = DB\Connection::instance( $db );
             if( ! $db instanceof DB\Iface ) throw new Exception('invalid db object');
             if( ! $db->isA('sqlite') ) throw new Exception('db object not sqlite');
+            if( ! $db->isa('gaia\db\extendediface') ) throw new Exception('invalid db object');
             if( ! $db->isA('Gaia\DB\Except') ) $db = new DB\Except( $db );
             return $object = $db;
         };
