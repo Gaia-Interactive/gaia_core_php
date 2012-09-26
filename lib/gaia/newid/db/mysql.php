@@ -19,12 +19,13 @@ class MySQL implements Iface {
     protected $db;
     protected static $info = array();
     
-    public function __construct( \Gaia\DB $db, $app = 'default' ){
+    public function __construct( \Gaia\DB\Iface $db, $app = 'default' ){
         if( ! preg_match('/^[a-z0-9_]+$/', $app) ) throw new Exception('invalid-app');
         if( ! $db->isa('mysql')){
             trigger_error('invalid db layer', E_USER_ERROR);
             exit(1);
         }
+        if( ! $db->isa('\gaia\db\extendediface' ) ) $db = new \Gaia\DB( $db );
         if( ! $db->isa('gaia\db\except') ) $db = new \Gaia\DB\Except( $db );
         $this->app = $app;
         $this->db = $db;
