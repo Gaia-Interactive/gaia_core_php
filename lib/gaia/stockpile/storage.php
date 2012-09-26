@@ -35,7 +35,7 @@ class Storage {
      }
     protected static function loadDefault( Iface $stockpile, $name, $dsn ){
         $db = Connection::instance( $dsn );
-        if( ! $db instanceof \Gaia\DB ) $db = new \Gaia\DB( $db );
+        if( ! $db instanceof \Gaia\DB\ExtendedIface ) $db = new \Gaia\DB( $db );
         if( $db->isa('mysql') ) {
             $classname = 'Gaia\Stockpile\Storage\MySQL\\' . $name;
         } elseif( $db->isa('sqlite') ){
