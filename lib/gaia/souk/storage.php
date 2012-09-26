@@ -45,7 +45,7 @@ class Storage {
     protected static function loadDefault( Iface $souk, $dsn ){
         $db = Connection::instance( $dsn );
         if( ! $db instanceof \Gaia\DB\Iface ) throw new Exception('invalid db driver', $db );
-        if( ! $db instanceof \Gaia\DB ) $db = new \Gaia\DB( $db );
+        if( ! $db instanceof \Gaia\DB\ExtendedIface ) $db = new \Gaia\DB( $db );
         if( $db->isa('mysql') ){
             $classname = 'Gaia\Souk\Storage\MySQL';
         } elseif( $db->isa('sqlite') ){
