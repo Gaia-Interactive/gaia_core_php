@@ -9,11 +9,12 @@ class PGSQL implements Iface {
     protected $app;
     protected $db;
     
-    public function __construct(\Gaia\DB $db, $app = 'default' ){
+    public function __construct(\Gaia\DB\Iface $db, $app = 'default' ){
         if( ! $db->isa('pgsql') && ! $db->isa('postgre') ) {
             trigger_error('invalid pdo', E_USER_ERROR);
             exit;
         }
+        if( ! $db->isa('\gaia\db\extendediface' ) ) $db = new \Gaia\DB( $db );
         if( ! $db->isa('gaia\db\except') ) $db = new \Gaia\DB\Except( $db );
         $this->db = $db;
         if( ! preg_match('/^[a-z0-9_]+$/', $app) ) throw new Exception('invalid-app');
