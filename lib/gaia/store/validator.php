@@ -63,7 +63,7 @@ class Validator extends Wrap {
     public function get( $input ){
         if( isset( $this->validators[ __FUNCTION__ ] ) ) {
             $validate = $this->validators[ __FUNCTION__ ];
-            if( ! $validate( $input ) ) return FALSE;
+            if( ! $validate( $input ) ) return is_array( $input ) ? array() : NULL;
         }
         return parent::get( $input );
     }

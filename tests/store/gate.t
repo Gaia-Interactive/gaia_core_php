@@ -4,7 +4,11 @@ include __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\Store;
 
-Tap::plan(1);
+$plan_ct = 1;
+
+$cache = new Store\Gate(new Store\KvpTTL());
+include __DIR__ . '/generic_tests.php';
+
 
 $cache = new Store\Gate(new Store\KvpTTL());
 $cache->set('test1', 1, 10000000);
