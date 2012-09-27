@@ -3,8 +3,11 @@
 include __DIR__ . '/../common.php';
 use Gaia\Test\Tap;
 use Gaia\Store;
+$plan_ct = 36;
 
-Tap::plan(36);
+$cache = new Store\Replica(array(new Store\KvpTTL(), new Store\KvpTTL()));
+include __DIR__ . '/generic_tests.php';
+
 
 $a = new Store\KvpTTL;
 $b = new Store\KvpTTL;

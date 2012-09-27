@@ -4,7 +4,8 @@ use Gaia\Store;
 use Gaia\Time;
 
 if( ! isset( $skip_expiration_tests ) ) $skip_expiration_tests = FALSE;
-Tap::plan(40);
+if( ! isset( $plan_ct ) ) $plan_ct = 0;
+Tap::plan(40 + $plan_ct);
 
 $data = array();
 for( $i = 1; $i <= 3; $i++){
