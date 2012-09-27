@@ -7,8 +7,11 @@ use Gaia\Store;
 include __DIR__ . '/../common.php';
 include __DIR__ . '/../assert/apc_installed.php';
 
+$plan_ct = 11;
+$cache = new Store\Apc();
+$skip_expiration_tests = TRUE;
+include __DIR__ . '/generic_tests.php';
 
-Tap::plan(11);
 
 $apc = new Store\Apc;
 
