@@ -5,7 +5,7 @@ include __DIR__ . '/assert/mcrypt_installed.php';
 use Gaia\Test\Tap;
 use Gaia\Crypto;
 
-Tap::plan(10);
+Tap::plan(3);
 
 $input = rtrim(file_get_contents( __DIR__ . '/sample/i_can_eat_glass.txt'));
 
