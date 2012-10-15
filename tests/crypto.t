@@ -7,9 +7,9 @@ use Gaia\Crypto;
 
 Tap::plan(10);
 
-$input = rtrim(file_get_contents( __DIR__ . '/sample/i_can_eat_glass.txt'), "\0");
+$input = rtrim(file_get_contents( __DIR__ . '/sample/i_can_eat_glass.txt'));
 
-$secret = 'my super secret password';
+$secret =  sha1(mt_rand(0, 10000000000), TRUE);
 
 $crypto = new Crypto( $secret );
 

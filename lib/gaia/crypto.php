@@ -23,7 +23,7 @@ class Crypto {
     * set up the object. pass in the secret and 
     * optionally change method, mode or rand_source in options.
     */
-    public function __construct( $secret, array $options = array() ){  
+    public function __construct( $secret, array $options = array() ){
         $this->secret = $secret;
         $this->options = array_merge( $this->options, $options );
     }
