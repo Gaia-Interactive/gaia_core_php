@@ -50,6 +50,7 @@ class EAV extends Container {
 
     protected $entity;
     protected $storage;
+    protected $state;
    
    /**
     * Specify storage and an entity key.
@@ -70,6 +71,7 @@ class EAV extends Container {
         // standard approach.
         $this->entity = $entity;
         parent::__construct( $this->storage->get( $entity ) );
+        $this->state = $this->checksum();
     }
     
     public static function bulkLoad( Iface $storage, array $keys ){
@@ -85,9 +87,14 @@ class EAV extends Container {
     
    /**
     * Make changes to the object then write back to persistent storage.
+    * only write if data has changed or if the force flag is present
     */
-    public function store(){
-        return $this->storage->set( $this->entity, $this->all() );
+    public function store( $force = FALSE ){
+        $current_state = $this->checksum();
+        if( ! $force && $this->state == $current_state ) return;
+        $response = $this->storage->set( $this->entity, $this->all() );
+        if( $response ) $this->state = $current_state;
+        return $response;
     }
     
    /**
@@ -95,7 +102,11 @@ class EAV extends Container {
     */
     public function clear(){
         $this->flush();
-        return $this->store();
+        return $this->store(TRUE);
+    }
+    
+    protected function checksum(){
+        return md5( serialize( $this->all() ) );
     }
     
 } // EOC
