@@ -65,6 +65,7 @@ class EAV extends Container {
             $this->entity = $entity["\0._entity"];
             unset( $entity["\0._entity"]);
             $this->load( $entity );
+            $this->state = $this->checksum();
             return;
         }
         
