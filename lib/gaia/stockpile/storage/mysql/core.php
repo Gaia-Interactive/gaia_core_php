@@ -8,8 +8,9 @@ abstract class Core implements Iface {
     protected $db;
     protected $table;
     protected $user_id;
-    public function __construct( \Gaia\DB\ExtendedIface $db, $table, $user_id ){
+    public function __construct( \Gaia\DB\Iface $db, $table, $user_id ){
         if( ! $db->isa('mysql') ) throw new Exception('invalid driver', $db );
+        if( ! $db->isa('gaia\db\extendediface') ) throw new Exception('invalid driver', $db );
         $this->db = $db;
         $this->table = $table;
         $this->user_id = $user_id;
