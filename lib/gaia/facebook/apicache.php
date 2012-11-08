@@ -1,6 +1,7 @@
 <?php
 namespace Gaia\Facebook;
 use Gaia\Store;
+use Gaia\Time;
 
 class ApiCache {
 
@@ -21,7 +22,11 @@ class ApiCache {
     
     public static $RETRIES = 3;
     
-    public function __construct( \BaseFacebook $facebook, Store\Iface $cache ){
+    public function __construct( $facebook, Store\Iface $cache ){
+        if( ! method_exists($facebook, 'getAppId') || ! method_exists($facebook, 'getApiSecret')) {
+            trigger_error('passed invalid facebook object into ' . __CLASS__, E_USER_ERROR);
+            exit;
+        }    
         $this->facebook = $facebook;
         $this->cache = $cache;
     }
@@ -168,7 +173,7 @@ class ApiCache {
     }
     
     protected static function time(){
-        return time();
+        return Time::now();
     }
 
 }
