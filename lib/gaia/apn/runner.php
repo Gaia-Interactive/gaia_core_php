@@ -32,6 +32,12 @@ class Runner {
     */
     protected $timelimit = 0;
     
+    
+    /**
+    * when shutting down, how many select loops do we want to go before giving up?.
+    */
+    protected $shutdown_loops = 10;
+    
     /**
     * keep track of the time we started.
     */
@@ -296,6 +302,15 @@ class Runner {
     }
     
     /**
+    * how many times to iterate in a select loop before shutting down?
+    * it will exit earlier if all the streams are completely finished writing.
+    * but we don't want to loop forever.
+    */
+    public function setShutdownLoops( $v ){
+        return $this->shutdown_loops = intval( $v );
+    }
+    
+    /**
     * populate notices into the system.
     * @return boolean
     */
@@ -414,7 +429,11 @@ class Runner {
 		if( ! $this->active ) return;
 		$this->active = FALSE;
 		$this->debug('initiating shutdown sequence ...', E_NOTICE);
-		while ($this->pool->select(1) === TRUE) { 
+		
+		// don't want to get stuck in an endless loop on shutdown.
+		// give it a few tries, then give up.
+		for ($i = 0; $i < $this->shutdown_loops; $i++ ) {
+		    if( $this->pool->select(1) !== TRUE ) break;
 		    foreach( $this->pool->streams() as $stream ){
 		        foreach( $stream->readResponses() as $response ){
                     $this->failed++;
