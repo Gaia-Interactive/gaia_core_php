@@ -316,7 +316,8 @@ class Runner {
     */
     public function populate(){
         try {
-            if( ! $this->active && ! $this->pool->streams() ){
+            $streams = $this->pool->streams();
+            if( ! $this->active && ! $streams ){
                 return TRUE;
             }
             
@@ -327,7 +328,8 @@ class Runner {
             $queue_bytes = 0;
             
             $block_patterns = array();
-            foreach( $this->pool->streams() as $stream ){
+            shuffle( $streams );
+            foreach( $streams as $stream ){
                 if( strlen( $stream->out ) > $this->max_bytes ) $block_patterns[$stream->app] = $stream->app;
             }
                         
@@ -392,7 +394,7 @@ class Runner {
                 }
             }
             return TRUE;
-         } catch( Exception $e ){
+         } catch( \Exception $e ){
             $this->debug( $e, E_WARNING );
             return FALSE;
          }
