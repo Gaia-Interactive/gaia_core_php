@@ -54,6 +54,7 @@ for( $i = 0; $i < $iterations; $i++){
 //Tap::debug( $notices );
 $runner->setTimelimit(1);
 $runner->setLimit( count($notices) + 1 );
+$runner->setShutdownLoops(2);
 $start = microtime(TRUE);
 $runner->process();
 $elapsed = number_format( microtime(TRUE) - $start, 3);
