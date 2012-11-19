@@ -37,6 +37,9 @@ $runner->attachStreamBuilder( function( $app ) use( $connection, & $connect_coun
     return $connection;
 } );
 
+$res = $runner->flushOld();
+if( $res ) Tap::debug("flushed old notices in the queue: $res");
+
 $res = $runner->flush();
 if( $res ) Tap::debug("flushed stale notices in the queue: $res");
 
