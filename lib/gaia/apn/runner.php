@@ -271,7 +271,10 @@ class Runner {
     }
     
     public function flushOld( $pattern = '*' ){
-        return $this->flush( $pattern, NULL, Time::now() - Config::instance()->ttl() );
+        $days = (int) Config::instance()->get('expired_days');
+        if( $days < 1 ) $days = 1;
+        $ttl = 86400 * $days;
+        return $this->flush( $pattern, NULL, Time::now() - $ttl );
     }
     
     
