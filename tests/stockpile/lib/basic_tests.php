@@ -16,6 +16,7 @@ Tap::is( quantify( $total ), 1, 'add an item to the account');
 $total = stockpile( $app, $user_id )->get( $item_id );
 Tap::is( quantify( $total ), 1, 'read the item we added');
 
+
 // add multiple items
 $total = stockpile( $app, $user_id )->add( $item_id, 2 );
 Tap::is( quantify( $total ), 3, 'add multiple items to the account');
@@ -40,4 +41,16 @@ $total = stockpile( $app, $user_id )->add( $item_id );
 Transaction::commit();
 $total = stockpile( $app, $user_id )->get( $item_id );
 Tap::is( quantify( $total ), 4, 'add inside of a transaction and commit it. now we can see it!');
+
+// set the value back to zero
+$total = stockpile( $app, $user_id )->set( $item_id, 0 );
+Tap::is( quantify( $total ), 0, 'set the value back to zero');
+
+// confirm
+$total = stockpile( $app, $user_id )->get( $item_id );
+Tap::is( quantify( $total ), 0, 'read confirms the value is zero');
+
+// confirm
+$total = stockpile( $app, $user_id )->add( $item_id, 4 );
+Tap::is( quantify( $total ), 4, 'set the value again');
 

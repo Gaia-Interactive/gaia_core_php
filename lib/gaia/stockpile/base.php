@@ -80,7 +80,11 @@ class Base implements Iface {
         try {
             $current = $this->get($item_id);
             if( Base::quantify( $current ) > 0 ) $this->subtract( $item_id, $current, $data );
-            $result = $this->add( $item_id, $quantity, $data );
+            if( Base::quantify( $quantity ) == 0 ) {
+                $result = $quantity;
+            } else { 
+                $result = $this->add( $item_id, $quantity, $data );
+            }
             if( ! Transaction::commit() ) throw new Exception('database error');
             return $result;
         } catch( \Exception $e ){
