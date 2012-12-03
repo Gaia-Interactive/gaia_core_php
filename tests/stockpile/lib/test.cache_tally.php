@@ -3,7 +3,7 @@ namespace Gaia\Stockpile;
 use Gaia\Test\Tap;
 
 // how many tests are we gonna run?
-Tap::plan(74);
+Tap::plan(77);
 
 // utility function for instantiating the object 
 function stockpile( $app, $user_id ){
