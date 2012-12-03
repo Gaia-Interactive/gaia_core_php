@@ -59,7 +59,11 @@ abstract class Passthru implements IFace {
         try {
             $current = $this->get($item_id);
             if( Base::quantify( $current ) > 0 ) $this->subtract( $item_id, $current, $data );
-            $result = $this->add( $item_id, $quantity, $data );
+            if( Base::quantify( $quantity ) == 0 ) {
+                $result = $quantity;
+            } else { 
+                $result = $this->add( $item_id, $quantity, $data );
+            }
             if( ! Transaction::commit() ) throw new \Gaia\Exception('database error');
             return $result;
         } catch( \Exception $e ){
@@ -117,7 +121,7 @@ abstract class Passthru implements IFace {
         return $this->core->storage( $name );
     }
     
-    public function handle( Exception $e ){
+    public function handle( \Exception $e ){
         if( Transaction::inProgress() ) Transaction::rollback();
         return $e;
     }
