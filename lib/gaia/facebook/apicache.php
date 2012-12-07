@@ -51,16 +51,20 @@ class ApiCache {
         unset( $this->facebook->$key );
     }
     
-    public function api($url, $method = NULL, $params = array()) {
-    
-        if( is_array( $url ) ) return $this->facebook->api( $url, $method, $params );
+    public function api($url=NULL, $method = 'GET', $params = array()) {
+        $__ = func_get_args();
+        // don't cache if it is a complex url structure.
+        if( ! isset( $url ) || is_array( $url ) ) return call_user_func_array(array($this->facebook, 'api'), $__ );
+
         
         if( is_array( $method ) && empty($params) ) {
             $params = $method;
             $method = 'GET';
         }
         
-        if( $method == 'POST' ) return $this->facebook->api( $url, $method, $params );
+        if( $method != 'GET' ) {
+            return call_user_func_array(array($this->facebook, 'api'), $__ );
+        }
 
         // use prefix cache object
         $cache = $this->cache;
