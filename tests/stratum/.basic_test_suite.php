@@ -1,0 +1,43 @@
+<?php
+use Gaia\Stratum;
+use Gaia\Test\Tap;
+use Gaia\Time;
+
+if( ! isset( $use_int_keys ) )  $use_int_keys = FALSE;
+if( ! isset( $plan ) ) $plan = 0;
+
+Tap::plan($plan + 8);
+
+Tap::ok( $stratum instanceof Stratum\Iface, 'stratum object instantiated with correct interface');
+
+$pairs = array();
+for( $i = 1; $i <= 10; $i++ ){
+    $key = $use_int_keys ? strval($i + 100000000) : 'foo' . $i;
+    do {
+        $value = strval(mt_rand(1, 10000000));
+    } while( in_array( $value, $pairs ) );
+    $pairs[ $key ] = $value;
+    $res = $stratum->store($key, $value);
+}
+$res = $stratum->query();
+
+asort( $pairs, TRUE );
+
+Tap::is( $res, $pairs, 'stored a bunch of pairs ... query matches what I stored');
+//Tap::debug( $pairs );
+//Tap::debug( $res );
+
+Tap::is( $stratum->query(array('limit'=>'0,1')), array_slice($pairs, 0, 1, TRUE), 'queried the first in the list');
+Tap::is( $stratum->query(array('limit'=>2, 'sort'=>'desc')), array_slice($pairs, -2, NULL, TRUE), 'queried the last two in the list');
+$middle = array_slice($pairs, 5, 1, TRUE);
+list( $key, $value ) = each($middle);
+Tap::is( $stratum->query(array( 'min'=>$value, 'limit'=>2)), array_slice($pairs, 5, 2, TRUE), 'queried from the middle of the list');
+
+Tap::is( $stratum->query(array( 'max'=>$value, 'limit'=>2, 'sort'=>'DESC')), array_reverse(array_slice($pairs, 4, 2, TRUE), TRUE), 'queried from the middle of the list in reverse');
+
+Tap::is( $stratum->query(array('search'=>array_values(array_slice($pairs, 2, 3, TRUE) )  )), array_slice($pairs, 2,3, TRUE), 'search by value matches correct result set');
+
+Tap::ok( $stratum->delete( $key ), 'successfully deleted a constraint');
+
+
+//Tap::debug($pairs);
