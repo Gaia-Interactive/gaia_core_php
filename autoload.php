@@ -22,7 +22,7 @@ call_user_func( function(){
         foreach( array('facebook', 'sfyaml', 'pheanstalk', 'predis', 'codeigniter') as $repo ){
             $path = __DIR__ . '/vendor/' . $repo . '.phar';
             if( file_exists( $path ) ) continue;
-            $url = 'https://github.com/downloads/gaiaops/gaia_core_php/' . $repo . '.phar';
+            $url = 'http://d.cdn.gaiaonline.com/gaiaops/gaia_core_php/' . $repo . '.phar';
             $download( $url, $path );
         }
     }
