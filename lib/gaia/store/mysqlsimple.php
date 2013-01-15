@@ -5,7 +5,6 @@
 namespace Gaia\Store;
 use Gaia\Time;
 use Gaia\DB;
-use Gaia\Exception;
 
 // basic wrapper to make mysql library conform to the storage interface.
 class MySQLSimple implements Iface {
@@ -30,16 +29,7 @@ class MySQLSimple implements Iface {
     * pass in a db object or dsn string and table name
     */
     public function __construct($db, $table, \Gaia\Serialize\Iface $s = NULL ){
-        $this->db = function() use ( $db ){
-            static $object;
-            if( isset( $object ) ) return $object;
-            if( is_scalar( $db ) ) $db = DB\Connection::instance( $db );
-            if( ! $db instanceof DB\Iface ) throw new Exception('invalid db object');
-            if( ! $db->isA('mysql') ) throw new Exception('db object not mysql');
-            if( ! $db->isa('gaia\db\extendediface') ) throw new Exception('invalid db object');
-            if( ! $db->isA('Gaia\DB\Except') ) $db = new DB\Except( $db );
-            return $object = $db;
-        };
+        $this->db = $db;
         $this->table = $table;
         $this->s = ( $s ) ? $s : new \Gaia\Serialize\PHP;
     }
@@ -213,8 +203,18 @@ class MySQLSimple implements Iface {
     }
     
     protected function db(){
-        $closure = $this->db;
-        $db = $closure();
+        if( $this->db instanceof \Closure ){
+            $mapper = $this->db;
+            $db = $mapper( $table );
+        } elseif( is_scalar( $this->db ) ){
+            $db = DB\Connection::instance( $this->db );
+        } else {
+            $db = $this->db;
+        }
+        if( ! $db instanceof DB\Iface ) throw new Exception('invalid db');
+        if( ! $db->isa('mysql') ) throw new Exception('invalid db');
+        if( ! $db->isa('gaia\db\extendediface') ) throw new Exception('invalid db');
+        if( ! $db->isa('Gaia\DB\Except') ) $db = new DB\Except( $db );
         if( DB\Transaction::inProgress() ) DB\Transaction::add( $db );
         return $db;
     }
