@@ -5,6 +5,7 @@
 namespace Gaia\Store;
 use Gaia\Time;
 use Gaia\DB;
+use Gaia\Exception;
 
 // basic wrapper to make mysql library conform to the storage interface.
 class MySQL implements Iface {
