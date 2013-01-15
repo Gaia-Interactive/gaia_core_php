@@ -8,7 +8,7 @@ use Gaia\DB;
 use Gaia\Exception;
 
 // basic wrapper to make mysql library conform to the storage interface.
-class MySQLSimple implements Iface {
+class SQLite implements Iface {
     
     /**
     * pluggable serializer 
@@ -35,7 +35,7 @@ class MySQLSimple implements Iface {
             if( isset( $object ) ) return $object;
             if( is_scalar( $db ) ) $db = DB\Connection::instance( $db );
             if( ! $db instanceof DB\Iface ) throw new Exception('invalid db object');
-            if( ! $db->isA('mysql') ) throw new Exception('db object not mysql');
+            if( ! $db->isA('sqlite') ) throw new Exception('db object not sqlite');
             if( ! $db->isa('gaia\db\extendediface') ) throw new Exception('invalid db object');
             if( ! $db->isA('Gaia\DB\Except') ) $db = new DB\Except( $db );
             return $object = $db;
@@ -84,9 +84,10 @@ class MySQLSimple implements Iface {
         $now = $this->now();
         $ttl = $this->ttl( $ttl );
         $db = $this->db();
+        $v = $this->serialize( $v );
         $rs = $db->execute("UPDATE `{$this->table}` SET `data` = %s, `ttl` = %i, `revision` = `revision` + 1 WHERE `keyname` = %s AND `ttl` < %i", $v, $ttl, $k, $now);
         if( $rs->affected() > 0 ) return TRUE;
-        $rs = $db->execute("INSERT IGNORE INTO `{$this->table}` (`keyname`, `data`, `ttl`, `revision`) VALUES (%s, %s, %i, 1)", $k, $this->serialize($v), $ttl);
+        $rs = $db->execute("INSERT OR IGNORE INTO `{$this->table}` (`keyname`, `data`, `ttl`, `revision`) VALUES (%s, %s, %i, 1)", $k, $v, $ttl);
         return $rs->affected() > 0;
     }
 
@@ -97,7 +98,10 @@ class MySQLSimple implements Iface {
         if( $v === NULL ) return $this->delete( $k );
         $now = $this->now();
         $ttl = $this->ttl( $ttl );
-        $rs = $this->db()->execute("INSERT INTO `{$this->table}` (`keyname`, `data`, `ttl`, `revision`) VALUES (%s, %s, %i, 1) ON DUPLICATE KEY UPDATE `data` = VALUES(`data`), `ttl` = VALUES(`ttl`), `revision` = `revision` + 1", $k, $this->serialize($v), $ttl);
+        $v = $this->serialize($v);
+        $rs = $this->db()->execute("INSERT OR IGNORE INTO `{$this->table}` (`keyname`, `data`, `ttl`, `revision`) VALUES (%s, %s, %i, 1)", $k, $v, $ttl);
+        if( $rs->affected() > 0 ) return TRUE;
+        $rs = $this->db()->execute("UPDATE `{$this->table}` SET `data` = %s, ttl = %i, `revision` = `revision` + 1 WHERE `keyname` = %s", $v, $ttl, $k);
         return $rs->affected() > 0;
     }
 
@@ -117,11 +121,8 @@ class MySQLSimple implements Iface {
     public function increment( $k, $v = 1 ){
         $now = $this->now();
         $db = $this->db();
-        $db->execute("UPDATE `{$this->table}` SET `data` =  @TOTAL:=CAST(`data` AS UNSIGNED) + %i, `revision` = `revision` + 1 WHERE `keyname` = %s AND ttl >= %i", $v, $k, $now);
-        $rs = $db->execute('SELECT @TOTAL as total');
-        $row = $rs->fetch();
-        $rs->free();
-        return $row['total'];
+        $db->execute("UPDATE `{$this->table}` SET `data` = CAST(`data` AS INTEGER) + %i, `revision` = `revision` + 1 WHERE `keyname` = %s AND ttl >= %i", $v, $k, $now);
+        return $this->get( $k );
     }
 
    /**
@@ -130,18 +131,15 @@ class MySQLSimple implements Iface {
     public function decrement( $k, $v = 1 ){
         $now = $this->now();
         $db = $this->db();
-        $rs = $db->execute("UPDATE `{$this->table}` SET `data` =  @TOTAL:=CAST(`data` AS UNSIGNED) - %i, `revision` = `revision` + 1 WHERE `keyname` = %s AND `ttl` >= %i", $v, $k, $now);
-        $rs = $db->execute('SELECT @TOTAL as total');
-        $row = $rs->fetch();
-        $rs->free();
-        return $row['total'];
+        $rs = $db->execute("UPDATE `{$this->table}` SET `data` =CAST(`data` AS INTEGER) - %i, `revision` = `revision` + 1 WHERE `keyname` = %s AND `ttl` >= %i", $v, $k, $now);
+        return $this->get( $k );
     }
 
    /**
     * delete a key
     */
     public function delete( $k ){
-        $rs = $this->db()->execute("UPDATE `{$this->table}` SET `data`= NULL, ttl = NULL, `revision` = `revision` + 1 WHERE keyname IN( %s )", $k);
+        $rs = $this->db()->execute("UPDATE `{$this->table}` SET `data`= NULL, ttl = 0, `revision` = `revision` + 1 WHERE keyname IN( %s )", $k);
         return TRUE;
     }
     
@@ -150,23 +148,27 @@ class MySQLSimple implements Iface {
     }
 
     public function initialize(){
-        $this->db()->execute($this->schema());
+        $db = $this->db();
+        foreach( explode(';', $this->schema()) as $sql ) {
+            $sql  = trim( $sql );
+            if( strlen( $sql ) < 1 ) continue;
+            $db->execute( $sql );
+        }
     }
     
     public function schema(){
         return 
             "CREATE TABLE IF NOT EXISTS `{$this->table}` (" .
-            "`keyname` VARCHAR(500) NOT NULL, " . 
-            "`data` BLOB, " .
-            "`ttl` INT UNSIGNED NOT NULL, " . 
-            "`revision` BIGINT UNSIGNED NOT NULL, " .
-            "UNIQUE `keyname` (`keyname`), " .
-            "INDEX `ttl` (`ttl`) " .
-            ") Engine=InnoDB";
+            "`keyname` TEXT NOT NULL PRIMARY KEY, " . 
+            "`data` TEXT, " .
+            "`ttl` INTEGER NOT NULL, " . 
+            "`revision` INTEGER NOT NULL" .
+            ");
+            CREATE INDEX IF NOT EXISTS `{$this->table}_idx_ttl` ON `{$this->table}`(`ttl`);";
     }
     
     public function flush(){
-        $this->db()->execute("TRUNCATE {$this->table}");
+        $this->db()->execute("DELETE FROM {$this->table}");
     }
     
     public function ttlEnabled(){
