@@ -230,7 +230,7 @@ class OwnerMySQL implements Iface {
     protected function db(){
         if( $this->db instanceof \Closure ){
             $mapper = $this->db;
-            $db = $mapper( $table );
+            $db = $mapper();
         } elseif( is_scalar( $this->db ) ){
             $db = DB\Connection::instance( $this->db );
         } else {
