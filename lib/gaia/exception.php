@@ -12,19 +12,32 @@ class Exception extends \Exception {
     * @mixed    arbitrary debug info attached by the constructor.
     */
 	protected $debug;
+    protected $_ = array();
+
 	
 	const DEBUG_HEADER = "\nDebug: \n# ";
 	
+
    /**
 	* Pass in a message and optional debug. can be an object, array, or scalar value.
 	* We don't assign a code at all, since it isn't that useful
 	*/
-	public function __construct($msg, $debug = NULL){
-	    // default behavior, call the parent, no code.
-        parent::__construct($msg);
-        
-        // attach debug, whatever it is.
+    public function __construct( $_ = '', $debug = NULL ){
+        if( ! is_array( $_ ) ) $_ = array('message'=>$_);
+        if( ! isset( $_['message'] ) ) $_['message'] = '';
+        $message = $_['message'];
+        unset( $_['message'] );
+        if( ! isset( $debug ) && isset( $_['debug'] ) ) $debug = $_['debug'];
         $this->debug = $debug;
+        parent::__construct($message );
+        foreach( $_ as $k => $v ) $this->_[ $k ] = $v;
+    }
+    
+    /**
+    * get exception parameters passed to the constructor.
+    */
+    public function getErrorParameters(){
+        return $this->_;
     }
     
    /**
