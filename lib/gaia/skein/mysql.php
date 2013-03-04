@@ -9,6 +9,7 @@ class MySQL implements Iface {
     protected $db;
     protected $thread;
     protected $table_prefix;
+    protected $serializer;
     
     /**
     * Thread is an integer id that your thread of entries will be tied to.
@@ -25,6 +26,17 @@ class MySQL implements Iface {
     *       testskein_201207
     */
     public function __construct( $thread, $db, $table_prefix = '' ){
+        $args = func_get_args();
+        if( is_array($thread ) && count( $args ) == 1 ){
+            $params = array_merge( array('thread'=>NULL, 'db'=>NULL, 'table_prefix'=>'', 'serializer'=>NULL), $thread);
+            $this->thread = $params['thread'];
+            $this->db = $params['db'];
+            $this->table_prefix = $params['table_prefix'];
+            if( $params['serializer'] ){
+                $this->overrideSerializer( $params['serializer'] );
+            }
+        
+        }
         $this->db = $db;
         $this->thread = $thread;
         $this->table_prefix = $table_prefix;
@@ -102,7 +114,6 @@ class MySQL implements Iface {
         $dbs->commit();
         DB\Transaction::commit();
         $id = Util::composeId( $shard, $sequence );
-       
         return $id;
     }
     
@@ -136,7 +147,6 @@ class MySQL implements Iface {
     public function filter( array $params ){
         Util::filter( $this, $params );
     }
-
     
    /**
     * Utility function used mainly by other functions to derive values, but can be used by
@@ -188,11 +198,17 @@ class MySQL implements Iface {
         ) ENGINE=InnoDB";
     }
     
+    public function overrideSerializer( \Gaia\Serialize\Iface $s ){
+        return $this->serializer = $s;
+    }
+    
     protected function serialize( $data ){
+        if( $this->serializer ) return $this->serializer->serialize( $data );
         return serialize( $data );
     }
     
     protected function unserialize( $string ){
+        if( $this->serializer ) return $this->serializer->unserialize( $string );
         return unserialize( $string );
     }
     
