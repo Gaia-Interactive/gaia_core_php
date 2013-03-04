@@ -26,9 +26,8 @@ class SQLite implements Iface {
     *       testskein_index
     *       testskein_201207
     */
-    public function __construct( $thread, $db, $table_prefix = '' ){
-        $args = func_get_args();
-        if( is_array($thread ) && count( $args ) == 1 ){
+    public function __construct( $thread, $db = NULL, $table_prefix = '' ){
+        if( is_array($thread ) && $db === NULL){
             $params = array_merge( array('thread'=>NULL, 'db'=>NULL, 'table_prefix'=>'', 'serializer'=>NULL), $thread);
             $this->thread = $params['thread'];
             $this->db = $params['db'];

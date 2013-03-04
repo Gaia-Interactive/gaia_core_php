@@ -1,0 +1,94 @@
+<?php
+include __DIR__ . '/common.php';
+
+use Gaiaonline\Favorites\Storage;
+use Gaia\DB\Transaction;
+
+$user_id = 5184;
+$now = currentTime();
+
+// keep track of what favorites a user is tracking.
+$skein = Storage::skein( $user_id, 'collection');
+
+// if we don't have a default one, create it.
+$id = array_shift( $skein->ids( array('limit'=>1 ) ) );
+
+if( ! $id ){
+    $skein->add( $collection = array(
+        'name'=>'default',
+        'id'=>Storage::newId(),
+        'created'=>$now,
+    ));
+} else {
+    $collection = $skein->get( $id );
+}
+
+
+
+$collection_id = $collection['id'];
+
+print "\ncollection: " . print_r( $collection, TRUE);
+
+
+$types = array('journal', 'forum_thread', 'forum_post');
+
+$type = $types[ array_rand( $types ) ];
+
+$data = array(
+'owner'=>$user_id,
+'type'=>$type,
+'ref'=> mt_rand(1, 10000000),
+);
+
+$data_id = Storage::newID();
+
+$cellar = Storage::cellar($collection_id, 'primary');
+$cellar->set( $data_id, $data );
+
+
+$skein = Storage::numberskein( $collection_id, 'primary');
+$skein_id = $skein->add( $data_id );
+$origin = $collection_id . '_' . $skein_id;
+
+$data['origin'] = $origin;
+
+// find all my followers
+$followers = array(1,2,3);
+
+
+// make sure those people are following me.
+$stratum = Storage::stratum( $collection_id, 'followers');
+$follower = mt_rand(1, 2000);
+$stratum->store( $follower, $now );
+
+$offset = 0;
+$limit = 50;
+do {
+    $followers = array_keys( $stratum->query( array('limit'=>sprintf("%s, %s", $offset, $limit) ) ) );
+    // populate my entry into their feed
+    foreach( $followers as $follower){
+        // logic here for burst/flood control.
+        $skein = Storage::numberskein( $follower, 'follow');
+        $skein_id = $skein->add( $data_id );
+        print "\n follower:  $follower added entry $entry_id to the post $skein_id";
+    }
+    $offset += $limit;
+} while( count( $followers ) >= $limit );
+
+
+
+
+// now print out all the entries in my personal list.
+$skein = Storage::numberskein( $collection_id, 'primary');
+
+$after = NULL;
+
+while( $skein_ids = $skein->ids( array('limit'=>10, 'start_after'=>$after ) ) ){
+    $after = max( $skein_ids );
+    foreach(  $cellar->get( $skein->get( $skein_ids ) ) as $id => $row ){
+        print "\n $id: " . print_r( $row, TRUE);
+    }
+}
+
+print "\n";
+
