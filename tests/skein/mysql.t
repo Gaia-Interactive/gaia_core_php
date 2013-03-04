@@ -31,7 +31,11 @@ $callback = function( $table ) use ( $db, $cache ){
 
 
 
-$skein = new Skein\MySQL( $thread, $callback, 'test' );
+$skein = new Skein\MySQL( array(
+    'thread'=>$thread, 
+    'db'=>$callback, 
+    'table_prefix'=>'test',
+));
 
 DB\Transaction::start();
 

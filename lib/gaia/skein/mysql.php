@@ -34,7 +34,7 @@ class MySQL implements Iface {
             if( $params['serializer'] ){
                 $this->overrideSerializer( $params['serializer'] );
             }
-        
+            return;
         }
         $this->db = $db;
         $this->thread = $thread;
