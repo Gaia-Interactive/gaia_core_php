@@ -55,34 +55,9 @@ class Persistence extends \BaseFacebook
         }
     }
     
-    // override behavior of the BaseFacebook class. the logic is botched in here.
-    // it won't clean up a wedged signed_request cookie. this one will.
-    protected function throwAPIException($result) {
-        $e = new \FacebookApiException($result);
-        switch ($e->getType()) {
-          // OAuth 2.0 Draft 00 style
-          case 'OAuthException':
-            // OAuth 2.0 Draft 10 style
-          case 'invalid_token':
-            $this->setAccessToken(null);
-            $this->user = 0;
-            $this->clearCookies();
-        }
-        throw $e;
-    }
-    
     // get rid of persistent data and signed request cookies.
     public function clearCookies(){
-        $this->clearSignedRequest();
-        $this->clearAllPersistentData();
-    }
-    
-    // get rid of the signed request cookie.
-    public function clearSignedRequest(){
-        $key = $this->getSignedRequestCookieName();
-        if( ! isset( $_COOKIE[ $key ] ) ) return;
-        unset( $_COOKIE[ $key ] );
-        setcookie( $key, '', time() - (86400 * 365), '/');
+        $this->destroySession();
     }
     
     // write persistent data into a signed cookie.
