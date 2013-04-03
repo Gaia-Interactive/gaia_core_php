@@ -21,6 +21,53 @@ class Internal implements Iface {
         return TRUE;
     }
     
+    public function batch( array $params = array() ){
+        $sort = 'ASC';
+        $start_after = NULL;
+        $limit = NULL;
+        $result = $this->kvp;
+        ksort( $result );
+        
+        if( isset( $params['sort'] ) ) $sort = $params['sort'];
+        if( isset( $params['start_after'] ) ) $start_after = $params['start_after'];
+        if( isset( $params['limit'] ) ) $limit = $params['limit'];
+        $sort = strtoupper( $sort );
+        if( $sort == 'DESC' ) $result = array_reverse( $result );
+        
+        if( $start_after !== NULL ){
+            $res = array();
+            $skip = TRUE;
+            foreach( $result as $k => $v ){
+                if( $skip && $k == $start_after ){
+                    $skip = FALSE;
+                    continue;
+                }
+                if( $skip ) continue;
+                $res[ $k ] = $v;
+            }
+            $result = $res;
+            
+        }
+        
+        if( $limit !== NULL ) {
+            $limit = str_replace(' ', '', $limit );
+            $parts = explode(',', $limit, 2);
+            if( count( $parts ) == 2 ){
+                $offset = $parts[0];
+                $limit = $parts[1];
+            } else {
+                $offset = '0';
+                $limit = $parts[0];
+            }
+            if( ctype_digit( $limit ) && ctype_digit( $offset ) ){
+                $result = array_slice( $result, $offset, $limit, $preserve = TRUE );
+            }
+        }
+        
+        return $result;
+    }
+    
+    
     public function query( array $params = array() ){
         $search = NULL;
         $min = NULL;

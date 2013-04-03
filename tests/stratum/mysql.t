@@ -21,6 +21,6 @@ $stratum = new Stratum\MySQL('test', 'test_stratum' );
 $schema = $stratum->schema();
 $schema = str_replace('CREATE TABLE', 'CREATE TEMPORARY TABLE', $schema);
 $db->execute( $schema );
-
+$use_bin_constraint = TRUE;
 include __DIR__ .'/.basic_test_suite.php';
 

@@ -37,6 +37,33 @@ class OwnerSQLite implements Iface {
         return $rs->affected() > 0;
     }
     
+    public function batch( array $params = array() ){
+        $sort = 'ASC';
+        $start_after = NULL;
+        $limit = NULL;
+        
+        if( isset( $params['sort'] ) ) $sort = $params['sort'];
+        if( isset( $params['start_after'] ) ) $start_after = $params['start_after'];
+        if( isset( $params['limit'] ) ) $limit = $params['limit'];
+        $sort = strtoupper( $sort );        
+        if( $sort != 'DESC' ) $sort = 'ASC';
+
+        $db = $this->db();
+        $table = $this->table();
+        if( DB\Transaction::inProgress() ) DB\Transaction::add( $db );
+        $where = array($db->prep_args('`owner` = %i', array( $this->owner ) ) );
+        if( $start_after !== NULL ) $where[] = $db->prep_args("`constraint` > %s", array($start_after) );
+        $where = ( $where ) ? 'WHERE ' . implode(' AND ', $where ) : '';
+        $sql = "SELECT `constraint`, `stratum` FROM `{$table}` {$where} ORDER BY `constraint` $sort";
+        if( $limit !== NULL && preg_match("#^([0-9]+)((,[0-9]+)?)$#", $limit ) ) $sql .= " LIMIT " . $limit;
+        //print "\n$sql\n";
+        $rs = $db->execute( $sql );
+        while( $row = $rs->fetch() ) {
+            $result[ $row['constraint'] ] = $row['stratum'];
+        }
+        $rs->free();
+        return $result;
+    }
     
     public function query( array $params = array() ){
         $search = NULL;
