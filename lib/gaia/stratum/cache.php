@@ -34,6 +34,18 @@ class Cache implements Iface {
         return $response;
     }
     
+    public function batch( array $params = array() ){
+        $refresh =  isset( $params['refresh'] ) && $params['refresh'] ? TRUE : FALSE;
+        unset( $params['refresh']);
+        $params['rev'] = ( $refresh ) ? $this->newRev() : $this->rev();
+        $key = 'batch_' . sha1( strtolower( serialize( $params ) ) );
+        $res =  ! $refresh ? $this->cacher->get( $key ) : NULL;
+        if( is_array( $res ) ) return $res;
+        $res = $this->core->batch( $params );
+        $this->cacher->set( $key, $res, $this->ttl );
+        return $res;
+    }
+    
     public function query( array $params = array() ){
         $refresh =  isset( $params['refresh'] ) && $params['refresh'] ? TRUE : FALSE;
         unset( $params['refresh']);

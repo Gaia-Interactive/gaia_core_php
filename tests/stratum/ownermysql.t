@@ -21,6 +21,7 @@ $stratum = new Stratum\OwnerMySQL( mt_rand(1, 100000000), 'test', 'test_owner_st
 $schema = $stratum->schema();
 $schema = str_replace('CREATE TABLE', 'CREATE TEMPORARY TABLE', $schema);
 $db->execute( $schema );
+$use_bin_constraint = TRUE;
 
 include __DIR__ .'/.basic_test_suite.php';
 
