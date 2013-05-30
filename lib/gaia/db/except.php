@@ -14,7 +14,9 @@ class Except extends Wrapper {
             $rs = $this->core->execute($query);
         } catch( \Exception $e ){ }
         if( ! $rs ) {
-            throw new Exception('database error', 
+            $msg = '';
+            if( $this->core->isa('Gaia\DB\ExtendedIface') ) $msg .= ': ' . $this->core->error();
+            throw new Exception('database error' . $msg, 
                                     array(
                                         'db'=> $this->core, 
                                         'query'=>$query, 
