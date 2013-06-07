@@ -14,8 +14,8 @@ if( $db->connect_error ){
     Tap::plan('skip_all', 'mysqli: ' . $db->connect_error );
 }
 
-$create_identifier = function ($table='test_identifier') use ( $db ){
-    
+$create_identifier = function ($table=NULL) use ( $db ){
+    if( $table === NULL ) $table = 'test_identifier';
     $db = new DB( $db );
     DB\Connection::add('test', $db );
 

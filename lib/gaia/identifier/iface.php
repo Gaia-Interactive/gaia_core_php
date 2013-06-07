@@ -7,5 +7,4 @@ interface Iface {
     public function delete( $id, $name );
     public function store( $id, $name, $strict = FALSE );
     public function batch( \Closure $closure, array $options = NULL );
-
 }
