@@ -12,7 +12,7 @@ class Cache extends Wrap {
         parent::__construct( $core );
         $this->revision = new Store\Revision( $cache );
         $this->cache = $cache;
-        $this->ttl = NULL;
+        $this->ttl = $ttl;
     }
     
     public function spawn( $parent = NULL ){
